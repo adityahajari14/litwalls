@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand — orange is an accent, never a background wash. */
+  --color-brand-50: #fff5ed;
+  --color-brand-100: #ffe8d4;
+  --color-brand-200: #ffcda8;
+  --color-brand-300: #ffaa71;
+  --color-brand-400: #ff7c38;
+  --color-brand-500: #ff6a00;
+  --color-brand-600: #ed4f00;
+  --color-brand-700: #c43a02;
+  --color-brand-800: #9c300b;
+  --color-brand-900: #7e2a0c;
+
+  /* Ink — warm-tinted neutrals so they sit well against the off-white paper. */
+  --color-ink-50: #f7f6f4;
+  --color-ink-100: #eeecea;
+  --color-ink-200: #dfdcd8;
+  --color-ink-300: #c4c0ba;
+  --color-ink-400: #a19c95;
+  --color-ink-500: #7f7a73;
+  --color-ink-600: #64605b;
+  --color-ink-700: #4f4c48;
+  --color-ink-800: #37342f;
+  --color-ink-900: #1a1815;
+  --color-ink-950: #111010;
+
+  --color-paper: #fdfcfa;
+  --color-success: #0f7b4f;
+
+  --font-display: var(--font-bebas), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 0.75rem;
+
+  --shadow-card:
+    0 1px 2px rgb(17 16 16 / 0.04), 0 8px 24px -12px rgb(17 16 16 / 0.12);
+  --shadow-lift:
+    0 2px 4px rgb(17 16 16 / 0.05), 0 16px 40px -16px rgb(17 16 16 / 0.22);
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink-900);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Bebas is uppercase-only; a little tracking keeps it from looking cramped. */
+  .font-display {
+    letter-spacing: 0.01em;
+  }
+
+  ::selection {
+    background-color: var(--color-brand-500);
+    color: white;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

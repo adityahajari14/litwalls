@@ -1,0 +1,206 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useState, useTransition } from "react";
+
+import { CloseIcon } from "@/components/icons";
+import { useCart } from "@/components/cart/cart-provider";
+import { ButtonLink } from "@/components/ui/button";
+import { formatMoney } from "@/lib/money";
+import { removeItem, updateItemQuantity } from "@/lib/shopify/actions";
+import type { CartLine } from "@/lib/shopify/types";
+
+function LineItem({ line }: { line: CartLine }) {
+  const { refresh } = useCart();
+  const [pending, startTransition] = useTransition();
+
+  const mutate = (run: () => Promise<unknown>) =>
+    startTransition(async () => {
+      await run();
+      await refresh();
+    });
+
+  const { product } = line.merchandise;
+
+  return (
+    <li className={pending ? "opacity-60 transition-opacity" : undefined}>
+      <div className="flex gap-4">
+        <Link
+          href={`/products/${product.handle}`}
+          className="relative size-20 shrink-0 overflow-hidden rounded-lg bg-ink-100"
+        >
+          {product.featuredImage ? (
+            <Image
+              src={product.featuredImage.url}
+              alt={product.featuredImage.altText ?? product.title}
+              fill
+              sizes="5rem"
+              className="object-cover"
+            />
+          ) : null}
+        </Link>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-3">
+            <Link
+              href={`/products/${product.handle}`}
+              className="line-clamp-2 text-sm font-medium text-ink-900 hover:text-brand-600"
+            >
+              {product.title}
+            </Link>
+            <button
+              type="button"
+              onClick={() => mutate(() => removeItem(line.id))}
+              disabled={pending}
+              aria-label={`Remove ${product.title}`}
+              className="shrink-0 text-ink-400 transition-colors hover:text-ink-900"
+            >
+              <CloseIcon className="size-4" />
+            </button>
+          </div>
+
+          <p className="mt-1 text-sm text-ink-600">
+            {formatMoney(line.merchandise.price)}
+          </p>
+
+          <div className="mt-2 flex items-center justify-between">
+            <div className="inline-flex items-center rounded-full border border-ink-200">
+              <button
+                type="button"
+                className="grid size-8 place-items-center text-ink-700 transition-colors hover:text-ink-950 disabled:text-ink-300"
+                onClick={() =>
+                  mutate(() => updateItemQuantity(line.id, line.quantity - 1))
+                }
+                disabled={pending}
+                aria-label="Decrease quantity"
+              >
+                −
+              </button>
+              <span className="w-8 text-center text-sm font-medium">
+                {line.quantity}
+              </span>
+              <button
+                type="button"
+                className="grid size-8 place-items-center text-ink-700 transition-colors hover:text-ink-950 disabled:text-ink-300"
+                onClick={() =>
+                  mutate(() => updateItemQuantity(line.id, line.quantity + 1))
+                }
+                disabled={pending}
+                aria-label="Increase quantity"
+              >
+                +
+              </button>
+            </div>
+
+            <p className="text-sm font-semibold text-ink-950">
+              {formatMoney(line.cost.totalAmount)}
+            </p>
+          </div>
+        </div>
+      </div>
+    </li>
+  );
+}
+
+export function CartDrawer() {
+  const { cart, isOpen, close } = useCart();
+  const [checkingOut, setCheckingOut] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") close();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isOpen, close]);
+
+  if (!isOpen) return null;
+
+  const lines = cart?.lines.nodes ?? [];
+  const isEmpty = lines.length === 0;
+
+  return (
+    <div className="fixed inset-0 z-60">
+      <button
+        type="button"
+        aria-label="Close cart"
+        onClick={close}
+        className="absolute inset-0 bg-ink-950/40 backdrop-blur-sm"
+      />
+
+      <aside
+        role="dialog"
+        aria-label="Shopping cart"
+        className="absolute inset-y-0 right-0 flex w-[min(28rem,92vw)] flex-col bg-paper shadow-lift"
+      >
+        <header className="flex items-center justify-between border-b border-ink-100 px-5 py-4">
+          <h2 className="font-display text-2xl text-ink-950">
+            Your cart
+            {cart && cart.totalQuantity > 0 ? (
+              <span className="ml-2 text-base text-ink-500">
+                ({cart.totalQuantity})
+              </span>
+            ) : null}
+          </h2>
+          <button
+            type="button"
+            onClick={close}
+            aria-label="Close cart"
+            className="grid size-10 place-items-center rounded-full text-ink-700 transition-colors hover:bg-ink-100"
+          >
+            <CloseIcon className="size-5" />
+          </button>
+        </header>
+
+        {isEmpty ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
+            <p className="text-ink-600">Your cart is empty.</p>
+            <ButtonLink href="/products" onClick={close}>
+              Browse posters
+            </ButtonLink>
+          </div>
+        ) : (
+          <>
+            <ul className="flex-1 space-y-6 overflow-y-auto px-5 py-6">
+              {lines.map((line) => (
+                <LineItem key={line.id} line={line} />
+              ))}
+            </ul>
+
+            <footer className="border-t border-ink-100 px-5 py-5">
+              <div className="flex items-baseline justify-between">
+                <span className="text-ink-600">Subtotal</span>
+                <span className="text-lg font-semibold text-ink-950">
+                  {cart ? formatMoney(cart.cost.subtotalAmount) : "—"}
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-ink-500">
+                Shipping and taxes calculated at checkout.
+              </p>
+
+              <a
+                href={cart?.checkoutUrl ?? "#"}
+                onClick={() => setCheckingOut(true)}
+                aria-disabled={!cart?.checkoutUrl}
+                className="mt-4 flex h-13 w-full items-center justify-center rounded-full bg-brand-500 px-8 font-medium text-white transition-colors hover:bg-brand-600"
+              >
+                {checkingOut ? "Redirecting…" : "Checkout"}
+              </a>
+            </footer>
+          </>
+        )}
+      </aside>
+    </div>
+  );
+}
