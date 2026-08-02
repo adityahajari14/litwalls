@@ -23,6 +23,13 @@ function required(name: string) {
 /** Pinned so a new Shopify release can't silently change the response shape. */
 export const STOREFRONT_API_VERSION = "2025-01";
 export const CUSTOMER_ACCOUNT_API_VERSION = "2025-01";
+export const ADMIN_API_VERSION = "2025-01";
+
+function storeOrigin() {
+  const store = required("SHOPIFY_STORE_DOMAIN");
+  const origin = /^https?:\/\//.test(store) ? store : `https://${store}`;
+  return origin.replace(/\/$/, "");
+}
 
 /**
  * Both the Storefront API and the Headless channel's Storefront token share
@@ -30,12 +37,29 @@ export const CUSTOMER_ACCOUNT_API_VERSION = "2025-01";
  * a bare custom app) is what makes New Customer Accounts available.
  */
 export function storefrontConfig() {
-  const store = required("SHOPIFY_STORE_DOMAIN");
-  const origin = /^https?:\/\//.test(store) ? store : `https://${store}`;
-
   return {
-    endpoint: `${origin.replace(/\/$/, "")}/api/${STOREFRONT_API_VERSION}/graphql.json`,
+    endpoint: `${storeOrigin()}/api/${STOREFRONT_API_VERSION}/graphql.json`,
     accessToken: required("SHOPIFY_STOREFRONT_ACCESS_TOKEN"),
+  };
+}
+
+/**
+ * The Admin API — used only to mint staged upload targets for custom poster
+ * artwork. The Storefront API cannot do this: there is no public-scope way to
+ * put a file into a store, by design.
+ *
+ * This token is a **secret**. It grants write access to the store, so it must
+ * never reach the browser. Everything that reads it lives behind "server-only",
+ * and the browser is only ever handed the short-lived, single-purpose upload
+ * URL that stagedUploadsCreate returns.
+ *
+ * From Shopify admin: Settings → Apps and sales channels → Develop apps →
+ * your app → Admin API access token. Needs the `write_files` scope.
+ */
+export function adminConfig() {
+  return {
+    endpoint: `${storeOrigin()}/admin/api/${ADMIN_API_VERSION}/graphql.json`,
+    accessToken: required("SHOPIFY_ADMIN_ACCESS_TOKEN"),
   };
 }
 

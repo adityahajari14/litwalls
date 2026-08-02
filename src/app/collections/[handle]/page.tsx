@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { CollectionViewTracker } from "@/components/analytics/collection-view";
 import { ProductCard } from "@/components/product-card";
 import { ButtonLink } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
@@ -43,6 +44,8 @@ export default async function CollectionPage({
 
   return (
     <Container className="py-12 lg:py-16">
+      <CollectionViewTracker collection={collection} products={products} />
+
       <header className="max-w-2xl">
         <h1 className="font-display text-5xl text-ink-950 sm:text-6xl">
           {collection.title}

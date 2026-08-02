@@ -21,7 +21,7 @@ import {
   isConfigured,
   logAnalyticsError,
 } from "@/lib/analytics/config";
-import type { Cart, Product, ProductVariant } from "@/lib/shopify/types";
+import type { Cart, Collection, Product, ProductVariant } from "@/lib/shopify/types";
 
 type CurrencyCode = ShopifyPageViewPayload["currency"];
 
@@ -90,6 +90,54 @@ export function trackProductView(product: Product, variant: ProductVariant | nul
  * real cart id. Attribution is keyed on that id, so a placeholder would break
  * the join between this event and the resulting order.
  */
+/**
+ * Firing this — and trackSearchView below — separately from the generic
+ * PAGE_VIEW in ShopifyAnalytics is what lets Shopify's reports break sessions
+ * down by collection and search term instead of lumping every list page into
+ * one undifferentiated "page" bucket.
+ */
+export function trackCollectionView(collection: Collection, products: Product[]) {
+  if (!isConfigured()) return;
+
+  // A list has no single price; the first product's currency stands in for
+  // the whole page, same as every storefront on one currency ever will be.
+  const currency = products[0]?.priceRange.minVariantPrice.currencyCode ?? "INR";
+
+  const payload: ShopifyPageViewPayload = {
+    ...basePayload(currency),
+    canonicalUrl: window.location.href,
+    pageType: "collection",
+    resourceId: collection.id,
+    collectionHandle: collection.handle,
+    collectionId: collection.id,
+    products: products.map((product) => toAnalyticsProduct(product, null)),
+  };
+
+  sendShopifyAnalytics(
+    { eventName: AnalyticsEventName.COLLECTION_VIEW, payload },
+    SHOP_DOMAIN,
+  ).catch(logAnalyticsError);
+}
+
+export function trackSearchView(searchString: string, products: Product[]) {
+  if (!isConfigured()) return;
+
+  const currency = products[0]?.priceRange.minVariantPrice.currencyCode ?? "INR";
+
+  const payload: ShopifyPageViewPayload = {
+    ...basePayload(currency),
+    canonicalUrl: window.location.href,
+    pageType: "search",
+    searchString,
+    products: products.map((product) => toAnalyticsProduct(product, null)),
+  };
+
+  sendShopifyAnalytics(
+    { eventName: AnalyticsEventName.SEARCH_VIEW, payload },
+    SHOP_DOMAIN,
+  ).catch(logAnalyticsError);
+}
+
 export function trackAddToCart(
   cart: Cart,
   product: Product,

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Bebas_Neue, Inter } from "next/font/google";
 import { Suspense } from "react";
 
+import { MetaPixel } from "@/components/analytics/meta-pixel";
 import { ShopifyAnalytics } from "@/components/analytics/shopify-analytics";
 import { CartDrawer } from "@/components/cart/cart-drawer";
 import { CartLoader } from "@/components/cart/cart-loader";
@@ -10,7 +11,11 @@ import { AnnouncementBar } from "@/components/layout/announcement-bar";
 import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
 import { SubscribePopup } from "@/components/marketing/subscribe-popup";
+import { getCollections } from "@/lib/shopify/products";
 import "./globals.css";
+
+/** Same list Footer fetches — cached, so this is a cache hit, not a second request. */
+const NAV_COLLECTION_COUNT = 12;
 
 const inter = Inter({
   variable: "--font-inter",
@@ -38,13 +43,20 @@ export const metadata: Metadata = {
     siteName: "Litwalls",
     locale: "en_IN",
   },
+  // Proves domain ownership to Meta Business Manager — required once for the
+  // pixel's domain to be verified there, unrelated to the pixel script itself.
+  verification: process.env.META_DOMAIN_VERIFICATION
+    ? { other: { "facebook-domain-verification": process.env.META_DOMAIN_VERIFICATION } }
+    : undefined,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const collections = await getCollections(NAV_COLLECTION_COUNT);
+
   return (
     <html
       lang="en"
@@ -55,11 +67,12 @@ export default function RootLayout({
             boundary keeps that deopt from reaching the rest of the layout. */}
         <Suspense fallback={null}>
           <ShopifyAnalytics />
+          <MetaPixel />
         </Suspense>
         <CartProvider>
           <CartLoader />
           <AnnouncementBar />
-          <Header />
+          <Header collections={collections} />
           <main className="flex flex-1 flex-col">{children}</main>
           <Footer />
           <CartDrawer />

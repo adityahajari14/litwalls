@@ -1,0 +1,75 @@
+"use client";
+
+import { isMetaPixelConfigured } from "@/lib/analytics/meta-config";
+import type { Cart, Product, ProductVariant } from "@/lib/shopify/types";
+
+declare global {
+  interface Window {
+    /**
+     * Installed by the base pixel script (components/analytics/meta-pixel.tsx).
+     * The base code itself defines a queueing stub before fbevents.js has
+     * loaded, so calling this immediately after mount is always safe — calls
+     * queue and replay once the real script arrives.
+     */
+    fbq?: (...args: unknown[]) => void;
+  }
+}
+
+function fbq(...args: unknown[]) {
+  if (!isMetaPixelConfigured()) return;
+  window.fbq?.(...args);
+}
+
+/**
+ * Fired once per client-side navigation by MetaPixel — mirrors what the base
+ * install's own inline `fbq('track', 'PageView')` does for the very first
+ * load, but that call only runs once at script-insertion time, so every route
+ * change after that needs its own call or Meta only ever sees one page view
+ * per session.
+ */
+export function trackMetaPageView() {
+  fbq("track", "PageView");
+}
+
+/**
+ * content_ids uses the variant's Shopify GID, not the product's — Meta's
+ * catalog matching (for dynamic/retargeting ads) is per-variant, and this
+ * store's Storefront catalog feed is also keyed on variant id.
+ */
+export function trackMetaAddToCart(
+  product: Product,
+  variant: ProductVariant | null,
+  quantity: number,
+) {
+  const price = variant?.price ?? product.priceRange.minVariantPrice;
+
+  fbq("track", "AddToCart", {
+    content_ids: [variant?.id ?? product.id],
+    content_type: "product",
+    content_name: product.title,
+    contents: [{ id: variant?.id ?? product.id, quantity }],
+    currency: price.currencyCode,
+    value: Number(price.amount) * quantity,
+  });
+}
+
+/**
+ * Fired the moment a customer is handed off to Shopify's checkout — the last
+ * page view this app ever sees for that order, and the one Meta needs to
+ * attribute an eventual Purchase (tracked separately, on Shopify's own domain,
+ * outside this app's reach) back to the ad that brought them here.
+ */
+export function trackMetaInitiateCheckout(cart: Cart) {
+  const lines = cart.lines.nodes;
+
+  fbq("track", "InitiateCheckout", {
+    content_ids: lines.map((line) => line.merchandise.id),
+    contents: lines.map((line) => ({
+      id: line.merchandise.id,
+      quantity: line.quantity,
+    })),
+    num_items: cart.totalQuantity,
+    currency: cart.cost.totalAmount.currencyCode,
+    value: Number(cart.cost.totalAmount.amount),
+  });
+}

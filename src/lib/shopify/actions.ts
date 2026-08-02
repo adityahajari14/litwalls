@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { createStagedUpload, type StagedTarget } from "@/lib/shopify/admin";
 import {
   addCartLines,
   createCart,
@@ -10,9 +11,20 @@ import {
   removeCartLines,
   setCartId,
   updateCartLines,
+  type CartLineInput,
 } from "@/lib/shopify/cart";
 import { ShopifyError, storefront } from "@/lib/shopify/client";
 import { CUSTOMER_CREATE } from "@/lib/shopify/queries";
+import { getProduct } from "@/lib/shopify/products";
+import {
+  checkFile,
+  CUSTOM_ART_ATTRIBUTE,
+  CUSTOM_NOTE_ATTRIBUTE,
+  CUSTOM_POSTER_HANDLE,
+  CUSTOM_SIZE_ATTRIBUTE,
+  printSize,
+} from "@/lib/custom-poster";
+import { defaultVariant, type Attribute } from "@/lib/shopify/types";
 
 export type CartActionResult = { ok: true } | { ok: false; message: string };
 
@@ -27,17 +39,20 @@ function toResult(error: unknown): CartActionResult {
 export async function addItem(
   merchandiseId: string,
   quantity = 1,
+  attributes?: Attribute[],
 ): Promise<CartActionResult> {
   if (!merchandiseId) {
     return { ok: false, message: "This product is unavailable." };
   }
+
+  const line: CartLineInput = { merchandiseId, quantity, attributes };
 
   try {
     const cartId = await getCartId();
 
     if (cartId) {
       try {
-        await addCartLines(cartId, [{ merchandiseId, quantity }]);
+        await addCartLines(cartId, [line]);
         revalidatePath("/", "layout");
         return { ok: true };
       } catch {
@@ -46,7 +61,7 @@ export async function addItem(
       }
     }
 
-    const cart = await createCart([{ merchandiseId, quantity }]);
+    const cart = await createCart([line]);
     await setCartId(cart.id);
     revalidatePath("/", "layout");
     return { ok: true };
@@ -124,6 +139,115 @@ export async function subscribeToNewsletter(
     }
 
     return { ok: true };
+  } catch (error) {
+    return toResult(error);
+  }
+}
+
+/* ---------------------------------------------------------------- custom */
+
+export type StagedUploadResult =
+  | { ok: true; target: StagedTarget }
+  | { ok: false; message: string };
+
+/**
+ * Step 1 of the custom poster flow: hand the browser a pre-signed target so it
+ * can upload the artwork straight to Shopify, bypassing this server entirely.
+ *
+ * Only the file's *metadata* crosses this boundary, which is what keeps the
+ * request under the Server Action body limit — the bytes go direct.
+ */
+export async function createArtworkUpload(file: {
+  name: string;
+  type: string;
+  size: number;
+}): Promise<StagedUploadResult> {
+  // The browser already checked this, but the browser is not a trust boundary.
+  const problem = checkFile(file);
+  if (problem) return { ok: false, message: problem.message };
+
+  try {
+    const target = await createStagedUpload({
+      filename: file.name,
+      mimeType: file.type,
+      fileSize: file.size,
+    });
+
+    return { ok: true, target };
+  } catch (error) {
+    console.error("Staged upload failed", error);
+    return {
+      ok: false,
+      message: "We couldn't start the upload. Please try again.",
+    };
+  }
+}
+
+/**
+ * Step 2: add the custom poster to the cart, with the uploaded artwork's URL
+ * attached as a line-item attribute so it travels through to the order.
+ *
+ * The price is whatever the "custom-poster" product costs in Shopify — this
+ * never invents a price, so the store stays the single source of truth.
+ */
+export async function addCustomPoster({
+  artworkUrl,
+  sizeId,
+  note,
+  quantity = 1,
+}: {
+  artworkUrl: string;
+  sizeId: string;
+  note?: string;
+  quantity?: number;
+}): Promise<CartActionResult> {
+  const size = printSize(sizeId);
+  if (!size) return { ok: false, message: "Pick a size." };
+
+  // The artwork URL is echoed back by the browser after it uploads. Pin it to
+  // Shopify's own storage so a compromised client can't put an arbitrary link
+  // — or a tracking pixel — onto a real order.
+  let host: string;
+  try {
+    host = new URL(artworkUrl).hostname;
+  } catch {
+    return { ok: false, message: "That artwork link isn't valid." };
+  }
+  if (!/(^|\.)shopify\.com$/.test(host) && !/(^|\.)myshopify\.com$/.test(host)) {
+    return { ok: false, message: "That artwork link isn't valid." };
+  }
+
+  try {
+    const product = await getProduct(CUSTOM_POSTER_HANDLE);
+    if (!product) {
+      return {
+        ok: false,
+        message: "Custom posters are unavailable right now.",
+      };
+    }
+
+    const variant = defaultVariant(product);
+    if (!variant?.availableForSale) {
+      return {
+        ok: false,
+        message: "Custom posters are unavailable right now.",
+      };
+    }
+
+    const attributes: Attribute[] = [
+      { key: CUSTOM_ART_ATTRIBUTE, value: artworkUrl },
+      { key: CUSTOM_SIZE_ATTRIBUTE, value: size.label },
+    ];
+
+    const trimmedNote = note?.trim();
+    if (trimmedNote) {
+      attributes.push({
+        key: CUSTOM_NOTE_ATTRIBUTE,
+        value: trimmedNote.slice(0, 500),
+      });
+    }
+
+    return await addItem(variant.id, quantity, attributes);
   } catch (error) {
     return toResult(error);
   }

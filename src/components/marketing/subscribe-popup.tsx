@@ -1,62 +1,158 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-import { CloseIcon, TagIcon } from "@/components/icons";
+import { CheckIcon, CloseIcon, TagIcon } from "@/components/icons";
+import { SubscribeForm } from "@/components/marketing/subscribe-form";
 import { buttonClass } from "@/components/ui/button";
-import { subscribeToNewsletter } from "@/lib/shopify/actions";
+import {
+  SUBSCRIBE_DISCOUNT_CODE,
+  SUBSCRIBE_DISCOUNT_PERCENT,
+} from "@/lib/marketing";
 
-const DISCOUNT_CODE = "SUBSCRIBE10";
-const SHOW_AFTER_MS = 10_000;
-const DISMISSED_KEY = "subscribe-popup-dismissed";
+/**
+ * localStorage, not sessionStorage: a dismissal is a decision about this
+ * shop, not about this tab. Re-asking on every new tab is how a popup turns
+ * from an offer into an annoyance, and annoyance costs more sessions than the
+ * offer wins.
+ */
+const DISMISSED_KEY = "litwalls:subscribe-dismissed";
+const SUBSCRIBED_KEY = "litwalls:subscribed";
+
+/** Long enough that a dismissal sticks for the whole shopping trip and then some. */
+const DISMISS_DAYS = 30;
+
+/** A fallback, not the primary trigger — intent signals below usually fire first. */
+const FALLBACK_DELAY_MS = 25_000;
+
+/** Fraction of the page scrolled before we read the visit as engaged. */
+const SCROLL_TRIGGER = 0.35;
+
+function isSuppressed() {
+  try {
+    if (localStorage.getItem(SUBSCRIBED_KEY)) return true;
+
+    const until = localStorage.getItem(DISMISSED_KEY);
+    if (!until) return false;
+
+    // A malformed value would make Number() NaN, and NaN > now is false, so a
+    // corrupted entry fails open — we show the popup rather than silently
+    // suppressing it forever.
+    if (Number(until) > Date.now()) return true;
+
+    localStorage.removeItem(DISMISSED_KEY);
+    return false;
+  } catch {
+    // Safari private mode throws on localStorage. Don't take the popup down
+    // over it, but don't loop on it either — the in-memory guard still holds
+    // for this page view.
+    return false;
+  }
+}
+
+function suppress(key: string, days?: number) {
+  try {
+    localStorage.setItem(
+      key,
+      days === undefined ? "1" : String(Date.now() + days * 864e5),
+    );
+  } catch {
+    // Ignore — see isSuppressed.
+  }
+}
 
 export function SubscribePopup() {
   const [isOpen, setIsOpen] = useState(false);
-  const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [subscribed, setSubscribed] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [isPending, startTransition] = useTransition();
 
+  const dialogRef = useRef<HTMLDivElement>(null);
+  /** Guards against a second trigger racing the first — and against re-opening
+      after a dismissal within the same page view, when storage is unavailable. */
+  const settled = useRef(false);
+
+  const openOnce = useCallback(() => {
+    if (settled.current || isSuppressed()) return;
+    settled.current = true;
+    setIsOpen(true);
+  }, []);
+
+  /**
+   * Show the offer when the visitor has demonstrated interest or is about to
+   * leave — not on an arbitrary countdown. Whichever signal lands first wins:
+   *
+   *  - exit intent (pointer leaving toward the browser chrome) — desktop only,
+   *    since there is no cursor to track on touch;
+   *  - scroll depth, which is the honest mobile equivalent of exit intent;
+   *  - a slow timer, so a visitor who reads one screenful and stops still sees it.
+   */
   useEffect(() => {
-    if (sessionStorage.getItem(DISMISSED_KEY)) return;
+    if (isSuppressed()) return;
 
-    const timer = setTimeout(() => setIsOpen(true), SHOW_AFTER_MS);
-    return () => clearTimeout(timer);
+    const onPointerOut = (event: MouseEvent) => {
+      // relatedTarget is null when the pointer leaves the document entirely;
+      // clientY <= 0 keeps it to an upward exit, not a drift out of the side.
+      if (event.relatedTarget === null && event.clientY <= 0) openOnce();
+    };
+
+    const onScroll = () => {
+      const scrollable = document.body.scrollHeight - window.innerHeight;
+      if (scrollable <= 0) return;
+      if (window.scrollY / scrollable >= SCROLL_TRIGGER) openOnce();
+    };
+
+    const timer = setTimeout(openOnce, FALLBACK_DELAY_MS);
+    document.addEventListener("mouseout", onPointerOut);
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("mouseout", onPointerOut);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, [openOnce]);
+
+  const dismiss = useCallback(() => {
+    setIsOpen(false);
+    suppress(DISMISSED_KEY, DISMISS_DAYS);
   }, []);
 
   useEffect(() => {
     if (!isOpen) return;
+
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") dismiss();
     };
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [isOpen]);
 
-  function dismiss() {
-    setIsOpen(false);
-    sessionStorage.setItem(DISMISSED_KEY, "1");
-  }
+    // The offer is worthless if claiming it costs a click to focus the field.
+    dialogRef.current?.querySelector("input")?.focus();
 
-  function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
-    startTransition(async () => {
-      const result = await subscribeToNewsletter(email);
-      if (result.ok) {
-        setStatus("success");
-        sessionStorage.setItem(DISMISSED_KEY, "1");
-      } else {
-        setStatus("error");
-        setErrorMessage(result.message);
-      }
-    });
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [isOpen, dismiss]);
+
+  function handleSubscribed() {
+    setSubscribed(true);
+    // Permanent: they've taken the offer, so it must never be pitched again.
+    suppress(SUBSCRIBED_KEY);
   }
 
   async function copyCode() {
-    await navigator.clipboard.writeText(DISCOUNT_CODE);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(SUBSCRIBE_DISCOUNT_CODE);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard is permission-gated and blocked in some embedded webviews.
+      // The code is on screen either way, so failing silently still leaves the
+      // customer able to use it.
+    }
   }
 
   if (!isOpen) return null;
@@ -67,12 +163,14 @@ export function SubscribePopup() {
         type="button"
         aria-label="Close"
         onClick={dismiss}
-        className="absolute inset-0 bg-ink-950/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-ink-950/50 backdrop-blur-sm"
       />
 
       <div
+        ref={dialogRef}
         role="dialog"
-        aria-label="Subscribe for a discount"
+        aria-modal="true"
+        aria-labelledby="subscribe-popup-title"
         className="relative w-full max-w-sm rounded-2xl bg-paper p-8 text-center shadow-lift"
       >
         <button
@@ -84,17 +182,21 @@ export function SubscribePopup() {
           <CloseIcon className="size-5" />
         </button>
 
-        <div className="mx-auto grid size-12 place-items-center rounded-full bg-brand-50 text-brand-600">
-          <TagIcon className="size-6" />
-        </div>
-
-        {status === "success" ? (
+        {subscribed ? (
           <>
-            <h2 className="mt-4 font-display text-2xl text-ink-950">
-              You&apos;re in!
+            <div className="mx-auto grid size-12 place-items-center rounded-full bg-success/10 text-success">
+              <CheckIcon className="size-6" />
+            </div>
+
+            <h2
+              id="subscribe-popup-title"
+              className="mt-4 font-display text-3xl text-ink-950"
+            >
+              You&apos;re in
             </h2>
             <p className="mt-2 text-sm text-ink-600 text-pretty">
-              Use this code at checkout for 10% off your first order.
+              Your {SUBSCRIBE_DISCOUNT_PERCENT}% off is applied automatically at
+              checkout. Here&apos;s the code, in case you want it later.
             </p>
 
             <button
@@ -103,52 +205,57 @@ export function SubscribePopup() {
               className="mt-5 flex w-full items-center justify-between rounded-full border border-dashed border-ink-300 bg-white px-5 py-3 text-left transition-colors hover:border-brand-400"
             >
               <span className="font-display text-lg tracking-wide text-ink-950">
-                {DISCOUNT_CODE}
+                {SUBSCRIBE_DISCOUNT_CODE}
               </span>
               <span className="text-xs font-medium text-brand-600">
-                {copied ? "Copied!" : "Tap to copy"}
+                {copied ? "Copied" : "Tap to copy"}
               </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className={buttonClass({ className: "mt-3 w-full" })}
+            >
+              Start shopping
             </button>
           </>
         ) : (
           <>
-            <h2 className="mt-4 font-display text-2xl text-ink-950">
-              Get 10% off
+            <div className="mx-auto grid size-12 place-items-center rounded-full bg-brand-50 text-brand-600">
+              <TagIcon className="size-6" />
+            </div>
+
+            <h2
+              id="subscribe-popup-title"
+              className="mt-4 font-display text-4xl text-ink-950"
+            >
+              {SUBSCRIBE_DISCOUNT_PERCENT}% off your first wall
             </h2>
             <p className="mt-2 text-sm text-ink-600 text-pretty">
-              Subscribe for style drops and offers — get 10% off your first
-              order.
+              Join the list for new drops and get {SUBSCRIBE_DISCOUNT_PERCENT}%
+              off your first order. It applies itself at checkout.
             </p>
 
-            <form onSubmit={handleSubmit} className="mt-5 space-y-3">
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="you@email.com"
-                aria-label="Email address"
-                className="h-12 w-full rounded-full border border-ink-200 bg-white px-5 text-sm text-ink-900 placeholder:text-ink-400 focus:border-brand-400 focus:outline-none"
-              />
-              <button
-                type="submit"
-                disabled={isPending}
-                className={buttonClass({ className: "w-full" })}
-              >
-                {isPending ? "Subscribing…" : "Get my code"}
-              </button>
-            </form>
+            <SubscribeForm
+              id="subscribe-popup-email"
+              className="mt-5"
+              onSubscribed={handleSubscribed}
+            />
 
-            {status === "error" ? (
-              <p className="mt-3 text-sm text-red-600">{errorMessage}</p>
-            ) : null}
+            {/* The two objections that kill an email capture: "will you spam
+                me" and "can I get out". Answering both beats another
+                exclamation mark. */}
+            <p className="mt-4 text-xs text-ink-400 text-pretty">
+              One email a week at most. Unsubscribe in a click.
+            </p>
 
             <button
               type="button"
               onClick={dismiss}
-              className="mt-4 text-xs font-medium text-ink-400 transition-colors hover:text-ink-700"
+              className="mt-3 text-xs font-medium text-ink-400 underline underline-offset-4 transition-colors hover:text-ink-700"
             >
-              No thanks
+              No thanks, I&apos;ll pay full price
             </button>
           </>
         )}

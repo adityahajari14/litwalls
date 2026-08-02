@@ -1,7 +1,9 @@
 import Image from "next/image";
 
+import type { Review } from "@/components/home/reviews";
 import { ButtonLink } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
+import { Rating } from "@/components/ui/rating";
 
 const HERO_POSTERS = [
   { src: "/categories/marvel.jpg", offset: "-translate-y-6" },
@@ -9,7 +11,19 @@ const HERO_POSTERS = [
   { src: "/categories/music.jpg", offset: "-translate-y-8" },
 ];
 
-export function Hero() {
+/**
+ * The star rating is computed from the same reviews the page renders, so the
+ * hero can never quote a score the reviews section contradicts — and when
+ * there are no reviews, it shows no rating at all rather than an invented one.
+ * A fabricated score in the first screenful is the most consequential lie on
+ * the site. See getReviews.
+ */
+export function Hero({ reviews = [] }: { reviews?: Review[] }) {
+  const reviewCount = reviews.length;
+  const averageRating = reviewCount
+    ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviewCount
+    : 0;
+
   return (
     <section className="relative overflow-hidden bg-ink-100">
       <Image
@@ -64,7 +78,7 @@ export function Hero() {
 
             <p className="mt-5 max-w-md text-lg text-ink-700 text-pretty">
               Museum-grade 300gsm matte prints of the movies, music and anime you
-              actually love. From ₹149.
+              actually love. From ₹149, on your wall this week.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -72,9 +86,23 @@ export function Hero() {
                 Shop all posters
               </ButtonLink>
               <ButtonLink href="/custom" variant="ghost" size="lg">
-                Make it custom
+                Upload your own
               </ButtonLink>
             </div>
+
+            {/* Under the button, not above it: proof is what converts the
+                hesitation the button just created. */}
+            {reviewCount > 0 ? (
+              <a
+                href="#reviews"
+                className="mt-6 inline-flex items-center gap-2.5 rounded-full transition-opacity hover:opacity-80"
+              >
+                <Rating rating={averageRating} reviewCount={reviewCount} />
+                <span className="text-sm text-ink-600 underline decoration-ink-300 underline-offset-4">
+                  Read reviews
+                </span>
+              </a>
+            ) : null}
           </div>
         </div>
       </Container>

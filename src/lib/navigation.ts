@@ -1,25 +1,23 @@
 export const MAIN_NAV = [
   { label: "All Products", href: "/products" },
+  { label: "Collections", href: "/collections" },
   { label: "Custom", href: "/custom" },
   { label: "About", href: "/about" },
   { label: "Reviews", href: "/reviews" },
 ] as const;
 
+/**
+ * The footer's "Shop" group is built from live Shopify collections instead of
+ * hardcoded here — see Footer. Hardcoding collection handles let this drift
+ * out of sync with the store (it linked to /collections/anime and
+ * /collections/cars, neither of which existed) with no build-time signal that
+ * anything was wrong.
+ */
 export const FOOTER_NAV = [
-  {
-    title: "Shop",
-    links: [
-      { label: "All posters", href: "/products" },
-      { label: "Marvel", href: "/collections/marvel" },
-      { label: "Anime", href: "/collections/anime" },
-      { label: "Music", href: "/collections/music" },
-      { label: "Cars", href: "/collections/cars" },
-    ],
-  },
   {
     title: "Help",
     links: [
-      { label: "Track your order", href: "/orders" },
+      { label: "Track your order", href: "/account" },
       { label: "Shipping", href: "/shipping" },
       { label: "Returns & refunds", href: "/returns" },
       { label: "Contact us", href: "/contact" },

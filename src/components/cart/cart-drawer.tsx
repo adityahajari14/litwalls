@@ -4,9 +4,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
 
-import { CloseIcon } from "@/components/icons";
+import { CloseIcon, LockIcon, ReturnIcon } from "@/components/icons";
 import { useCart } from "@/components/cart/cart-provider";
+import { FreeShippingBar } from "@/components/cart/free-shipping-bar";
 import { ButtonLink } from "@/components/ui/button";
+import { trackMetaInitiateCheckout } from "@/lib/analytics/meta-pixel";
+import { withClaimedDiscount } from "@/lib/checkout-url";
+import { CUSTOM_ART_ATTRIBUTE } from "@/lib/custom-poster";
 import { formatMoney } from "@/lib/money";
 import { removeItem, updateItemQuantity } from "@/lib/shopify/actions";
 import type { CartLine } from "@/lib/shopify/types";
@@ -23,6 +27,12 @@ function LineItem({ line }: { line: CartLine }) {
 
   const { product } = line.merchandise;
 
+  // A custom poster's thumbnail should be the customer's own artwork, not the
+  // generic product photo — otherwise three custom lines look identical.
+  const artwork = line.attributes.find(
+    (attribute) => attribute.key === CUSTOM_ART_ATTRIBUTE,
+  )?.value;
+
   return (
     <li className={pending ? "opacity-60 transition-opacity" : undefined}>
       <div className="flex gap-4">
@@ -30,7 +40,17 @@ function LineItem({ line }: { line: CartLine }) {
           href={`/products/${product.handle}`}
           className="relative size-20 shrink-0 overflow-hidden rounded-lg bg-ink-100"
         >
-          {product.featuredImage ? (
+          {artwork ? (
+            // Custom artwork sits on Shopify's staged-upload bucket, not the
+            // product CDN, so next/image would reject the host — and there is
+            // nothing to gain from optimising an image one person will see.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={artwork}
+              alt="Your artwork"
+              className="size-full object-cover"
+            />
+          ) : product.featuredImage ? (
             <Image
               src={product.featuredImage.url}
               alt={product.featuredImage.altText ?? product.title}
@@ -63,6 +83,22 @@ function LineItem({ line }: { line: CartLine }) {
           <p className="mt-1 text-sm text-ink-600">
             {formatMoney(line.merchandise.price)}
           </p>
+
+          {/* A custom poster is otherwise indistinguishable from a catalogue
+              one here — same title, same price. The size and note are what the
+              customer needs to see to know their order is right. The artwork
+              URL is for fulfilment, not for them, so it stays hidden. */}
+          {line.attributes.length > 0 ? (
+            <ul className="mt-1 space-y-0.5">
+              {line.attributes
+                .filter((attribute) => attribute.key !== CUSTOM_ART_ATTRIBUTE)
+                .map((attribute) => (
+                  <li key={attribute.key} className="truncate text-xs text-ink-500">
+                    {attribute.key}: {attribute.value}
+                  </li>
+                ))}
+            </ul>
+          ) : null}
 
           <div className="mt-2 flex items-center justify-between">
             <div className="inline-flex items-center rounded-full border border-ink-200">
@@ -172,6 +208,14 @@ export function CartDrawer() {
           </div>
         ) : (
           <>
+            {/* Above the items, not below: the customer decides whether to add
+                another poster while they're still looking at the list. */}
+            {cart ? (
+              <div className="border-b border-ink-100 px-5 py-4">
+                <FreeShippingBar subtotal={cart.cost.subtotalAmount} />
+              </div>
+            ) : null}
+
             <ul className="flex-1 space-y-6 overflow-y-auto px-5 py-6">
               {lines.map((line) => (
                 <LineItem key={line.id} line={line} />
@@ -191,12 +235,42 @@ export function CartDrawer() {
 
               <a
                 href={cart?.checkoutUrl ?? "#"}
-                onClick={() => setCheckingOut(true)}
+                onClick={(event) => {
+                  if (!cart?.checkoutUrl) return;
+                  // Rewritten on click, not in render: withClaimedDiscount
+                  // reads localStorage, which doesn't exist on the server.
+                  event.preventDefault();
+                  setCheckingOut(true);
+                  trackMetaInitiateCheckout(cart);
+                  window.location.href = withClaimedDiscount(cart.checkoutUrl);
+                }}
                 aria-disabled={!cart?.checkoutUrl}
                 className="mt-4 flex h-13 w-full items-center justify-center rounded-full bg-brand-500 px-8 font-medium text-white transition-colors hover:bg-brand-600"
               >
                 {checkingOut ? "Redirecting…" : "Checkout"}
               </a>
+
+              {/* The last thing seen before leaving for Shopify's domain.
+                  Naming the risks the customer is already weighing — is this
+                  safe, what if it's wrong — is what stops the tab from closing. */}
+              <ul className="mt-4 flex items-center justify-center gap-5 text-xs text-ink-500">
+                <li className="flex items-center gap-1.5">
+                  <LockIcon className="size-4 text-ink-400" />
+                  Secure checkout
+                </li>
+                <li className="flex items-center gap-1.5">
+                  <ReturnIcon className="size-4 text-ink-400" />
+                  7-day replacement
+                </li>
+              </ul>
+
+              <button
+                type="button"
+                onClick={close}
+                className="mt-3 w-full text-center text-xs font-medium text-ink-400 transition-colors hover:text-ink-700"
+              >
+                Continue shopping
+              </button>
             </footer>
           </>
         )}

@@ -51,10 +51,22 @@ export type Collection = {
   image: Image | null;
 };
 
+/**
+ * A custom key/value pair carried on a cart line and through to the order.
+ * This is how a custom poster's artwork reaches fulfilment: the line item
+ * holds a URL to the uploaded file, since Shopify's cart can only store
+ * strings, not the image itself. See CUSTOM_ART_ATTRIBUTE.
+ */
+export type Attribute = {
+  key: string;
+  value: string;
+};
+
 export type CartLine = {
   id: string;
   quantity: number;
   cost: { totalAmount: Money };
+  attributes: Attribute[];
   merchandise: {
     id: string;
     title: string;
@@ -83,3 +95,14 @@ export type CartMutationPayload = {
   cart: Cart | null;
   userErrors: { field: string[] | null; message: string }[];
 };
+
+/**
+ * The default (and only) variant — what the Cart API needs as merchandise id.
+ *
+ * Lives here rather than in shopify/products.ts because that module is
+ * "server-only" (it calls the Storefront API), and this is a plain accessor
+ * that client components need too — e.g. a product card's quick-add button.
+ */
+export function defaultVariant(product: Product) {
+  return product.variants.nodes[0] ?? null;
+}

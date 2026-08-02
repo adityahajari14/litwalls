@@ -10,7 +10,18 @@ import {
   REMOVE_CART_LINES,
   UPDATE_CART_LINES,
 } from "@/lib/shopify/queries";
-import type { Cart, CartMutationPayload } from "@/lib/shopify/types";
+import type { Attribute, Cart, CartMutationPayload } from "@/lib/shopify/types";
+
+/**
+ * A line to add to the cart. `attributes` rides along as line-item properties
+ * — Shopify carries them onto the order, which is how a custom poster's
+ * artwork URL reaches fulfilment.
+ */
+export type CartLineInput = {
+  merchandiseId: string;
+  quantity: number;
+  attributes?: Attribute[];
+};
 
 export const CART_COOKIE = "litwalls_cart_id";
 
@@ -68,9 +79,7 @@ export async function getCart(): Promise<Cart | null> {
   return data.cart;
 }
 
-export async function createCart(
-  lines: { merchandiseId: string; quantity: number }[] = [],
-): Promise<Cart> {
+export async function createCart(lines: CartLineInput[] = []): Promise<Cart> {
   const data = await storefront<{ cartCreate: CartMutationPayload }>(
     CREATE_CART,
     { variables: { lines } },
@@ -81,7 +90,7 @@ export async function createCart(
 
 export async function addCartLines(
   cartId: string,
-  lines: { merchandiseId: string; quantity: number }[],
+  lines: CartLineInput[],
 ): Promise<Cart> {
   const data = await storefront<{ cartLinesAdd: CartMutationPayload }>(
     ADD_CART_LINES,

@@ -1,13 +1,38 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { ArrowRightIcon, InstagramIcon, TwitterIcon } from "@/components/icons";
+import { InstagramIcon, TwitterIcon } from "@/components/icons";
+import { SubscribeForm } from "@/components/marketing/subscribe-form";
 import { Container } from "@/components/ui/container";
+import { SUBSCRIBE_DISCOUNT_PERCENT } from "@/lib/marketing";
 import { FOOTER_NAV } from "@/lib/navigation";
+import { getCollections } from "@/lib/shopify/products";
 
 const PAYMENT_METHODS = ["UPI", "Visa", "Mastercard", "RuPay", "Net Banking"];
 
-export function Footer() {
+/** Enough to fill the column without it outgrowing "Help" and "Company" next to it. */
+const FOOTER_COLLECTION_COUNT = 4;
+
+export async function Footer() {
+  // One extra than the footer shows, so we know whether "See all" earns its
+  // place without a second round trip to Shopify.
+  const collections = await getCollections(FOOTER_COLLECTION_COUNT + 1);
+  const hasMore = collections.length > FOOTER_COLLECTION_COUNT;
+
+  const shopGroup = {
+    title: "Shop",
+    links: [
+      { label: "All posters", href: "/products" },
+      ...collections.slice(0, FOOTER_COLLECTION_COUNT).map((collection) => ({
+        label: collection.title,
+        href: `/collections/${collection.handle}`,
+      })),
+      ...(hasMore
+        ? [{ label: "See all collections", href: "/collections" }]
+        : []),
+    ],
+  };
+
   return (
     <footer className="mt-24 border-t border-ink-200 bg-white">
       <Container className="py-14 lg:py-16">
@@ -25,30 +50,15 @@ export function Footer() {
               Printed in India, shipped to your wall.
             </p>
 
-            <form className="mt-6">
+            <div className="mt-6">
               <label
                 htmlFor="newsletter"
                 className="text-sm font-medium text-ink-900"
               >
-                Get 10% off your first order
+                Get {SUBSCRIBE_DISCOUNT_PERCENT}% off your first order
               </label>
-              <div className="mt-2 flex gap-2">
-                <input
-                  id="newsletter"
-                  type="email"
-                  required
-                  placeholder="you@email.com"
-                  className="h-11 w-full min-w-0 rounded-full border border-ink-200 bg-paper px-4 text-sm text-ink-900 placeholder:text-ink-400 focus:border-brand-400 focus:outline-none"
-                />
-                <button
-                  type="submit"
-                  aria-label="Subscribe"
-                  className="grid size-11 shrink-0 place-items-center rounded-full bg-ink-950 text-white transition-colors hover:bg-brand-500"
-                >
-                  <ArrowRightIcon className="size-5" />
-                </button>
-              </div>
-            </form>
+              <SubscribeForm id="newsletter" className="mt-2" />
+            </div>
 
             <div className="mt-6 flex gap-2">
               <Link
@@ -69,7 +79,7 @@ export function Footer() {
           </div>
 
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
-            {FOOTER_NAV.map((group) => (
+            {[shopGroup, ...FOOTER_NAV].map((group) => (
               <nav key={group.title} aria-label={group.title}>
                 <h3 className="text-sm font-semibold text-ink-950">
                   {group.title}

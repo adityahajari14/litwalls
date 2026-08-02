@@ -31,7 +31,7 @@ const FAQS = [
   {
     question: "Can I print my own design?",
     answer:
-      "Yes. Upload any image on our Custom page. For a crisp A3 we recommend at least 3500×2480 pixels; we'll tell you before you pay if your file is too small to print well.",
+      "Yes. Upload any image on our Custom page, pick a size, and we print it on the same paper as everything else. We check your file's resolution as you upload it and tell you before you pay if it's too small to print sharply at the size you picked.",
   },
   {
     question: "Do you do bulk or corporate orders?",

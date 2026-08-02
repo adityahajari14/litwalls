@@ -12,9 +12,11 @@ export type Review = {
 };
 
 /**
- * Real reviews only. Wire this to a reviews app (Judge.me, Loox, or a Shopify
- * metafield) and pass them in — the section renders nothing while empty rather
- * than inventing social proof.
+ * Renders nothing when handed an empty array, so the section can never invent
+ * social proof on its own. Whatever it displays came from its caller.
+ *
+ * Reviews come from getReviews, which returns nothing in production until a
+ * real reviews app is connected — see src/lib/reviews.ts.
  */
 export function Reviews({ reviews = [] }: { reviews?: Review[] }) {
   if (reviews.length === 0) return null;

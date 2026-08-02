@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { ProductViewTracker } from "@/components/analytics/product-view";
 import { AddToCart } from "@/components/product/add-to-cart";
+import { BuyReassurance } from "@/components/product/buy-reassurance";
 import { Gallery } from "@/components/product/gallery";
 import { ProductGridSection } from "@/components/home/product-grid-section";
 import { Accordion } from "@/components/ui/accordion";
@@ -13,12 +15,48 @@ import { Price } from "@/components/ui/price";
 import { LeafIcon, ReturnIcon, TruckIcon } from "@/components/icons";
 import { discountPercent } from "@/lib/money";
 import {
-  defaultVariant,
   getProduct,
   getProductHandles,
   getProducts,
   getVariantQuantityAvailable,
 } from "@/lib/shopify/products";
+import { defaultVariant } from "@/lib/shopify/types";
+
+function Breadcrumb({ productType, title }: { productType: string; title: string }) {
+  return (
+    <nav aria-label="Breadcrumb" className="mb-6 hidden lg:block">
+      <ol className="flex flex-wrap items-center gap-1.5 text-sm text-ink-500">
+        <li>
+          <Link href="/" className="transition-colors hover:text-ink-900">
+            Home
+          </Link>
+        </li>
+        <li aria-hidden className="text-ink-300">
+          /
+        </li>
+        <li>
+          <Link href="/products" className="transition-colors hover:text-ink-900">
+            All posters
+          </Link>
+        </li>
+        {productType ? (
+          <>
+            <li aria-hidden className="text-ink-300">
+              /
+            </li>
+            <li className="text-ink-700">{productType}</li>
+          </>
+        ) : null}
+        <li aria-hidden className="text-ink-300">
+          /
+        </li>
+        <li aria-current="page" className="truncate text-ink-900">
+          {title}
+        </li>
+      </ol>
+    </nav>
+  );
+}
 
 type Params = { handle: string };
 
@@ -118,17 +156,59 @@ export default async function ProductPage({
   // access still renders the page — see getVariantQuantityAvailable.
   const maxQuantity = variant ? await getVariantQuantityAvailable(variant.id) : null;
 
+  // Feeds Google's product rich results — price and availability show up in
+  // the SERP, which qualifies the click before it costs anything. Deliberately
+  // omits aggregateRating: we have no real reviews, and marking up ratings we
+  // don't have is exactly what earns a manual action.
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.title,
+    description: product.description,
+    image: product.images.nodes.map((image) => image.url),
+    sku: variant?.id ?? product.id,
+    brand: { "@type": "Brand", name: product.vendor || "Litwalls" },
+    offers: {
+      "@type": "Offer",
+      url: `https://litwalls.in/products/${product.handle}`,
+      price: price.amount,
+      priceCurrency: price.currencyCode,
+      availability: available
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+    },
+  };
+
   return (
     <>
       <ProductViewTracker product={product} variant={variant} />
 
+      <script
+        type="application/ld+json"
+        // Values come from Shopify, not user input, and JSON.stringify escapes
+        // the payload — but the tag still must not be interpolated by hand.
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+      />
+
       <Container className="py-8 lg:py-12">
+        <Breadcrumb productType={product.productType} title={product.title} />
+
         <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
-          <Gallery images={product.images.nodes} title={product.title} />
+          <Gallery
+            images={product.images.nodes}
+            title={product.title}
+            badge={
+              !available ? (
+                <Badge tone="neutral">Sold out</Badge>
+              ) : percent > 0 ? (
+                <Badge tone="sale">{percent}% off</Badge>
+              ) : undefined
+            }
+          />
 
           <div className="lg:py-4">
             {product.productType ? (
-              <p className="text-xs font-semibold tracking-[0.18em] text-ink-500 uppercase">
+              <p className="text-xs font-semibold tracking-[0.18em] text-brand-600 uppercase">
                 {product.productType}
               </p>
             ) : null}
@@ -137,17 +217,15 @@ export default async function ProductPage({
               {product.title}
             </h1>
 
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              {/* The badge carries the discount, so the price line doesn't repeat it. */}
+            <div className="mt-4 flex flex-wrap items-baseline gap-3">
+              {/* The badge on the image now carries the discount, so the price
+                  line doesn't repeat it in text. */}
               <Price
                 price={price}
                 compareAt={compareAt}
                 showDiscount={false}
-                className="text-xl"
+                className="text-2xl"
               />
-              {percent > 0 && available ? (
-                <Badge tone="sale">{percent}% off</Badge>
-              ) : null}
             </div>
             <p className="mt-1 text-sm text-ink-500">
               Inclusive of all taxes. Shipping calculated at checkout.
@@ -162,21 +240,31 @@ export default async function ProductPage({
               />
             </div>
 
-            <ul className="mt-8 space-y-3 border-t border-ink-100 pt-6">
+            {/* Directly under the button, where the hesitation actually happens. */}
+            <BuyReassurance />
+
+            {/* A 3-up card row reads as a set of facts, not a checklist buried
+                in the page — this is what earns the "museum-grade" claim its
+                keep instead of just asserting it in prose. */}
+            <ul className="mt-8 grid grid-cols-3 gap-3 border-t border-ink-100 pt-8">
               {HIGHLIGHTS.map((highlight) => (
                 <li
                   key={highlight.text}
-                  className="flex items-center gap-3 text-sm text-ink-700"
+                  className="flex flex-col items-center gap-2 rounded-xl border border-ink-100 bg-white px-3 py-4 text-center shadow-card"
                 >
                   <highlight.icon className="size-5 shrink-0 text-brand-500" />
-                  {highlight.text}
+                  <span className="text-xs font-medium text-ink-700 text-pretty">
+                    {highlight.text}
+                  </span>
                 </li>
               ))}
             </ul>
 
             {product.description ? (
-              <div className="mt-8 border-t border-ink-100 pt-6">
-                <h2 className="text-sm font-semibold text-ink-950">Description</h2>
+              <div className="mt-8 rounded-card border border-ink-100 bg-white p-5">
+                <h2 className="text-sm font-semibold tracking-wide text-ink-950 uppercase">
+                  Description
+                </h2>
                 <div
                   className="mt-3 space-y-3 text-sm/6 text-ink-600 [&_a]:text-brand-600 [&_a]:underline [&_li]:list-disc [&_ul]:pl-5"
                   dangerouslySetInnerHTML={{ __html: product.descriptionHtml }}
@@ -184,7 +272,7 @@ export default async function ProductPage({
               </div>
             ) : null}
 
-            <div className="mt-8">
+            <div className="mt-6 rounded-card bg-white px-5">
               <Accordion items={SHIPPING_FAQ} />
             </div>
           </div>
@@ -194,6 +282,10 @@ export default async function ProductPage({
       <Suspense fallback={null}>
         <RelatedProducts handle={handle} />
       </Suspense>
+
+      {/* Clears the sticky mobile buy bar, which would otherwise sit on top of
+          the last row of related products. */}
+      <div aria-hidden className="h-20 sm:hidden" />
     </>
   );
 }

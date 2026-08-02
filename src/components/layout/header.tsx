@@ -2,10 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   BagIcon,
+  ChevronDownIcon,
   CloseIcon,
   MenuIcon,
   SearchIcon,
@@ -14,14 +15,61 @@ import {
 import { useCart } from "@/components/cart/cart-provider";
 import { MAIN_NAV } from "@/lib/navigation";
 import { cn } from "@/lib/cn";
+import type { Collection } from "@/lib/shopify/types";
 
 const ICON_BUTTON =
   "grid size-10 place-items-center rounded-full text-ink-700 transition-colors hover:bg-ink-100 hover:text-ink-950";
 
-export function Header() {
+/**
+ * Which MAIN_NAV item gets a collections submenu. Matched by href rather than
+ * a boolean on the nav item itself, so the submenu logic lives entirely here
+ * instead of leaking a header-specific concern into the shared nav config.
+ */
+const COLLECTIONS_HREF = "/collections";
+
+export function Header({ collections }: { collections: Collection[] }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileCollectionsOpen, setMobileCollectionsOpen] = useState(false);
+  const [collectionsMenuOpen, setCollectionsMenuOpen] = useState(false);
   const { cart, open: openCart } = useCart();
   const cartCount = cart?.totalQuantity ?? 0;
+
+  // Closes the whole drawer, not just its top level — reopening it later
+  // should start collapsed rather than wherever the Collections toggle was left.
+  function closeMenu() {
+    setMenuOpen(false);
+    setMobileCollectionsOpen(false);
+  }
+
+  /**
+   * Driven in JS rather than pure CSS group-hover: the trigger link and the
+   * dropdown panel are visually separated (the panel sits below with a gap
+   * for breathing room), and relying on the pointer staying over a continuous
+   * hoverable box across that gap was flaky in practice — a small lateral
+   * move while crossing it, or ordinary pointer jitter, closed the menu
+   * before the cursor reached it. A short close delay tolerates that: the
+   * timer is cancelled the instant the pointer lands on either the trigger or
+   * the panel, and only actually closes once it's left both for good.
+   */
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function openCollectionsMenu() {
+    if (closeTimer.current) {
+      clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
+    setCollectionsMenuOpen(true);
+  }
+
+  function scheduleCloseCollectionsMenu() {
+    closeTimer.current = setTimeout(() => setCollectionsMenuOpen(false), 200);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (closeTimer.current) clearTimeout(closeTimer.current);
+    };
+  }, []);
 
   // The drawer is a full-screen overlay; letting the page scroll behind it
   // strands the user somewhere else when they close it.
@@ -37,7 +85,7 @@ export function Header() {
   useEffect(() => {
     if (!menuOpen) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setMenuOpen(false);
+      if (event.key === "Escape") closeMenu();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -69,16 +117,56 @@ export function Header() {
 
         <nav aria-label="Main" className="ml-auto hidden lg:block">
           <ul className="flex items-center gap-8">
-            {MAIN_NAV.map((item) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className="relative text-[15px] text-ink-700 transition-colors hover:text-ink-950 after:absolute after:-bottom-1.5 after:left-0 after:h-0.5 after:w-0 after:bg-brand-500 after:transition-[width] after:duration-300 hover:after:w-full"
+            {MAIN_NAV.map((item) => {
+              const showSubmenu = item.href === COLLECTIONS_HREF && collections.length > 0;
+
+              return (
+                <li
+                  key={item.href}
+                  className="relative"
+                  onMouseEnter={showSubmenu ? openCollectionsMenu : undefined}
+                  onMouseLeave={showSubmenu ? scheduleCloseCollectionsMenu : undefined}
                 >
-                  {item.label}
-                </Link>
-              </li>
-            ))}
+                  <Link
+                    href={item.href}
+                    aria-haspopup={showSubmenu ? "true" : undefined}
+                    aria-expanded={showSubmenu ? collectionsMenuOpen : undefined}
+                    onFocus={showSubmenu ? openCollectionsMenu : undefined}
+                    onBlur={showSubmenu ? scheduleCloseCollectionsMenu : undefined}
+                    className="relative text-[15px] text-ink-700 transition-colors hover:text-ink-950 after:absolute after:-bottom-1.5 after:left-0 after:h-0.5 after:w-0 after:bg-brand-500 after:transition-[width] after:duration-300 hover:after:w-full"
+                  >
+                    {item.label}
+                  </Link>
+
+                  {showSubmenu ? (
+                    <div
+                      className={cn(
+                        "absolute left-1/2 top-full z-50 w-56 -translate-x-1/2 pt-3",
+                        "transition-[opacity,visibility] duration-150",
+                        collectionsMenuOpen
+                          ? "visible opacity-100"
+                          : "invisible opacity-0",
+                      )}
+                      onMouseEnter={openCollectionsMenu}
+                      onMouseLeave={scheduleCloseCollectionsMenu}
+                    >
+                      <ul className="rounded-2xl border border-ink-100 bg-white p-2 shadow-lift">
+                        {collections.map((collection) => (
+                          <li key={collection.id}>
+                            <Link
+                              href={`/collections/${collection.handle}`}
+                              className="block rounded-lg px-3.5 py-2.5 text-sm text-ink-700 transition-colors hover:bg-ink-50 hover:text-ink-950"
+                            >
+                              {collection.title}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                </li>
+              );
+            })}
           </ul>
         </nav>
 
@@ -114,7 +202,7 @@ export function Header() {
           <button
             type="button"
             aria-label="Close menu"
-            onClick={() => setMenuOpen(false)}
+            onClick={closeMenu}
             className="absolute inset-0 bg-ink-950/40 backdrop-blur-sm"
           />
           <div className="absolute inset-y-0 left-0 flex w-[min(20rem,85vw)] flex-col bg-paper shadow-lift">
@@ -128,7 +216,7 @@ export function Header() {
               />
               <button
                 type="button"
-                onClick={() => setMenuOpen(false)}
+                onClick={closeMenu}
                 className={ICON_BUTTON}
                 aria-label="Close menu"
               >
@@ -138,21 +226,77 @@ export function Header() {
 
             <nav aria-label="Mobile" className="flex-1 overflow-y-auto p-2">
               <ul>
-                {MAIN_NAV.map((item) => (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      onClick={() => setMenuOpen(false)}
-                      className="block rounded-lg px-4 py-3.5 font-medium text-ink-800 transition-colors hover:bg-ink-100"
-                    >
-                      {item.label}
-                    </Link>
-                  </li>
-                ))}
+                {MAIN_NAV.map((item) => {
+                  const showSubmenu = item.href === COLLECTIONS_HREF && collections.length > 0;
+
+                  if (!showSubmenu) {
+                    return (
+                      <li key={item.href}>
+                        <Link
+                          href={item.href}
+                          onClick={closeMenu}
+                          className="block rounded-lg px-4 py-3.5 font-medium text-ink-800 transition-colors hover:bg-ink-100"
+                        >
+                          {item.label}
+                        </Link>
+                      </li>
+                    );
+                  }
+
+                  // No hover on touch, so Collections gets a tap-to-expand
+                  // disclosure here instead of the desktop hover panel.
+                  return (
+                    <li key={item.href}>
+                      <div className="flex items-center rounded-lg hover:bg-ink-100">
+                        <Link
+                          href={item.href}
+                          onClick={closeMenu}
+                          className="flex-1 px-4 py-3.5 font-medium text-ink-800"
+                        >
+                          {item.label}
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => setMobileCollectionsOpen((open) => !open)}
+                          aria-expanded={mobileCollectionsOpen}
+                          aria-label={
+                            mobileCollectionsOpen
+                              ? "Hide collections"
+                              : "Show collections"
+                          }
+                          className="grid size-11 shrink-0 place-items-center text-ink-500"
+                        >
+                          <ChevronDownIcon
+                            className={cn(
+                              "size-4 transition-transform duration-200",
+                              mobileCollectionsOpen && "rotate-180",
+                            )}
+                          />
+                        </button>
+                      </div>
+
+                      {mobileCollectionsOpen ? (
+                        <ul className="ml-4 border-l border-ink-100 pl-4">
+                          {collections.map((collection) => (
+                            <li key={collection.id}>
+                              <Link
+                                href={`/collections/${collection.handle}`}
+                                onClick={closeMenu}
+                                className="block rounded-lg px-4 py-3 text-sm text-ink-600 transition-colors hover:bg-ink-100 hover:text-ink-900"
+                              >
+                                {collection.title}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : null}
+                    </li>
+                  );
+                })}
                 <li>
                   <Link
                     href="/account"
-                    onClick={() => setMenuOpen(false)}
+                    onClick={closeMenu}
                     className="block rounded-lg px-4 py-3.5 font-medium text-ink-800 transition-colors hover:bg-ink-100 sm:hidden"
                   >
                     Account

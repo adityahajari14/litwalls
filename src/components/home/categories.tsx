@@ -12,8 +12,8 @@ export function Categories({ collections }: { collections: Collection[] }) {
         <SectionHeading
           title="Shop by universe"
           subtitle="Find the wall that matches the fandom."
-          href="/products"
-          linkLabel="Browse everything"
+          href="/collections"
+          linkLabel="Browse all collections"
         />
       </Container>
 

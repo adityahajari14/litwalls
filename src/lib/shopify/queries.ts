@@ -94,6 +94,10 @@ const CART = /* GraphQL */ `
             ...Money
           }
         }
+        attributes {
+          key
+          value
+        }
         merchandise {
           ... on ProductVariant {
             id

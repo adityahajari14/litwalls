@@ -22,9 +22,9 @@ export function ProductGridSection({
     <section id={id} className="py-16 lg:py-24">
       <Container>
         <SectionHeading title={title} subtitle={subtitle} href={href} />
-        <ul className="mt-8 grid grid-cols-2 gap-x-4 gap-y-10 lg:grid-cols-4 lg:gap-x-6">
+        <ul className="mt-8 grid grid-cols-2 gap-x-4 gap-y-6 lg:grid-cols-4 lg:gap-6">
           {products.map((product, index) => (
-            <li key={product.id}>
+            <li key={product.id} className="h-full">
               <ProductCard product={product} priority={priority && index < 4} />
             </li>
           ))}

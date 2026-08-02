@@ -87,11 +87,6 @@ export async function getCollectionProducts(
   return { collection, products: products.nodes };
 }
 
-/** The default (and only) variant — what the Cart API needs as merchandise id. */
-export function defaultVariant(product: Product) {
-  return product.variants.nodes[0] ?? null;
-}
-
 /**
  * Stock level for the "Only N left" messaging. Requires the
  * `unauthenticated_read_product_inventory` scope; if the store's Storefront
