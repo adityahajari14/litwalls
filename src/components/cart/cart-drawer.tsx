@@ -80,6 +80,18 @@ function LineItem({ line }: { line: CartLine }) {
             </button>
           </div>
 
+          {/* The variant title IS the size for multi-size products. Without it
+              two lines of the same poster in different sizes look identical
+              apart from the price, which reads as a duplicate rather than a
+              deliberate choice. "Default Title" is Shopify's placeholder for a
+              product with no options, so it is never worth showing. */}
+          {line.merchandise.title &&
+          line.merchandise.title !== "Default Title" ? (
+            <p className="mt-1 text-xs text-ink-500">
+              {line.merchandise.title}
+            </p>
+          ) : null}
+
           <p className="mt-1 text-sm text-ink-600">
             {formatMoney(line.merchandise.price)}
           </p>

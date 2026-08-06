@@ -13,7 +13,11 @@ import { trackMetaAddToCart } from "@/lib/analytics/meta-pixel";
 import { discountPercent } from "@/lib/money";
 import { addItem } from "@/lib/shopify/actions";
 import { cn } from "@/lib/cn";
-import { defaultVariant, type Product } from "@/lib/shopify/types";
+import {
+  defaultVariant,
+  hasSizeChoice,
+  type Product,
+} from "@/lib/shopify/types";
 
 export function ProductCard({
   product,
@@ -31,18 +35,22 @@ export function ProductCard({
   const soldOut = !product.availableForSale;
 
   const variant = defaultVariant(product);
+  const needsSizeChoice = hasSizeChoice(product);
   const [pending, startTransition] = useTransition();
   const [added, setAdded] = useState(false);
   const { refresh, open } = useCart();
 
-  // Products have no options, so there is exactly one variant to add — a
-  // click is the whole decision. No picker, no page visit required.
+  // Quick-add only works when there is nothing to decide. Once a product has
+  // four sizes, one click has to guess which one — and guessing wrong sells
+  // someone an A5 when they wanted an A3. Multi-size cards send the customer
+  // to the product page instead, where the choice is explicit.
   //
   // No router.refresh() here: unlike the PDP, a grid card has no per-item
   // stock count on screen to reconcile, and addItem() already revalidates
   // the cart server-side — refreshing the whole grid on every click would
   // just be wasted work if someone quick-adds several cards in a row.
   function quickAdd(event: React.MouseEvent) {
+    if (needsSizeChoice) return; // let the Link navigate
     event.preventDefault();
     if (!variant || pending) return;
 
@@ -103,7 +111,9 @@ export function ProductCard({
             </div>
           )}
 
-          {!soldOut && variant ? (
+          {/* Hidden when a size must be chosen: the whole card is already a
+              link to the product page, which is where that choice belongs. */}
+          {!soldOut && variant && !needsSizeChoice ? (
             <button
               type="button"
               onClick={quickAdd}
@@ -137,7 +147,14 @@ export function ProductCard({
           <h3 className="line-clamp-1 text-[15px] font-medium text-ink-900 transition-colors group-hover:text-brand-600">
             {product.title}
           </h3>
-          <Price price={price} compareAt={compareAt} className="text-[15px]" />
+          {/* "from" once sizes differ in price — showing a bare A5 price for a
+              product whose A3 costs three times as much reads as a bait. */}
+          <div className="flex items-baseline gap-1.5">
+            {needsSizeChoice ? (
+              <span className="text-[13px] text-ink-500">from</span>
+            ) : null}
+            <Price price={price} compareAt={compareAt} className="text-[15px]" />
+          </div>
         </div>
       </Link>
     </article>

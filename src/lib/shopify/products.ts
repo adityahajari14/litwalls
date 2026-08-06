@@ -8,6 +8,7 @@ import {
   GET_PRODUCT_HANDLES,
   GET_PRODUCTS,
   GET_VARIANT_INVENTORY,
+  GET_VARIANTS_INVENTORY,
 } from "@/lib/shopify/queries";
 import type { Collection, Product } from "@/lib/shopify/types";
 
@@ -93,6 +94,43 @@ export async function getCollectionProducts(
  * token doesn't have it, this quietly returns null (unlimited/unknown stock)
  * rather than take down the page — see the comment on GET_VARIANT_INVENTORY.
  */
+/**
+ * Stock for every variant of a product, in one request.
+ *
+ * Used by the product page, where each size has its own stock level. Asking
+ * per variant would multiply every page's requests by the number of sizes,
+ * which during a full build is enough to get connections reset by Shopify.
+ *
+ * Degrades the same way as the single-variant version: a missing inventory
+ * scope yields nulls and the "Only N left" messaging simply goes quiet.
+ */
+export async function getVariantQuantities(
+  variantIds: string[],
+): Promise<Record<string, number | null>> {
+  const result: Record<string, number | null> = {};
+  for (const id of variantIds) result[id] = null;
+
+  if (variantIds.length === 0) return result;
+
+  try {
+    const data = await storefront<{
+      nodes: ({ id: string; quantityAvailable: number | null } | null)[];
+    }>(GET_VARIANTS_INVENTORY, {
+      variables: { ids: variantIds },
+      revalidate: 60,
+      tags: ["inventory"],
+    });
+
+    for (const node of data.nodes) {
+      if (node?.id) result[node.id] = node.quantityAvailable ?? null;
+    }
+  } catch {
+    // Leave every entry null — unknown stock, not zero stock.
+  }
+
+  return result;
+}
+
 export async function getVariantQuantityAvailable(
   variantId: string,
 ): Promise<number | null> {

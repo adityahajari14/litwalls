@@ -18,9 +18,9 @@ import {
   getProduct,
   getProductHandles,
   getProducts,
-  getVariantQuantityAvailable,
+  getVariantQuantities,
 } from "@/lib/shopify/products";
-import { defaultVariant } from "@/lib/shopify/types";
+import { defaultVariant, hasSizeChoice } from "@/lib/shopify/types";
 
 function Breadcrumb({ productType, title }: { productType: string; title: string }) {
   return (
@@ -154,7 +154,16 @@ export default async function ProductPage({
 
   // Fetched separately from the product so a store without inventory-read
   // access still renders the page — see getVariantQuantityAvailable.
-  const maxQuantity = variant ? await getVariantQuantityAvailable(variant.id) : null;
+  //
+  // Every variant, not just the default: stock differs per size, and the
+  // quantity stepper caps against whichever one is selected. Batched into one
+  // request — asking per variant multiplies every page's round trips by the
+  // number of sizes, which is enough to get a full build's connections reset.
+  const quantityBySize = await getVariantQuantities(
+    product.variants.nodes.map((node) => node.id),
+  );
+
+  const maxQuantity = variant ? (quantityBySize[variant.id] ?? null) : null;
 
   // Feeds Google's product rich results — price and availability show up in
   // the SERP, which qualifies the click before it costs anything. Deliberately
@@ -168,15 +177,30 @@ export default async function ProductPage({
     image: product.images.nodes.map((image) => image.url),
     sku: variant?.id ?? product.id,
     brand: { "@type": "Brand", name: product.vendor || "Litwalls" },
-    offers: {
-      "@type": "Offer",
-      url: `https://litwalls.in/products/${product.handle}`,
-      price: price.amount,
-      priceCurrency: price.currencyCode,
-      availability: available
-        ? "https://schema.org/InStock"
-        : "https://schema.org/OutOfStock",
-    },
+    // AggregateOffer once sizes are priced differently. A single Offer would
+    // advertise the A5 price for a listing whose A3 costs three times as much,
+    // and Google flags a mismatch between marked-up and displayed price.
+    offers: hasSizeChoice(product)
+      ? {
+          "@type": "AggregateOffer",
+          url: `https://litwalls.in/products/${product.handle}`,
+          priceCurrency: product.priceRange.minVariantPrice.currencyCode,
+          lowPrice: product.priceRange.minVariantPrice.amount,
+          highPrice: product.priceRange.maxVariantPrice.amount,
+          offerCount: product.variants.nodes.length,
+          availability: available
+            ? "https://schema.org/InStock"
+            : "https://schema.org/OutOfStock",
+        }
+      : {
+          "@type": "Offer",
+          url: `https://litwalls.in/products/${product.handle}`,
+          price: price.amount,
+          priceCurrency: price.currencyCode,
+          availability: available
+            ? "https://schema.org/InStock"
+            : "https://schema.org/OutOfStock",
+        },
   };
 
   return (
@@ -217,26 +241,18 @@ export default async function ProductPage({
               {product.title}
             </h1>
 
-            <div className="mt-4 flex flex-wrap items-baseline gap-3">
-              {/* The badge on the image now carries the discount, so the price
-                  line doesn't repeat it in text. */}
-              <Price
-                price={price}
-                compareAt={compareAt}
-                showDiscount={false}
-                className="text-2xl"
-              />
-            </div>
-            <p className="mt-1 text-sm text-ink-500">
-              Inclusive of all taxes. Shipping calculated at checkout.
-            </p>
-
+            {/* Price lives inside AddToCart because it must track the selected
+                size. Rendering it here as a server value would leave it
+                showing the cheapest variant's price after the customer picks
+                a bigger one — the exact mismatch that erodes trust at the
+                moment of purchase. */}
             <div className="mt-8">
               <AddToCart
                 product={product}
                 variant={variant}
                 available={available}
                 maxQuantity={maxQuantity}
+                quantityBySize={quantityBySize}
               />
             </div>
 

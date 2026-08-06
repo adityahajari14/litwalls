@@ -12,26 +12,66 @@ import { withClaimedDiscount } from "@/lib/checkout-url";
 import { LOW_STOCK_THRESHOLD } from "@/lib/marketing";
 import { addItem } from "@/lib/shopify/actions";
 import { useCart } from "@/components/cart/cart-provider";
-import type { Product, ProductVariant } from "@/lib/shopify/types";
+import {
+  hasSizeChoice,
+  SIZE_OPTION,
+  sizeOptions,
+  variantForSize,
+  type Product,
+  type ProductVariant,
+} from "@/lib/shopify/types";
+
+/** The size a variant represents, for display beside the legend. */
+function sizeOf(variant: ProductVariant): string {
+  return (
+    variant.selectedOptions.find((option) => option.name === SIZE_OPTION)
+      ?.value ?? variant.title
+  );
+}
 
 export function AddToCart({
   product,
   variant,
   available,
   maxQuantity,
+  quantityBySize,
 }: {
   product: Product;
+  /** The initially selected variant — the cheapest, for multi-size products. */
   variant: ProductVariant | null;
   available: boolean;
   maxQuantity: number | null;
+  /** Stock per variant id. Stock differs by size, so the stepper follows it. */
+  quantityBySize?: Record<string, number | null>;
 }) {
-  const merchandiseId = variant?.id ?? null;
+  // Selection lives here because everything downstream of it — price, stock,
+  // the sticky bar, what actually goes in the basket — has to move together.
+  // Splitting the selector out would mean four places reading a value that
+  // must never disagree.
+  const [selectedId, setSelectedId] = useState<string | null>(variant?.id ?? null);
+  const selected =
+    product.variants.nodes.find((v) => v.id === selectedId) ?? variant;
+
+  const sizes = sizeOptions(product);
+  const showSizes = hasSizeChoice(product) && sizes.length > 1;
+
+  const merchandiseId = selected?.id ?? null;
   const [quantity, setQuantity] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [buying, setBuying] = useState(false);
   const { refresh, open } = useCart();
   const router = useRouter();
+
+  const chooseSize = (size: string) => {
+    const match = variantForSize(product, size);
+    if (!match) return;
+    setSelectedId(match.id);
+    // A quantity valid for one size may exceed another's stock; resetting is
+    // less surprising than an add that silently fails.
+    setQuantity(1);
+    setError(null);
+  };
 
   // Drives the sticky mobile bar: it appears only once the real buttons have
   // scrolled away, so the two are never on screen competing with each other.
@@ -86,8 +126,10 @@ export function AddToCart({
       // the ok check so a failed add is never counted. "Buy now" adds a line
       // too, so both paths report it.
       if (cart) {
-        trackAddToCart(cart, product, variant, quantity);
-        trackMetaAddToCart(product, variant, quantity);
+        // `selected`, not the prop: revenue has to be attributed to the size
+        // the customer actually bought.
+        trackAddToCart(cart, product, selected, quantity);
+        trackMetaAddToCart(product, selected, quantity);
       }
 
       if (then === "checkout") {
@@ -109,26 +151,84 @@ export function AddToCart({
 
   const busy = pending || buying;
 
+  // Stock for the SELECTED size, falling back to the page's initial value.
+  const stock =
+    (selected && quantityBySize?.[selected.id] !== undefined
+      ? quantityBySize[selected.id]
+      : maxQuantity) ?? null;
+
   // Only claim scarcity when Shopify actually told us the number. A null count
   // means the token lacks the inventory scope — say nothing rather than invent
   // pressure.
-  const lowStock =
-    maxQuantity !== null && maxQuantity > 0 && maxQuantity <= LOW_STOCK_THRESHOLD;
+  const lowStock = stock !== null && stock > 0 && stock <= LOW_STOCK_THRESHOLD;
+
+  const displayPrice = selected?.price ?? product.priceRange.minVariantPrice;
+  const displayCompareAt =
+    selected?.compareAtPrice ?? product.compareAtPriceRange.minVariantPrice;
 
   return (
     <>
       <div className="space-y-4">
+        <div>
+          <Price
+            price={displayPrice}
+            compareAt={displayCompareAt}
+            showDiscount={false}
+            className="text-2xl"
+          />
+          <p className="mt-1 text-sm text-ink-500">
+            Inclusive of all taxes. Shipping calculated at checkout.
+          </p>
+        </div>
+
+        {showSizes ? (
+          <fieldset>
+            <legend className="text-sm font-medium text-ink-900">
+              Size
+              {selected ? (
+                <span className="ml-2 font-normal text-ink-600">
+                  {sizeOf(selected)}
+                </span>
+              ) : null}
+            </legend>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {sizes.map((size) => {
+                const candidate = variantForSize(product, size);
+                const isSelected = candidate?.id === selected?.id;
+                const soldOut = candidate ? !candidate.availableForSale : true;
+
+                return (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => chooseSize(size)}
+                    disabled={busy || !candidate}
+                    aria-pressed={isSelected}
+                    className={`rounded-lg border px-3.5 py-2 text-sm transition-colors disabled:opacity-40 ${
+                      isSelected
+                        ? "border-ink-900 bg-ink-900 text-paper"
+                        : "border-ink-200 text-ink-800 hover:border-ink-400"
+                    } ${soldOut && !isSelected ? "line-through" : ""}`}
+                  >
+                    {size}
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
+        ) : null}
+
         <div className="flex flex-wrap items-center gap-3">
           <QuantityStepper
             value={quantity}
             onChange={setQuantity}
-            max={maxQuantity ?? undefined}
+            max={stock ?? undefined}
             disabled={busy}
           />
           {lowStock ? (
             <p className="flex items-center gap-1.5 text-sm font-medium text-brand-600">
               <span className="size-1.5 animate-pulse rounded-full bg-brand-500" />
-              Only {maxQuantity} left
+              Only {stock} left
             </p>
           ) : (
             <p className="flex items-center gap-1.5 text-sm text-ink-600">
@@ -181,8 +281,8 @@ export function AddToCart({
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs text-ink-600">{product.title}</p>
             <Price
-              price={variant?.price ?? product.priceRange.minVariantPrice}
-              compareAt={variant?.compareAtPrice}
+              price={selected?.price ?? product.priceRange.minVariantPrice}
+              compareAt={selected?.compareAtPrice}
               showDiscount={false}
               className="mt-0.5"
             />

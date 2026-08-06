@@ -56,11 +56,22 @@ const PRODUCT = /* GraphQL */ `
         ...Money
       }
     }
-    variants(first: 1) {
+    options {
+      name
+      values
+    }
+    variants(first: 10) {
       nodes {
         id
         title
         availableForSale
+        selectedOptions {
+          name
+          value
+        }
+        image {
+          ...Image
+        }
         price {
           ...Money
         }
@@ -174,6 +185,24 @@ export const GET_VARIANT_INVENTORY = /* GraphQL */ `
   query GetVariantInventory($id: ID!) {
     node(id: $id) {
       ... on ProductVariant {
+        quantityAvailable
+      }
+    }
+  }
+`;
+
+/**
+ * Stock for several variants at once.
+ *
+ * A product with four sizes needs four stock numbers, and asking for them one
+ * at a time turns a 179-page build into several hundred extra round trips —
+ * enough to get connections reset. `nodes` answers in a single request.
+ */
+export const GET_VARIANTS_INVENTORY = /* GraphQL */ `
+  query GetVariantsInventory($ids: [ID!]!) {
+    nodes(ids: $ids) {
+      ... on ProductVariant {
+        id
         quantityAvailable
       }
     }
