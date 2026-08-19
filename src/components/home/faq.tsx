@@ -7,10 +7,9 @@ import {
   FIRST_ORDER_MINIMUM,
   FLAT_SHIPPING_FEE,
   FREE_SHIPPING_THRESHOLD,
-  BUNDLES,
+  SINGLE_BUNDLES,
+  SPLIT_BUNDLES,
 } from "@/lib/offers";
-
-const [SMALL_BUNDLE, BIG_BUNDLE] = BUNDLES;
 
 const FAQS = [
   {
@@ -36,7 +35,7 @@ const FAQS = [
   {
     question: "What offers can I use?",
     answer:
-      `Buy ${SMALL_BUNDLE.pay} posters and you get ${SMALL_BUNDLE.total}; buy ${BIG_BUNDLE.pay} and you get ${BIG_BUNDLE.total} — mix any designs you like, the cheapest ones come free. First orders over ₹${FIRST_ORDER_MINIMUM} also get ₹${FIRST_ORDER_DISCOUNT} off with code ${FIRST_ORDER_CODE}, and first orders over ₹${FREE_SHIPPING_THRESHOLD} include 5 free mini pocket prints.`,
+      `On single posters: buy ${SINGLE_BUNDLES.map((b) => `${b.pay} and get ${b.total}`).join(", buy ")} — mix any designs you like, the cheapest ones come free. On split-in-3 sets: buy ${SPLIT_BUNDLES.map((b) => `${b.pay} and get ${b.total}`).join(", or buy ")} sets. First orders over ₹${FIRST_ORDER_MINIMUM} also get ₹${FIRST_ORDER_DISCOUNT} off with code ${FIRST_ORDER_CODE}, and first orders over ₹${FREE_SHIPPING_THRESHOLD} include 5 free mini pocket prints.`,
   },
   {
     question: "What if my poster arrives damaged or blurred?",

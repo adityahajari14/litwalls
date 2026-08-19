@@ -1,26 +1,14 @@
 /**
- * Live offers, and the record of which proposed offers were rejected.
+ * Live offers. Every offer here is a promise the business has to honour at
+ * its own cost, so each carries the discount code that must exist in Shopify
+ * Admin. An offer advertised on the home page with no matching Shopify
+ * discount is worse than no offer: the customer reaches checkout, the code
+ * fails, and the order is abandoned at the last step.
  *
- * Every offer here is a promise the business has to honour at its own cost, so
- * each carries the discount code that must exist in Shopify Admin. An offer
- * advertised on the home page with no matching Shopify discount is worse than
- * no offer: the customer reaches checkout, the code fails, and the order is
- * abandoned at the last step.
- *
- * ── Why the aggressive tiers are not here ──────────────────────────────────
- * The proposed ladder was buy-4-get-3, buy-5-get-5, buy-6-get-12 and
- * buy-10-get-26. Priced against the A4 poster at ₹99 those work out to 43%,
- * 50%, 67% and 72% off respectively. The last two sell a poster for ₹33 and
- * ₹27.50 — at or below what 300gsm stock, ink, a rigid tube and courier cost
- * to deliver, before counting the ₹100 first-order discount that stacks on top
- * and the free shipping the order size guarantees. They do not convert better
- * than a 2-for-3 either: past roughly "buy 4", the offer stops recruiting new
- * buyers and starts discounting people who were going to buy anyway, while
- * signalling that the everyday price is fiction.
- *
- * The two tiers kept below are the ones that still clear a margin at a
- * realistic cost per print, and they ladder — 4 and 6 are close enough that
- * someone holding 3 in the cart can see the next step is worth taking.
+ * Two separate bundle ladders, because they apply to different products:
+ * SINGLE_BUNDLES discounts single posters, SPLIT_BUNDLES discounts
+ * split-in-3 sets. A split "set" is one 3-panel poster, priced and sold as
+ * one unit — "buy 2, get 8" means 8 sets (24 panels total), not 8 panels.
  */
 
 import { ENTRY_PRICE } from "@/lib/pricing";
@@ -51,25 +39,34 @@ export const FIRST_ORDER_DISCOUNT = 100;
 export const FIRST_ORDER_MINIMUM = 499;
 export const FIRST_ORDER_CODE = "LIT100";
 
-/**
- * The bundle ladder. `pay` items are charged, `total` arrive.
- *
- * Kept to two rungs deliberately: a ladder a customer can hold in their head
- * converts better than a four-rung table they have to study, and the deeper
- * rungs lost money (see the note at the top of this file).
- */
 export type Bundle = {
   pay: number;
   total: number;
   code: string;
 };
 
-export const BUNDLES: Bundle[] = [
+/** Buy-X-get-Y on single posters only. */
+export const SINGLE_BUNDLES: Bundle[] = [
   { pay: 4, total: 7, code: "LIT4FOR7" },
-  { pay: 6, total: 10, code: "LIT6FOR10" },
+  { pay: 5, total: 10, code: "LIT5FOR10" },
+  { pay: 6, total: 18, code: "LIT6FOR18" },
+  { pay: 10, total: 36, code: "LIT10FOR36" },
 ];
 
-/** What a bundle works out to per poster, at a given unit price. */
+/**
+ * Buy-X-get-Y on split-in-3 sets. A "set" is one 3-panel split poster, sold
+ * and priced as a single unit — this ladder counts sets, not panels.
+ */
+export const SPLIT_BUNDLES: Bundle[] = [
+  { pay: 1, total: 3, code: "LITSPLIT1FOR3" },
+  { pay: 2, total: 8, code: "LITSPLIT2FOR8" },
+];
+
+/** Backward-compatible alias — existing components read BUNDLES for the
+ *  single-poster ladder. */
+export const BUNDLES = SINGLE_BUNDLES;
+
+/** What a bundle works out to per unit, at a given unit price. */
 export function bundleUnitPrice(bundle: Bundle, unitPrice: number): number {
   return (bundle.pay * unitPrice) / bundle.total;
 }
@@ -90,8 +87,15 @@ export const OFFERS: Offer[] = [
   {
     id: "bundle",
     headline: "Buy 4, get 7",
-    detail: `Mix any posters. Buy 6 and get 10 — that's ${bundleSavingPercent(BUNDLES[1])}% off.`,
-    code: BUNDLES[0].code,
+    detail: "Mix any posters. The more you buy, the better it gets — up to buy 10, get 36.",
+    code: SINGLE_BUNDLES[0].code,
+    featured: true,
+  },
+  {
+    id: "split-bundle",
+    headline: "Buy 1 split set, get 3",
+    detail: "Buy 2 split-in-3 sets and get 8 — mix any designs.",
+    code: SPLIT_BUNDLES[0].code,
     featured: true,
   },
   {

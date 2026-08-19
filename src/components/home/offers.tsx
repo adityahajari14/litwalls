@@ -1,30 +1,28 @@
 import { ButtonLink } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
-import { GiftIcon, ReturnIcon, TagIcon, TruckIcon } from "@/components/icons";
+import { GiftIcon, ReturnIcon, ScissorsIcon, TagIcon, TruckIcon } from "@/components/icons";
 import {
-  BUNDLES,
-  bundleSavingPercent,
   FIRST_ORDER_CODE,
   FIRST_ORDER_DISCOUNT,
   FIRST_ORDER_MINIMUM,
   FREE_SHIPPING_THRESHOLD,
   GIFT_DESCRIPTION,
   GIFT_THRESHOLD,
+  SINGLE_BUNDLES,
+  SPLIT_BUNDLES,
 } from "@/lib/offers";
 
 /**
  * Every live offer, in one place a customer can scan in about five seconds.
  *
  * Offers scattered across a page get read as noise; collected into one block
- * under one heading they read as a reason to fill the basket. The bundle card
- * leads because it is the only one that changes what someone puts in the cart
- * rather than just what they pay for it.
+ * under one heading they read as a reason to fill the basket. The two bundle
+ * cards lead because they're the only offers that change what someone puts in
+ * the cart rather than just what they pay for it.
  *
  * Each card states its own condition inline. An offer whose catch is disclosed
  * only at checkout converts once and then generates a support ticket.
  */
-
-const [SMALL_BUNDLE, BIG_BUNDLE] = BUNDLES;
 
 export function Offers() {
   return (
@@ -41,28 +39,48 @@ export function Offers() {
         </div>
 
         <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {/* The bundle spans two columns on desktop: it carries a two-rung
-              ladder, and cramming both rungs into a quarter-width card is what
-              makes a good offer look like fine print. */}
+          {/* Spans two columns: it carries a four-rung ladder, and cramming
+              that into a quarter-width card is what makes a good offer look
+              like fine print. */}
           <li className="rounded-card bg-brand-500 p-6 sm:col-span-2">
             <TagIcon className="size-7 text-white" />
             <h3 className="mt-4 font-display text-3xl text-white">
-              Buy {SMALL_BUNDLE.pay}, get {SMALL_BUNDLE.total}
+              Buy more posters, pay for less
             </h3>
             <p className="mt-2 text-sm/6 text-white/90 text-pretty">
-              Mix any posters you like — the {SMALL_BUNDLE.total - SMALL_BUNDLE.pay}{" "}
-              cheapest come free. Go up to {BIG_BUNDLE.pay} and you get{" "}
-              {BIG_BUNDLE.total}, which works out to{" "}
-              {bundleSavingPercent(BIG_BUNDLE)}% off.
+              Applies to single posters — mix any designs you like, the
+              cheapest ones come free.
             </p>
 
             <div className="mt-5 flex flex-wrap gap-2">
-              {BUNDLES.map((bundle) => (
+              {SINGLE_BUNDLES.map((bundle) => (
                 <span
                   key={bundle.code}
                   className="rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold text-white"
                 >
                   {bundle.pay} → {bundle.total} · {bundle.code}
+                </span>
+              ))}
+            </div>
+          </li>
+
+          <li className="rounded-card bg-white p-6 sm:col-span-2">
+            <ScissorsIcon className="size-7 text-brand-500" />
+            <h3 className="mt-4 font-display text-3xl text-ink-950">
+              Split posters, stacked deeper
+            </h3>
+            <p className="mt-2 text-sm/6 text-ink-600 text-pretty">
+              Applies to split-in-3 sets — mix any designs you like.
+            </p>
+
+            <div className="mt-5 flex flex-wrap gap-2">
+              {SPLIT_BUNDLES.map((bundle) => (
+                <span
+                  key={bundle.code}
+                  className="rounded-full bg-ink-100 px-3 py-1.5 text-xs font-semibold text-ink-900"
+                >
+                  {bundle.pay} set{bundle.pay > 1 ? "s" : ""} → {bundle.total} sets ·{" "}
+                  {bundle.code}
                 </span>
               ))}
             </div>
@@ -113,7 +131,7 @@ export function Offers() {
             </p>
           </li>
 
-          <li className="flex flex-col justify-between rounded-card bg-white p-6 sm:col-span-2 lg:col-span-1">
+          <li className="flex flex-col justify-between rounded-card bg-white p-6 lg:col-span-2">
             <div>
               <h3 className="font-display text-2xl text-ink-950">
                 Start with one
