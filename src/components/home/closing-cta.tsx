@@ -1,7 +1,8 @@
 import { ButtonLink } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
 import { CheckIcon } from "@/components/icons";
-import { FREE_SHIPPING_THRESHOLD } from "@/lib/marketing";
+import { FREE_SHIPPING_THRESHOLD } from "@/lib/offers";
+import { ENTRY_PRICE } from "@/lib/pricing";
 import { formatMoney } from "@/lib/money";
 
 /**
@@ -16,9 +17,9 @@ export function ClosingCta() {
   });
 
   const assurances = [
-    `Free shipping over ${threshold}`,
+    `Free delivery over ${threshold}`,
     "Dispatched within 24 hours",
-    "7-day replacement if it arrives damaged",
+    "Free replacement if it arrives damaged",
   ];
 
   return (
@@ -29,7 +30,7 @@ export function ClosingCta() {
             Your wall is still empty
           </h2>
           <p className="mx-auto mt-4 max-w-md text-lg text-ink-600 text-pretty">
-            Museum-grade 300gsm matte prints, from ₹149. Pick one tonight and
+            300gsm matte prints from ₹{ENTRY_PRICE}. Pick one tonight and
             it&apos;s on your wall this week.
           </p>
 

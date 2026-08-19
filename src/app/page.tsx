@@ -1,15 +1,28 @@
 import { Categories } from "@/components/home/categories";
 import { ClosingCta } from "@/components/home/closing-cta";
-import { CustomBanner } from "@/components/home/custom-banner";
+import { CustomPrints } from "@/components/home/custom-prints";
 import { Faq } from "@/components/home/faq";
 import { Hero } from "@/components/home/hero";
+import { HowWePrint } from "@/components/home/how-we-print";
+import { Offers } from "@/components/home/offers";
+import { Pricing } from "@/components/home/pricing";
 import { ProductGridSection } from "@/components/home/product-grid-section";
 import { Reviews } from "@/components/home/reviews";
 import { TrustStrip } from "@/components/home/trust-strip";
-import { WhyChooseUs } from "@/components/home/why-choose-us";
 import { getReviews } from "@/lib/reviews";
 import { getCollections, getProducts } from "@/lib/shopify/products";
 
+/**
+ * Section order is the argument the page makes, in order:
+ *
+ *   want it → trust it → buy more of it → believe the quality → objections
+ *
+ * Offers sit high, right after the first product shelf, because the bundle
+ * changes how many posters someone puts in the basket — and it can only do
+ * that if they meet it before they have decided. WhyChooseUs was dropped: it
+ * asserted in adjectives what HowWePrint now demonstrates in specs, and two
+ * sections making the same claim weaken each other.
+ */
 export default async function Home() {
   const [collections, bestSellers, newArrivals, reviews] = await Promise.all([
     getCollections(5),
@@ -37,7 +50,11 @@ export default async function Home() {
         />
       ) : null}
 
-      <CustomBanner />
+      <Offers />
+
+      {/* The custom range is the part of the catalogue nobody else can copy,
+          and two of its four formats exist here and nowhere else on the site. */}
+      <CustomPrints />
 
       {newArrivals.length > 0 ? (
         <ProductGridSection
@@ -52,13 +69,10 @@ export default async function Home() {
           getReviews. Renders nothing rather than inventing social proof. */}
       <Reviews reviews={reviews} />
 
-      {/* Other customers first, then our own pitch: peer proof is what makes
-          the self-description credible, not the other way round. */}
-      <WhyChooseUs />
+      {/* Quality claims land better after peer proof than before it. */}
+      <HowWePrint />
+      <Pricing />
       <Faq />
-
-      {/* The FAQ used to be the last thing on the page — a visitor who read to
-          the bottom had no way to act on it without scrolling back up. */}
       <ClosingCta />
     </>
   );

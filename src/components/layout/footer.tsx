@@ -5,6 +5,7 @@ import { InstagramIcon, TwitterIcon } from "@/components/icons";
 import { SubscribeForm } from "@/components/marketing/subscribe-form";
 import { Container } from "@/components/ui/container";
 import { SUBSCRIBE_DISCOUNT_PERCENT } from "@/lib/marketing";
+import { SUPPORT_EMAIL } from "@/lib/company";
 import { FOOTER_NAV } from "@/lib/navigation";
 import { getCollections } from "@/lib/shopify/products";
 
@@ -46,7 +47,7 @@ export async function Footer() {
               className="h-9 w-auto"
             />
             <p className="mt-4 text-sm text-ink-600 text-pretty">
-              Museum-grade posters of the movies, music and anime you love.
+              Posters of the movies, music and anime you love, on 300gsm matte paper.
               Printed in India, shipped to your wall.
             </p>
 
@@ -101,7 +102,28 @@ export async function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col gap-4 border-t border-ink-200 pt-8 sm:flex-row sm:items-center sm:justify-between">
+        {/* Fan-art disclaimer. It sits above the copyright line and is
+            deliberately the loudest thing in the footer: for a store selling
+            prints of films, music and anime, saying plainly that these are not
+            official merchandise is both the honest position and the one that
+            keeps a takedown notice from being the first time the question gets
+            asked. */}
+        <div className="mt-12 rounded-card bg-brand-500 px-6 py-5 text-center">
+          <p className="text-sm/6 font-medium text-white text-pretty">
+            All artwork on this site is fan art and is not presented as official
+            merchandise unless stated otherwise. If you have any concern about
+            artwork published here, write to us at{" "}
+            <a
+              href={`mailto:${SUPPORT_EMAIL}`}
+              className="font-semibold underline underline-offset-2"
+            >
+              {SUPPORT_EMAIL}
+            </a>{" "}
+            and we will respond promptly.
+          </p>
+        </div>
+
+        <div className="mt-8 flex flex-col gap-4 border-t border-ink-200 pt-8 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-ink-500">
             © {new Date().getFullYear()} Litwalls. All rights reserved.
           </p>

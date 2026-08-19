@@ -9,7 +9,7 @@ import { defaultVariant } from "@/lib/shopify/types";
 export const metadata: Metadata = {
   title: "Custom posters",
   description:
-    "Turn any image into a museum-grade poster. Upload your artwork, pick a size, and we print it on 300gsm matte paper.",
+    "Turn any image into a poster. Upload your artwork, pick a size, and we print it on 300gsm matte paper.",
 };
 
 export default async function CustomPage() {

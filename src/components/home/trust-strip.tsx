@@ -1,21 +1,22 @@
 import { LeafIcon, ReturnIcon, ShieldIcon, TruckIcon } from "@/components/icons";
 import { Container } from "@/components/ui/container";
+import { FREE_SHIPPING_THRESHOLD } from "@/lib/offers";
 
 const ITEMS = [
   {
     icon: TruckIcon,
-    title: "Free shipping over ₹499",
-    body: "Dispatched in 24 hours, delivered in 3–5 days.",
+    title: `Free delivery over ₹${FREE_SHIPPING_THRESHOLD}`,
+    body: "Dispatched in 24 hours, delivered in 3–6 days.",
   },
   {
     icon: LeafIcon,
     title: "300gsm matte paper",
-    body: "Museum-grade stock that never glares under light.",
+    body: "Thick, non-glare stock. Hangs flat, no curling.",
   },
   {
     icon: ReturnIcon,
-    title: "7-day easy returns",
-    body: "Damaged or not what you expected? We replace it.",
+    title: "Free replacement on damage",
+    body: "Arrived damaged or blurred? Send a video, we reprint it.",
   },
   {
     icon: ShieldIcon,

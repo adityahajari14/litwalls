@@ -99,7 +99,7 @@ const SHIPPING_FAQ = [
   {
     question: "Paper & printing",
     answer:
-      "Printed on 300gsm museum-grade matte paper with pigment inks. The matte finish means no glare from lamps or windows, and the stock is thick enough to hang flat without curling.",
+      "Printed on 300gsm matte paper. The matte finish means no glare from lamps or windows, and the stock is thick enough to hang flat without curling.",
   },
   {
     question: "Shipping",
@@ -114,7 +114,7 @@ const SHIPPING_FAQ = [
 ];
 
 const HIGHLIGHTS = [
-  { icon: LeafIcon, text: "300gsm museum-grade matte" },
+  { icon: LeafIcon, text: "300gsm matte paper" },
   { icon: TruckIcon, text: "Ships in 24 hours, rolled in a tube" },
   { icon: ReturnIcon, text: "7-day replacement if damaged" },
 ];
@@ -260,8 +260,8 @@ export default async function ProductPage({
             <BuyReassurance />
 
             {/* A 3-up card row reads as a set of facts, not a checklist buried
-                in the page — this is what earns the "museum-grade" claim its
-                keep instead of just asserting it in prose. */}
+                in the page — concrete specs a customer can compare, rather
+                than adjectives asserted in prose. */}
             <ul className="mt-8 grid grid-cols-3 gap-3 border-t border-ink-100 pt-8">
               {HIGHLIGHTS.map((highlight) => (
                 <li

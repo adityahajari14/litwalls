@@ -1,8 +1,12 @@
 import {
+  BUNDLES,
+  FIRST_ORDER_CODE,
+  FIRST_ORDER_DISCOUNT,
   FREE_SHIPPING_THRESHOLD,
-  SUBSCRIBE_DISCOUNT_PERCENT,
-} from "@/lib/marketing";
+} from "@/lib/offers";
 import { formatMoney } from "@/lib/money";
+
+const [SMALL_BUNDLE] = BUNDLES;
 
 export function AnnouncementBar() {
   const threshold = formatMoney({
@@ -12,16 +16,19 @@ export function AnnouncementBar() {
 
   const messages = [
     {
-      text: `Free shipping over ${threshold}`,
+      // The bundle leads: it is the only message here that changes how much
+      // someone puts in the basket rather than what they pay for it.
+      text: `Buy ${SMALL_BUNDLE.pay}, get ${SMALL_BUNDLE.total}`,
       className: "",
     },
     {
-      // The same offer the popup makes, stated once up front. Someone who
-      // dismissed the popup can still find the discount without being chased.
-      text: `${SUBSCRIBE_DISCOUNT_PERCENT}% off your first order`,
+      text: `Free delivery over ${threshold}`,
       className: "hidden sm:flex",
     },
-    { text: "Dispatched in 24 hours", className: "hidden lg:flex" },
+    {
+      text: `₹${FIRST_ORDER_DISCOUNT} off your first order with ${FIRST_ORDER_CODE}`,
+      className: "hidden lg:flex",
+    },
   ];
 
   return (

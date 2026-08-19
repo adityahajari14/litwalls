@@ -1,17 +1,27 @@
 import { Accordion } from "@/components/ui/accordion";
 import { Container } from "@/components/ui/container";
 import { SectionHeading } from "@/components/ui/section-heading";
+import {
+  FIRST_ORDER_CODE,
+  FIRST_ORDER_DISCOUNT,
+  FIRST_ORDER_MINIMUM,
+  FLAT_SHIPPING_FEE,
+  FREE_SHIPPING_THRESHOLD,
+  BUNDLES,
+} from "@/lib/offers";
+
+const [SMALL_BUNDLE, BIG_BUNDLE] = BUNDLES;
 
 const FAQS = [
   {
-    question: "What paper quality do you use for posters?",
+    question: "What paper do you print on?",
     answer:
-      "Every poster is printed on 300gsm museum-grade matte paper. It's thick enough to hang without curling, and the matte finish means no glare from lamps or windows — unlike the glossy 150gsm stock most cheap prints use.",
+      "Every poster is printed on 300gsm matte paper. It's thick enough to hang without curling, and the matte finish means no glare from lamps or windows — unlike the thin 150gsm stock a lot of cheap prints use.",
   },
   {
     question: "What sizes are available, and how do I choose?",
     answer:
-      "A5 (148×210mm) suits a desk or a gallery cluster. A4 (210×297mm) is the safe default for most walls. A3 (297×420mm) is the statement size — pick it if the poster is going above a bed or sofa.",
+      "A5 (148×210mm) suits a desk or a gallery cluster. A4 (210×297mm) is the safe default for most walls. A3 (297×420mm) is the statement size — pick it if the poster is going above a bed or sofa. 13″×19″ is the largest we print. Split posters spread one image across three panels for a wider wall.",
   },
   {
     question: "How long does delivery take?",
@@ -19,19 +29,24 @@ const FAQS = [
       "We dispatch within 24 hours of your order. Metro cities usually receive in 3–4 days; the rest of India in 4–7 days. You'll get a tracking link by SMS and email as soon as it ships.",
   },
   {
-    question: "How much is shipping?",
+    question: "How much is delivery?",
     answer:
-      "Free on orders over ₹499. Below that it's a flat ₹49 anywhere in India. There are no surprise charges at checkout.",
+      `Free on orders over ₹${FREE_SHIPPING_THRESHOLD}. Below that it's a flat ₹${FLAT_SHIPPING_FEE} anywhere in India. There are no surprise charges at checkout — the price you see is the price you pay.`,
   },
   {
-    question: "What if my poster arrives damaged?",
+    question: "What offers can I use?",
     answer:
-      "Send us a photo within 7 days and we'll ship a replacement free — no return shipping, no arguing. Posters travel rolled in a rigid tube, so this is rare, but couriers are couriers.",
+      `Buy ${SMALL_BUNDLE.pay} posters and you get ${SMALL_BUNDLE.total}; buy ${BIG_BUNDLE.pay} and you get ${BIG_BUNDLE.total} — mix any designs you like, the cheapest ones come free. First orders over ₹${FIRST_ORDER_MINIMUM} also get ₹${FIRST_ORDER_DISCOUNT} off with code ${FIRST_ORDER_CODE}, and first orders over ₹${FREE_SHIPPING_THRESHOLD} include 5 free mini pocket prints.`,
   },
   {
-    question: "Can I print my own design?",
+    question: "What if my poster arrives damaged or blurred?",
     answer:
-      "Yes. Upload any image on our Custom page, pick a size, and we print it on the same paper as everything else. We check your file's resolution as you upload it and tell you before you pay if it's too small to print sharply at the size you picked.",
+      "Send us a short video of the print within 7 days and we ship a replacement free — you keep the original, and there's no return shipping to pay. We ask for a video rather than a photo because it shows the damage clearly enough to approve the replacement on the spot, without a back-and-forth. Posters travel rolled in a rigid tube, so this is rare, but couriers are couriers.",
+  },
+  {
+    question: "Can I print my own photo or design?",
+    answer:
+      `Yes — that's a big part of what we do. Upload any image on our Custom page and we'll print it as a single poster, a three-panel split poster, mini pocket prints or polaroids. Mini prints and polaroids are custom-only, starting at ₹99 for a pack of 5. We check your file's resolution as you upload it and tell you before you pay if it's too small to print sharply at the size you picked.`,
   },
   {
     question: "Do you do bulk or corporate orders?",

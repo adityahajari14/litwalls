@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     template: "%s | Litwalls",
   },
   description:
-    "Museum-grade 300gsm matte posters of the movies, music and anime you love. Free shipping over ₹499, 7-day easy returns.",
+    "300gsm matte posters of the movies, music and anime you love. From ₹79, free delivery over ₹349, free replacement on damage.",
   openGraph: {
     type: "website",
     siteName: "Litwalls",

@@ -7,7 +7,7 @@ import { getProducts } from "@/lib/shopify/products";
 export const metadata: Metadata = {
   title: "All posters",
   description:
-    "Every Litwalls poster — movies, music, anime and more, printed on 300gsm museum-grade matte paper.",
+    "Every Litwalls poster — movies, music, anime and more, printed on 300gsm matte paper.",
 };
 
 export default async function ProductsPage() {
@@ -21,7 +21,7 @@ export default async function ProductsPage() {
         </h1>
         <p className="mt-3 text-ink-600 text-pretty">
           {products.length} print{products.length === 1 ? "" : "s"}, each on
-          300gsm museum-grade matte paper.
+          300gsm matte paper.
         </p>
       </header>
 

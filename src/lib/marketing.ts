@@ -8,8 +8,14 @@
  * shipping profile says ₹599 is worse than no progress bar at all.
  */
 
-/** Must match the "Free shipping" rate's minimum order value in Shopify Settings → Shipping. */
-export const FREE_SHIPPING_THRESHOLD = 499;
+/**
+ * Re-exported from offers.ts, which is now the single source of truth for
+ * every rupee figure the site promises. Defining it in two files is how the
+ * cart's progress bar and the announcement bar end up quoting different
+ * thresholds — so this one only forwards.
+ */
+export { FREE_SHIPPING_THRESHOLD } from "@/lib/offers";
+import { FREE_SHIPPING_THRESHOLD } from "@/lib/offers";
 
 /** Must match a real, active discount code in Shopify Discounts. */
 export const SUBSCRIBE_DISCOUNT_CODE = "SUBSCRIBE10";

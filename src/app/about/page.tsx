@@ -7,7 +7,7 @@ import { SUPPORT_EMAIL } from "@/lib/company";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "Why Litwalls exists: museum-grade posters at a price that doesn't make you think twice, printed in India.",
+    "Why Litwalls exists: proper 300gsm matte posters at a price that doesn't make you think twice, printed in India.",
 };
 
 export default function AboutPage() {
@@ -32,16 +32,16 @@ export default function AboutPage() {
 
       <h2>What we do instead</h2>
       <p>
-        Every Litwalls poster is printed on <strong>300gsm museum-grade matte
+        Every Litwalls poster is printed on <strong>300gsm matte
         paper</strong>. It&apos;s thick enough to hang flat without curling, and
         the matte surface means no glare — you can actually look at it from an
-        angle. We print with pigment inks, which hold their colour for decades
-        rather than fading through a summer.
+        angle. Every file is colour-checked before it goes on the press, so what
+        arrives matches what you saw on screen.
       </p>
       <p>
         We keep it affordable by doing less: no frames, no middlemen, no retail
         space, no licensing deals that add ₹400 to the sticker. We print in
-        India, we ship from India, and we start at ₹149.
+        India, we ship from India, and we start at ₹79.
       </p>
 
       <h2>Printed to order</h2>

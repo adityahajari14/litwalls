@@ -19,8 +19,12 @@ export const SUPPORT_RESPONSE = "within one working day";
 /** Damage/misprint window. Must match what the returns policy and cart promise. */
 export const REPLACEMENT_WINDOW_DAYS = 7;
 
-/** Flat shipping below the free-shipping threshold. Must match Shopify's rates. */
-export const FLAT_SHIPPING_FEE = 49;
+/**
+ * Flat shipping below the free-shipping threshold. Defined in offers.ts
+ * alongside the threshold it pairs with, and forwarded here so the policy
+ * pages that already import it keep working.
+ */
+export { FLAT_SHIPPING_FEE } from "@/lib/offers";
 
 /** Orders dispatch within this many hours. Claimed on the FAQ. */
 export const DISPATCH_HOURS = 24;
