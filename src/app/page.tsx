@@ -3,9 +3,7 @@ import { ClosingCta } from "@/components/home/closing-cta";
 import { CustomPrints } from "@/components/home/custom-prints";
 import { Faq } from "@/components/home/faq";
 import { Hero } from "@/components/home/hero";
-import { HowWePrint } from "@/components/home/how-we-print";
 import { Offers } from "@/components/home/offers";
-import { Pricing } from "@/components/home/pricing";
 import { ProductGridSection } from "@/components/home/product-grid-section";
 import { Reviews } from "@/components/home/reviews";
 import { TrustStrip } from "@/components/home/trust-strip";
@@ -13,15 +11,18 @@ import { getReviews } from "@/lib/reviews";
 import { getCollections, getProducts } from "@/lib/shopify/products";
 
 /**
- * Section order is the argument the page makes, in order:
+ * Section order is the argument the page makes: want it → trust it → buy more
+ * of it → objections.
  *
- *   want it → trust it → buy more of it → believe the quality → objections
- *
- * Offers sit high, right after the first product shelf, because the bundle
- * changes how many posters someone puts in the basket — and it can only do
- * that if they meet it before they have decided. WhyChooseUs was dropped: it
- * asserted in adjectives what HowWePrint now demonstrates in specs, and two
- * sections making the same claim weaken each other.
+ * No section on this page is a spec sheet or a price list — those live on the
+ * product and custom pages, where a visitor has already decided to look
+ * closely. The home page's job is to look like a brand a stranger would trust
+ * with a card number, which is a design problem before it is a content
+ * problem: fewer, denser blocks of text; product photography carrying the
+ * argument instead of bullet lists; one clear offer instead of every discount
+ * code spelled out. TrustStrip already covers paper, shipping, replacement and
+ * checkout security in one glance — a second section re-asserting the same
+ * four facts in more words would read as padding, not proof.
  */
 export default async function Home() {
   const [collections, bestSellers, newArrivals, reviews] = await Promise.all([
@@ -69,9 +70,6 @@ export default async function Home() {
           getReviews. Renders nothing rather than inventing social proof. */}
       <Reviews reviews={reviews} />
 
-      {/* Quality claims land better after peer proof than before it. */}
-      <HowWePrint />
-      <Pricing />
       <Faq />
       <ClosingCta />
     </>

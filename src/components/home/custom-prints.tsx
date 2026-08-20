@@ -87,12 +87,8 @@ export function CustomPrints() {
                     {CUSTOM_COPY[group.id] ?? group.blurb}
                   </p>
 
-                  <p className="mt-4 border-t border-ink-100 pt-4 text-sm text-ink-500">
-                    <span className="font-semibold text-ink-950">
-                      From ₹{groupFromPrice(group)}
-                    </span>{" "}
-                    · {group.tiers.length}{" "}
-                    {group.tiers.length === 1 ? "size" : "sizes"}
+                  <p className="mt-4 border-t border-ink-100 pt-4 text-sm font-semibold text-ink-950">
+                    From ₹{groupFromPrice(group)}
                   </p>
                 </Link>
               </li>
@@ -100,26 +96,10 @@ export function CustomPrints() {
           })}
         </ul>
 
-        {/* One shared entry point under the grid: whichever format someone
-            picked, the next step is the same upload form. */}
-        <div className="mt-8 flex flex-col items-center gap-3 rounded-card bg-ink-950 p-8 text-center sm:flex-row sm:justify-between sm:text-left">
-          <div>
-            <p className="font-display text-2xl text-white">
-              We check your file before you pay
-            </p>
-            <p className="mt-1 text-sm text-ink-300 text-pretty">
-              Upload it and we&apos;ll tell you straight away whether it&apos;s
-              sharp enough to print at the size you picked.
-            </p>
-          </div>
-          <Link
-            href="/custom"
-            className="inline-flex shrink-0 items-center gap-2 rounded-full bg-brand-500 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-brand-600"
-          >
-            <UploadIcon className="size-4" />
-            Upload your image
-          </Link>
-        </div>
+        <p className="mt-6 flex items-center justify-center gap-2 text-center text-sm text-ink-500">
+          <UploadIcon className="size-4 shrink-0 text-ink-400" />
+          We check your file&apos;s resolution before you pay, so nothing prints soft.
+        </p>
       </Container>
     </section>
   );

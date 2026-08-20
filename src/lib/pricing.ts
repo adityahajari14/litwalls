@@ -7,8 +7,8 @@
  * hardcode a rupee figure — it imports from here.
  *
  * IMPORTANT: these are *claims made to customers*. Each one must match a real
- * Shopify variant price and a real Shopify discount. See OFFERS below for the
- * discount codes that have to exist in Shopify Admin before launch.
+ * Shopify variant price and a real Shopify discount. See src/lib/offers.ts
+ * for the discount codes that have to exist in Shopify Admin before launch.
  */
 
 export type PriceTier = {

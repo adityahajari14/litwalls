@@ -13,21 +13,6 @@
 
 import { ENTRY_PRICE } from "@/lib/pricing";
 
-export type Offer = {
-  id: string;
-  /** The headline, as the customer reads it. Short enough for a badge. */
-  headline: string;
-  /** What it actually means, in one sentence. No asterisks, no fine print. */
-  detail: string;
-  /**
-   * The Shopify discount code, if the offer needs one. Null when Shopify
-   * applies it automatically (an automatic discount or a shipping rate).
-   */
-  code: string | null;
-  /** Shown on the offers strip. Keep the set small — see OFFERS ordering. */
-  featured: boolean;
-};
-
 /** Must match the "Free shipping" rate's minimum in Settings → Shipping. */
 export const FREE_SHIPPING_THRESHOLD = 349;
 
@@ -66,60 +51,12 @@ export const SPLIT_BUNDLES: Bundle[] = [
  *  single-poster ladder. */
 export const BUNDLES = SINGLE_BUNDLES;
 
-/** What a bundle works out to per unit, at a given unit price. */
-export function bundleUnitPrice(bundle: Bundle, unitPrice: number): number {
-  return (bundle.pay * unitPrice) / bundle.total;
-}
-
-/** How much a bundle saves off the undiscounted price, as a percentage. */
-export function bundleSavingPercent(bundle: Bundle): number {
-  return Math.round((1 - bundle.pay / bundle.total) * 100);
-}
-
-export const OFFERS: Offer[] = [
-  {
-    id: "first-order",
-    headline: `₹${FIRST_ORDER_DISCOUNT} off your first order`,
-    detail: `Use code ${FIRST_ORDER_CODE} at checkout on orders over ₹${FIRST_ORDER_MINIMUM}.`,
-    code: FIRST_ORDER_CODE,
-    featured: true,
-  },
-  {
-    id: "bundle",
-    headline: "Buy 4, get 7",
-    detail: "Mix any posters. The more you buy, the better it gets — up to buy 10, get 36.",
-    code: SINGLE_BUNDLES[0].code,
-    featured: true,
-  },
-  {
-    id: "split-bundle",
-    headline: "Buy 1 split set, get 3",
-    detail: "Buy 2 split-in-3 sets and get 8 — mix any designs.",
-    code: SPLIT_BUNDLES[0].code,
-    featured: true,
-  },
-  {
-    id: "shipping",
-    headline: `Free delivery over ₹${FREE_SHIPPING_THRESHOLD}`,
-    detail: `Flat ₹${FLAT_SHIPPING_FEE} below that, anywhere in India. No surprise charges at checkout.`,
-    code: null,
-    featured: true,
-  },
-  {
-    id: "replacement",
-    headline: "Free replacement on damage",
-    detail:
-      "If a print arrives damaged or blurred, send us a short video and we ship a new one free. You keep the original.",
-    code: null,
-    featured: true,
-  },
-];
-
 /**
  * The gift-with-purchase.
  *
- * Kept as a separate concept from OFFERS because it is the one lever here that
- * costs almost nothing and does real work: a pack of 5 mini prints is cheap to
+ * Kept as a separate concept from the bundle ladders because it is the one
+ * lever here that costs almost nothing and does real work: a pack of 5 mini
+ * prints is cheap to
  * produce, it puts the custom-print products in the customer's hands, and the
  * customer who has held one is the one who orders a ₹149 pack next time. That
  * makes it an acquisition cost, not a discount.
