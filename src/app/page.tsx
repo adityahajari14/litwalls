@@ -6,36 +6,46 @@ import { Hero } from "@/components/home/hero";
 import { Offers } from "@/components/home/offers";
 import { ProductGridSection } from "@/components/home/product-grid-section";
 import { Reviews } from "@/components/home/reviews";
-import { SplitPosters } from "@/components/home/split-posters";
 import { TrustStrip } from "@/components/home/trust-strip";
 import { getReviews } from "@/lib/reviews";
-import { getCollections, getProducts } from "@/lib/shopify/products";
+import {
+  getCollections,
+  getCustomProducts,
+  getProducts,
+  getStandardProducts,
+} from "@/lib/shopify/products";
 
-/** 50 is the same ceiling /collections treats as "all" — see COLLECTION_COUNT
- *  there. Below it, "Browse all collections" would be a lie for any store
- *  with more than 5 collections. */
+/** The same ceiling /collections treats as "all". */
 const HOME_COLLECTION_COUNT = 50;
 
+/** One row of four on desktop, for every shelf on the page. */
+const SHELF_SIZE = 4;
+
 /**
- * Section order is the argument the page makes: want it → the range → trust
- * it → buy more of it → objections.
+ * Every shelf on this page is the same component with the same card, so the
+ * page reads as one catalogue rather than a stack of differently-built
+ * sections. Custom prints are ordinary Shopify products — mockups, variants,
+ * prices — so they get the ordinary product grid too; only their product page
+ * differs, because only their fulfilment does.
  *
- * Custom prints move up near the top because they're what nobody else in this
- * market offers — leading with them, not burying them after two product
- * shelves, is the actual differentiator. No section on this page is a spec
- * sheet or a price list — those live on the product and custom pages, where a
- * visitor has already decided to look closely. TrustStrip already covers
- * paper, shipping, replacement and checkout security in one glance — a second
- * section re-asserting the same four facts in more words would read as
- * padding, not proof.
+ * Order: want it → the range → what makes it worth buying → objections.
  */
 export default async function Home() {
-  const [collections, bestSellers, newArrivals, reviews] = await Promise.all([
-    getCollections(HOME_COLLECTION_COUNT),
-    getProducts({ first: 4, sortKey: "BEST_SELLING" }),
-    getProducts({ first: 4, sortKey: "CREATED_AT", reverse: true }),
-    getReviews(),
-  ]);
+  const [collections, customProducts, splitProducts, bestSellers, newArrivals, reviews] =
+    await Promise.all([
+      getCollections(HOME_COLLECTION_COUNT),
+      getCustomProducts(SHELF_SIZE),
+      // Split posters live in Shopify like anything else. Until they're
+      // published the shelf simply doesn't render.
+      getProducts({ first: SHELF_SIZE, query: "tag:split" }),
+      getStandardProducts({ first: SHELF_SIZE, sortKey: "BEST_SELLING" }),
+      getStandardProducts({
+        first: SHELF_SIZE,
+        sortKey: "CREATED_AT",
+        reverse: true,
+      }),
+      getReviews(),
+    ]);
 
   return (
     <>
@@ -44,12 +54,7 @@ export default async function Home() {
 
       {collections.length > 0 ? <Categories collections={collections} /> : null}
 
-      {/* The custom range is the part of the catalogue nobody else can copy. */}
-      <CustomPrints />
-
-      <SplitPosters />
-
-      {/* Best sellers: it's the highest-converting shelf, and it doubles as
+      {/* Best sellers lead the shelves: highest-converting, and it doubles as
           social proof — other people bought these. */}
       {bestSellers.length > 0 ? (
         <ProductGridSection
@@ -61,6 +66,18 @@ export default async function Home() {
         />
       ) : null}
 
+      <CustomPrints products={customProducts} />
+
+      {splitProducts.length > 0 ? (
+        <ProductGridSection
+          title="Split posters"
+          subtitle="One image across three panels. Covers a lot more wall."
+          href="/products"
+          products={splitProducts}
+          tone="paper"
+        />
+      ) : null}
+
       <Offers />
 
       {newArrivals.length > 0 ? (
@@ -69,6 +86,7 @@ export default async function Home() {
           subtitle="Fresh off the press this month."
           href="/products"
           products={newArrivals}
+          tone="white"
         />
       ) : null}
 

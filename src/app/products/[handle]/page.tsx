@@ -10,15 +10,16 @@ import { Gallery } from "@/components/product/gallery";
 import { ProductGridSection } from "@/components/home/product-grid-section";
 import { Accordion } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
+import { ButtonLink } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
-import { Price } from "@/components/ui/price";
 import { LeafIcon, ReturnIcon, TruckIcon } from "@/components/icons";
-import { discountPercent } from "@/lib/money";
+import { discountPercent, formatMoney } from "@/lib/money";
 import { FLAT_SHIPPING_FEE, FREE_SHIPPING_THRESHOLD } from "@/lib/offers";
 import {
+  CUSTOM_TAG,
   getProduct,
   getProductHandles,
-  getProducts,
+  getStandardProducts,
   getVariantQuantities,
 } from "@/lib/shopify/products";
 import { defaultVariant, hasSizeChoice } from "@/lib/shopify/types";
@@ -120,7 +121,10 @@ const HIGHLIGHTS = [
 ];
 
 async function RelatedProducts({ handle }: { handle: string }) {
-  const products = await getProducts({ first: 5 });
+  // Excludes custom prints: they need an upload before they can be bought, so
+  // offering one as a one-click "you might also like" sends the customer down
+  // a different path than the shelf implies.
+  const products = await getStandardProducts({ first: 5 });
   const related = products.filter((product) => product.handle !== handle).slice(0, 4);
 
   if (related.length === 0) return null;
@@ -151,6 +155,7 @@ export default async function ProductPage({
     variant?.compareAtPrice ?? product.compareAtPriceRange.minVariantPrice;
   const percent = discountPercent(price, compareAt);
   const available = product.availableForSale && (variant?.availableForSale ?? false);
+  const isCustom = product.tags.includes(CUSTOM_TAG);
 
   // Fetched separately from the product so a store without inventory-read
   // access still renders the page — see getVariantQuantityAvailable.
@@ -246,14 +251,34 @@ export default async function ProductPage({
                 showing the cheapest variant's price after the customer picks
                 a bigger one — the exact mismatch that erodes trust at the
                 moment of purchase. */}
+            {/* A custom product cannot be added to the cart from here: there
+                is no artwork on the order yet. Everything else about the page
+                — gallery, price, specs, shipping — is identical to any other
+                product, because the product is identical. Only the step that
+                collects the file differs. */}
             <div className="mt-8">
-              <AddToCart
-                product={product}
-                variant={variant}
-                available={available}
-                maxQuantity={maxQuantity}
-                quantityBySize={quantityBySize}
-              />
+              {isCustom ? (
+                <>
+                  <p className="text-2xl font-semibold text-ink-950">
+                    From {formatMoney(product.priceRange.minVariantPrice)}
+                  </p>
+                  <ButtonLink href="/custom" size="lg" className="mt-5 w-full sm:w-auto">
+                    Upload your image
+                  </ButtonLink>
+                  <p className="mt-3 text-sm text-ink-500">
+                    Pick your size on the next step. We check the file&apos;s
+                    resolution before you pay.
+                  </p>
+                </>
+              ) : (
+                <AddToCart
+                  product={product}
+                  variant={variant}
+                  available={available}
+                  maxQuantity={maxQuantity}
+                  quantityBySize={quantityBySize}
+                />
+              )}
             </div>
 
             {/* Directly under the button, where the hesitation actually happens. */}

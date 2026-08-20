@@ -25,7 +25,7 @@ export function Reviews({ reviews = [] }: { reviews?: Review[] }) {
     reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
 
   return (
-    <section id="reviews" className="bg-ink-50 py-16 lg:py-24">
+    <section id="reviews" className="bg-white py-16 lg:py-24">
       <Container>
         <SectionHeading
           title="What people say"

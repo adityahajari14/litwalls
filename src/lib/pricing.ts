@@ -61,7 +61,7 @@ export const PRICE_GROUPS: PriceGroup[] = [
     id: "mini",
     title: "Mini pocket prints",
     blurb: "Wallet-sized prints for a desk, a mirror or a phone case.",
-    customOnly: true,
+    customOnly: false,
     tiers: [
       { label: "Pack of 5", dimensions: "2.5″ × 3.5″", price: 99 },
       { label: "Pack of 10", dimensions: "2.5″ × 3.5″", price: 149 },

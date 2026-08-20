@@ -35,7 +35,7 @@ const bestSplit = SPLIT_BUNDLES[SPLIT_BUNDLES.length - 1];
 
 export function Offers() {
   return (
-    <section id="offers" className="scroll-mt-24 bg-ink-950 py-14 lg:py-20">
+    <section id="offers" className="scroll-mt-24 bg-ink-950 py-16 lg:py-24">
       <Container>
         <div className="grid items-center gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
           <div>

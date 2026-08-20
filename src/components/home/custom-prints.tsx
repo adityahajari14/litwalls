@@ -1,104 +1,48 @@
-import Link from "next/link";
-
+import { ProductCard } from "@/components/product-card";
+import { UploadIcon } from "@/components/icons";
 import { Container } from "@/components/ui/container";
 import { SectionHeading } from "@/components/ui/section-heading";
-import {
-  CameraIcon,
-  ImageIcon,
-  PrinterIcon,
-  ScissorsIcon,
-  UploadIcon,
-} from "@/components/icons";
-import { groupFromPrice, PRICE_GROUPS } from "@/lib/pricing";
+import type { Product } from "@/lib/shopify/types";
 
 /**
- * The custom-print range: every product a customer makes from their own image.
+ * The custom-print range, rendered exactly like every other shelf on the page.
  *
- * This is a *category* grid, not a product grid, and deliberately so. These
- * four things have no fixed artwork to photograph — the picture is whatever
- * the customer uploads — so a Shopify product grid would show four near-blank
- * mockups. Naming the format, its sizes and its real starting price does the
- * work that a product photo does elsewhere.
+ * These are ordinary Shopify products with their own mockups, variants and
+ * prices — the only thing custom about them is that the artwork comes from the
+ * customer. So they use the same <ProductCard> as the best-seller and new-in
+ * shelves: same aspect ratio, same hover, same price treatment. The earlier
+ * version drew bespoke dashed "your image here" tiles, which made the range
+ * look like a form rather than something you could buy, and made this the only
+ * section on the page that didn't match the others.
  *
- * Prices come from PRICE_GROUPS, so this section can never quote a figure the
- * product page contradicts.
+ * Renders nothing when Shopify has no products tagged `custom`, rather than
+ * advertising a range that isn't published yet.
  */
+export function CustomPrints({ products }: { products: Product[] }) {
+  if (products.length === 0) return null;
 
-const ICONS = {
-  poster: ImageIcon,
-  split: ScissorsIcon,
-  mini: PrinterIcon,
-  polaroid: CameraIcon,
-} as const;
-
-/** How each format is described when it is the customer's own image on it. */
-const CUSTOM_COPY: Record<string, string> = {
-  poster: "Any photo or artwork, printed as a single poster.",
-  split: "One image split across three panels for a bigger wall.",
-  mini: "Wallet-sized prints — for a desk, a mirror, a phone case.",
-  polaroid: "Your photos as polaroid-style prints, ready to peg up.",
-};
-
-export function CustomPrints() {
   return (
-    <section id="custom" className="scroll-mt-24 bg-ink-50 py-16 lg:py-24">
+    <section id="custom" className="scroll-mt-24 bg-white py-16 lg:py-24">
       <Container>
         <SectionHeading
-          title="Design your own prints"
-          subtitle="Upload a photo, pick a format, and we print it on the same 300gsm matte paper as everything else here."
+          title="Design your own"
+          subtitle="Your photo or artwork, printed on the same 300gsm matte paper as everything else here."
           href="/custom"
           linkLabel="Start uploading"
         />
 
-        <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {PRICE_GROUPS.map((group) => {
-            const Icon = ICONS[group.id as keyof typeof ICONS] ?? ImageIcon;
-
-            return (
-              <li key={group.id}>
-                <Link
-                  href="/custom"
-                  className="group flex h-full flex-col rounded-card border border-ink-200 bg-white p-6 transition-all duration-200 hover:border-brand-300 hover:shadow-lift"
-                >
-                  {/* An upload frame rather than a product photo: it shows the
-                      customer where their own image goes, which is the whole
-                      proposition here. */}
-                  <div className="relative grid aspect-4/5 place-items-center rounded-lg border-2 border-dashed border-ink-300 bg-ink-50 text-center transition-colors group-hover:border-brand-400 group-hover:bg-brand-50">
-                    <div>
-                      <Icon className="mx-auto size-9 text-ink-400 transition-colors group-hover:text-brand-500" />
-                      <p className="mt-3 px-4 font-display text-lg text-ink-500 transition-colors group-hover:text-brand-600">
-                        Your image
-                        <br />
-                        here
-                      </p>
-                    </div>
-
-                    {group.customOnly ? (
-                      <span className="absolute top-3 right-3 rounded-full bg-ink-950 px-2.5 py-1 text-[11px] font-semibold text-white">
-                        Custom only
-                      </span>
-                    ) : null}
-                  </div>
-
-                  <h3 className="mt-5 font-display text-2xl text-ink-950">
-                    {group.title}
-                  </h3>
-                  <p className="mt-1.5 flex-1 text-sm/6 text-ink-600 text-pretty">
-                    {CUSTOM_COPY[group.id] ?? group.blurb}
-                  </p>
-
-                  <p className="mt-4 border-t border-ink-100 pt-4 text-sm font-semibold text-ink-950">
-                    From ₹{groupFromPrice(group)}
-                  </p>
-                </Link>
-              </li>
-            );
-          })}
+        <ul className="mt-8 grid grid-cols-2 gap-x-4 gap-y-6 lg:grid-cols-4 lg:gap-6">
+          {products.map((product) => (
+            <li key={product.id} className="h-full">
+              <ProductCard product={product} />
+            </li>
+          ))}
         </ul>
 
-        <p className="mt-6 flex items-center justify-center gap-2 text-center text-sm text-ink-500">
+        <p className="mt-8 flex items-center justify-center gap-2 text-center text-sm text-ink-500">
           <UploadIcon className="size-4 shrink-0 text-ink-400" />
-          We check your file&apos;s resolution before you pay, so nothing prints soft.
+          We check your file&apos;s resolution before you pay, so nothing prints
+          soft.
         </p>
       </Container>
     </section>

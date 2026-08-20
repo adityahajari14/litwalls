@@ -46,7 +46,7 @@ const FAQS = [
   {
     question: "Can I print my own photo or design?",
     answer:
-      `Yes — that's a big part of what we do. Upload any image on our Custom page and we'll print it as a single poster, a three-panel split poster, mini pocket prints or polaroids. Mini prints and polaroids are custom-only, starting at ₹99 for a pack of 5. We check your file's resolution as you upload it and tell you before you pay if it's too small to print sharply at the size you picked.`,
+      `Yes — that's a big part of what we do. Upload any image on our Custom page and we'll print it as a single poster, a three-panel split poster, mini pocket prints or polaroids. Mini prints start at ₹99 for a pack of 5. We check your file's resolution as you upload it and tell you before you pay if it's too small to print sharply at the size you picked.`,
   },
   {
     question: "Do you do bulk or corporate orders?",
@@ -57,7 +57,7 @@ const FAQS = [
 
 export function Faq() {
   return (
-    <section id="faq" className="bg-white py-16 lg:py-24">
+    <section id="faq" className="bg-paper py-16 lg:py-24">
       <Container>
         <div className="grid gap-10 lg:grid-cols-[1fr_1.6fr] lg:gap-16">
           <div>

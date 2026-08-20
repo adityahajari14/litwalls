@@ -61,6 +61,37 @@ export async function getProductHandles(first = 250): Promise<string[]> {
   return data.products.nodes.map((node) => node.handle);
 }
 
+/**
+ * The tag that marks a product as customer-uploaded artwork in Shopify.
+ *
+ * Custom products are ordinary Shopify products — real mockups, real variants,
+ * real prices — that happen to be printed from a file the customer supplies.
+ * The tag is the only thing separating them from the rest of the catalogue, so
+ * it has to match exactly what is set in Shopify admin.
+ */
+export const CUSTOM_TAG = "custom";
+
+/**
+ * Products the customer supplies the artwork for.
+ *
+ * Returns whatever Shopify actually has tagged — one product today, more as
+ * split posters, mini prints and polaroids are published. Callers render
+ * nothing when this is empty rather than showing a section promising products
+ * that do not exist yet.
+ */
+export async function getCustomProducts(first = 8): Promise<Product[]> {
+  return getProducts({ first, query: `tag:${CUSTOM_TAG}` });
+}
+
+/** The catalogue minus the custom-print products. */
+export async function getStandardProducts(options: {
+  first?: number;
+  sortKey?: "BEST_SELLING" | "CREATED_AT" | "PRICE" | "TITLE" | "RELEVANCE";
+  reverse?: boolean;
+} = {}): Promise<Product[]> {
+  return getProducts({ ...options, query: `-tag:${CUSTOM_TAG}` });
+}
+
 export async function getCollections(first = 12): Promise<Collection[]> {
   const data = await storefront<{ collections: { nodes: Collection[] } }>(
     GET_COLLECTIONS,
