@@ -184,6 +184,69 @@ real reviews, and product cards show no star rating. Wire it to a reviews app
 (Judge.me, Loox) or a Shopify metafield rather than reintroducing placeholder
 ratings.
 
+## Discounts
+
+None of these exist in the store yet. Until they are created the storefront
+degrades quietly — it applies a code, Shopify reports `applicable: false`, and
+the cart is unchanged. Nothing breaks and nothing is falsely promised.
+
+The codes and thresholds live in `src/lib/offers.ts`; what is created in admin
+must match it exactly.
+
+### The one rule that shapes everything
+
+**Shopify applies only one buy-X-get-Y discount per order.** Verified against
+the live store: two BXGY discounts never both apply — not as two codes, not as
+a code plus an automatic discount, and regardless of `combinesWith`. Every
+bundle is a BXGY, and so is the free gift, so *the gift cannot stack with a
+bundle*. The storefront handles this by withholding the gift when a bundle is
+earned, and the site says so.
+
+An order-level discount (LIT100) is a different class and *does* stack.
+
+### What to create
+
+| Code | Type | Setup |
+| --- | --- | --- |
+| `LIT4FOR7` | Buy X get Y | Buy 4 → get 3 free (100% off) |
+| `LIT5FOR10` | Buy X get Y | Buy 5 → get 5 free |
+| `LIT6FOR18` | Buy X get Y | Buy 6 → get 12 free |
+| `LIT10FOR36` | Buy X get Y | Buy 10 → get 26 free |
+| `LITSPLIT1FOR3` | Buy X get Y | Buy 1 split set → get 2 free |
+| `LITSPLIT2FOR8` | Buy X get Y | Buy 2 split sets → get 6 free |
+| `LIT100` | Amount off order | ₹100 off, minimum ₹499, once per customer |
+| *(no code)* | Automatic, buy X get Y | Spend ₹349 → 1× mini-prints pack free |
+
+Notes that cost an hour to rediscover:
+
+- **BXGY cannot target "all products."** Shopify rejects it. Scope both the
+  "buy" and the "get" side to collections (or specific products).
+- **Set `combinesWith`** on every discount: tick *order discounts* on the
+  bundles, and *product discounts* on `LIT100`. Without this LIT100 will not
+  stack with a bundle.
+- **The gift must be an automatic discount, not a code** — the storefront adds
+  the gift line itself and expects Shopify to zero it with no code involved.
+  Its "get" product must be `GIFT_PRODUCT_HANDLE` from `offers.ts`
+  (`mini-pocket-prints-pack-of-5`), which does not exist in the store yet.
+- The split ladder needs products tagged `split`; none are published yet.
+
+### How the cart uses them
+
+`syncCartDiscounts` runs after every add, quantity change and removal. It
+works out which rung the basket has reached, applies that code, and removes it
+if the basket shrinks below it. Codes the customer typed are never touched —
+only the ones in `MANAGED_DISCOUNT_CODES` are managed.
+
+`syncCartGift` adds or withdraws the gift line, marked with a `_gift`
+attribute so the cart can tell its own line from the customer's. It refuses to
+leave a gift line in the cart that Shopify is charging for.
+
+Everything displayed is Shopify's own number. `cartDiscountTotal` derives the
+saving as full price minus `cost.totalAmount`, because the two discount
+classes report themselves in different places: a BXGY lands on the line (and
+Shopify splits the line in two to do it), while an order discount only moves
+the cart total.
+
 ## Scripts
 
 ```bash
