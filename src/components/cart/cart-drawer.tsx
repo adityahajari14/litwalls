@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
 
-import { CloseIcon, LockIcon, ReturnIcon } from "@/components/icons";
+import { CloseIcon, LockIcon, ReturnIcon, TagIcon } from "@/components/icons";
 import { useCart } from "@/components/cart/cart-provider";
 import { FreeShippingBar } from "@/components/cart/free-shipping-bar";
 import { ButtonLink } from "@/components/ui/button";
@@ -12,8 +12,42 @@ import { trackMetaInitiateCheckout } from "@/lib/analytics/meta-pixel";
 import { withClaimedDiscount } from "@/lib/checkout-url";
 import { CUSTOM_ART_ATTRIBUTE } from "@/lib/custom-poster";
 import { formatMoney } from "@/lib/money";
+import { bundleFreeCount, nextBundle, SINGLE_BUNDLES } from "@/lib/offers";
 import { removeItem, updateItemQuantity } from "@/lib/shopify/actions";
-import type { CartLine } from "@/lib/shopify/types";
+import {
+  cartDiscountTotal,
+  cartUndiscountedTotal,
+  type Cart,
+  type CartLine,
+} from "@/lib/shopify/types";
+
+/**
+ * "Add 1 more and 3 come free."
+ *
+ * Shown only while there is a rung left to reach. This is the one piece of
+ * nudging in the cart that earns its place: it names an exact, small action
+ * and what it is worth, rather than a generic "spend more to save".
+ *
+ * Counts every line, which slightly over-promises on a cart mixing split sets
+ * with posters — the two ladders are counted separately server-side. Worth it
+ * for a hint; the applied discount itself is always Shopify's number, never
+ * this one.
+ */
+function BundleNudge({ cart }: { cart: Cart }) {
+  const target = nextBundle(SINGLE_BUNDLES, cart.totalQuantity);
+  if (!target) return null;
+
+  const needed = target.pay - cart.totalQuantity;
+
+  return (
+    <p className="mt-3 flex items-start gap-2 rounded-lg bg-brand-50 px-3 py-2.5 text-xs text-brand-800">
+      <TagIcon className="mt-px size-3.5 shrink-0" />
+      <span>
+        Add {needed} more and {bundleFreeCount(target)} come free.
+      </span>
+    </p>
+  );
+}
 
 function LineItem({ line }: { line: CartLine }) {
   const { refresh } = useCart();
@@ -176,6 +210,13 @@ export function CartDrawer() {
   if (!isOpen) return null;
 
   const lines = cart?.lines.nodes ?? [];
+  // Shopify's numbers, not a recomputation of them. cart.cost.subtotalAmount
+  // is already net of a bundle discount, so the "Subtotal" line uses the
+  // full-price sum instead — otherwise subtotal minus discount would not
+  // equal the total actually charged.
+  const discount = cart ? cartDiscountTotal(cart) : 0;
+  const currency = cart?.cost.totalAmount.currencyCode ?? "INR";
+  const undiscounted = cart ? cartUndiscountedTotal(cart) : 0;
   const isEmpty = lines.length === 0;
 
   return (
@@ -235,15 +276,49 @@ export function CartDrawer() {
             </ul>
 
             <footer className="border-t border-ink-100 px-5 py-5">
-              <div className="flex items-baseline justify-between">
+              <div className="flex items-baseline justify-between text-sm">
                 <span className="text-ink-600">Subtotal</span>
+                <span className="text-ink-900">
+                  {cart
+                    ? formatMoney({
+                        amount: String(undiscounted),
+                        currencyCode: currency,
+                      })
+                    : "—"}
+                </span>
+              </div>
+
+              {/* Only rendered from what Shopify actually took off. A cart that
+                  earned nothing shows no line, and a code that Shopify marked
+                  inapplicable contributes zero — so this can never claim a
+                  saving the checkout won't honour. */}
+              {discount > 0 ? (
+                <div className="mt-1.5 flex items-baseline justify-between text-sm">
+                  <span className="flex items-center gap-1.5 font-medium text-success">
+                    <TagIcon className="size-3.5" />
+                    Bundle discount
+                  </span>
+                  <span className="font-medium text-success">
+                    −
+                    {formatMoney({
+                      amount: String(discount),
+                      currencyCode: currency,
+                    })}
+                  </span>
+                </div>
+              ) : null}
+
+              <div className="mt-3 flex items-baseline justify-between border-t border-ink-100 pt-3">
+                <span className="text-ink-600">Total</span>
                 <span className="text-lg font-semibold text-ink-950">
-                  {cart ? formatMoney(cart.cost.subtotalAmount) : "—"}
+                  {cart ? formatMoney(cart.cost.totalAmount) : "—"}
                 </span>
               </div>
               <p className="mt-1 text-xs text-ink-500">
                 Shipping and taxes calculated at checkout.
               </p>
+
+              {cart ? <BundleNudge cart={cart} /> : null}
 
               <a
                 href={cart?.checkoutUrl ?? "#"}

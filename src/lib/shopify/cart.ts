@@ -8,8 +8,11 @@ import {
   CREATE_CART,
   GET_CART,
   REMOVE_CART_LINES,
+  UPDATE_CART_DISCOUNTS,
   UPDATE_CART_LINES,
 } from "@/lib/shopify/queries";
+import { earnedDiscountCodes, MANAGED_DISCOUNT_CODES } from "@/lib/offers";
+import { getSplitHandles } from "@/lib/shopify/products";
 import type { Attribute, Cart, CartMutationPayload } from "@/lib/shopify/types";
 
 /**
@@ -122,4 +125,79 @@ export async function removeCartLines(
   );
 
   return unwrap(data.cartLinesRemove);
+}
+
+
+export async function updateCartDiscounts(
+  cartId: string,
+  discountCodes: string[],
+): Promise<Cart> {
+  const data = await storefront<{
+    cartDiscountCodesUpdate: CartMutationPayload;
+  }>(UPDATE_CART_DISCOUNTS, { variables: { cartId, discountCodes } });
+
+  return unwrap(data.cartDiscountCodesUpdate);
+}
+
+/**
+ * Puts the bundle discount the cart has earned onto the cart.
+ *
+ * Called after every line change, so "buy 4 get 3 free" applies itself the
+ * moment the seventh poster goes in, and steps back down if the customer
+ * removes one. The customer never types a code.
+ *
+ * Two rules this must not break:
+ *
+ * 1. **Shopify decides.** This nominates a code; whether it is worth anything
+ *    is Shopify's call, reported back on `discountCodes[].applicable`. If the
+ *    code doesn't exist yet — as none of them do until they're created in
+ *    admin — Shopify marks it inapplicable and the cart is unchanged. The UI
+ *    reads that flag rather than assuming the discount landed.
+ *
+ * 2. **Never clobber a code the customer typed.** A manually entered code
+ *    (LIT100, a campaign code) is preserved; only codes this system owns are
+ *    added and removed. Otherwise adding a fourth poster would silently strip
+ *    the first-order discount someone had already applied.
+ */
+export async function syncCartDiscounts(cart: Cart): Promise<Cart> {
+  const splitHandles = await getSplitHandles();
+
+  let singleQuantity = 0;
+  let splitQuantity = 0;
+
+  for (const line of cart.lines.nodes) {
+    if (splitHandles.has(line.merchandise.product.handle)) {
+      splitQuantity += line.quantity;
+    } else {
+      singleQuantity += line.quantity;
+    }
+  }
+
+  const earned = earnedDiscountCodes({ singleQuantity, splitQuantity });
+
+  // Everything this system owns, so we know which existing codes are ours to
+  // drop and which belong to the customer.
+  const managed = new Set(MANAGED_DISCOUNT_CODES);
+  const customerCodes = cart.discountCodes
+    .map((discount) => discount.code)
+    .filter((code) => !managed.has(code));
+
+  const next = [...customerCodes, ...earned];
+  const current = cart.discountCodes.map((discount) => discount.code);
+
+  // Shopify replaces the whole list on every call, so skip the round trip when
+  // nothing would change. Order matters for the comparison, not to Shopify.
+  const unchanged =
+    next.length === current.length &&
+    next.every((code, index) => code === current[index]);
+  if (unchanged) return cart;
+
+  try {
+    return await updateCartDiscounts(cart.id, next);
+  } catch {
+    // A discount failure must never cost someone their cart. Return the cart
+    // as it stands and let them check out at full price rather than showing
+    // an error on an action they didn't take.
+    return cart;
+  }
 }

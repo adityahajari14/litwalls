@@ -72,6 +72,13 @@ export async function getProductHandles(first = 250): Promise<string[]> {
 export const CUSTOM_TAG = "custom";
 
 /**
+ * The tag marking a split-in-3 poster. These have their own bundle ladder,
+ * counted in sets rather than panels, so the cart has to be able to tell them
+ * apart from ordinary posters.
+ */
+export const SPLIT_TAG = "split";
+
+/**
  * Products the customer supplies the artwork for.
  *
  * Returns whatever Shopify actually has tagged — one product today, more as
@@ -81,6 +88,19 @@ export const CUSTOM_TAG = "custom";
  */
 export async function getCustomProducts(first = 8): Promise<Product[]> {
   return getProducts({ first, query: `tag:${CUSTOM_TAG}` });
+}
+
+/**
+ * The handles of every split-in-3 product, as a set.
+ *
+ * The cart carries only a handle per line — no tags — so telling a split set
+ * apart from a single poster means asking the catalogue. Cached for the same
+ * ten minutes as everything else, and the set is small (a handful of
+ * products), so this costs one request per cart recalculation at worst.
+ */
+export async function getSplitHandles(): Promise<Set<string>> {
+  const products = await getProducts({ first: 250, query: `tag:${SPLIT_TAG}` });
+  return new Set(products.map((product) => product.handle));
 }
 
 /** The catalogue minus the custom-print products. */

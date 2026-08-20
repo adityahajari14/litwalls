@@ -81,3 +81,78 @@ export const GIFT_DESCRIPTION = "5 free mini pocket prints on your first order";
 /** The cheapest thing on the site, for "from ₹X" copy. Re-exported so that
  *  offer components need only one import. */
 export { ENTRY_PRICE };
+
+/**
+ * Every code the cart applies on the customer's behalf.
+ *
+ * The auto-apply logic adds and removes exactly these, and leaves anything
+ * else on the cart alone — a code the customer typed themselves is theirs, not
+ * ours to drop when their basket size changes.
+ */
+export const MANAGED_DISCOUNT_CODES: string[] = [
+  ...SINGLE_BUNDLES.map((bundle) => bundle.code),
+  ...SPLIT_BUNDLES.map((bundle) => bundle.code),
+];
+
+/**
+ * Which rung of a ladder a given quantity has reached.
+ *
+ * The best rung whose `pay` threshold the quantity meets — so 7 posters earns
+ * the buy-4 rung, and 12 earns buy-10. Returns null below the first rung.
+ *
+ * Ladders are searched from the top so the customer always gets the most
+ * generous rung they qualify for, regardless of array order.
+ */
+export function bundleForQuantity(
+  bundles: Bundle[],
+  quantity: number,
+): Bundle | null {
+  return (
+    [...bundles]
+      .sort((a, b) => b.pay - a.pay)
+      .find((bundle) => quantity >= bundle.pay) ?? null
+  );
+}
+
+/**
+ * Every discount code a cart currently earns.
+ *
+ * Deliberately returns codes rather than amounts: Shopify decides what a code
+ * is worth and whether it applies at all. This only nominates candidates — see
+ * syncCartDiscounts, which applies them and then trusts Shopify's verdict.
+ */
+export function earnedDiscountCodes({
+  singleQuantity,
+  splitQuantity,
+}: {
+  singleQuantity: number;
+  splitQuantity: number;
+}): string[] {
+  const codes: string[] = [];
+
+  const single = bundleForQuantity(SINGLE_BUNDLES, singleQuantity);
+  if (single) codes.push(single.code);
+
+  const split = bundleForQuantity(SPLIT_BUNDLES, splitQuantity);
+  if (split) codes.push(split.code);
+
+  return codes;
+}
+
+/**
+ * The next rung up from where a quantity currently sits, if there is one.
+ *
+ * Powers the "add 1 more and get 3 free" nudge. Returns null when the customer
+ * is already on the top rung, so the cart stops pushing once there is nothing
+ * left to earn.
+ */
+export function nextBundle(
+  bundles: Bundle[],
+  quantity: number,
+): Bundle | null {
+  return (
+    [...bundles]
+      .sort((a, b) => a.pay - b.pay)
+      .find((bundle) => quantity < bundle.pay) ?? null
+  );
+}

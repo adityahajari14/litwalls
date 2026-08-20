@@ -88,6 +88,13 @@ const CART = /* GraphQL */ `
     id
     checkoutUrl
     totalQuantity
+    # The applicable flag is Shopify's verdict, not ours: a code that is
+    # expired, not yet started, or whose conditions the cart doesn't meet
+    # comes back false. The UI must never claim a discount it hasn't confirmed.
+    discountCodes {
+      code
+      applicable
+    }
     cost {
       subtotalAmount {
         ...Money
@@ -102,6 +109,20 @@ const CART = /* GraphQL */ `
         quantity
         cost {
           totalAmount {
+            ...Money
+          }
+          # What the line would cost undiscounted. For a BXGY "free" line this
+          # is the full price while totalAmount is zero.
+          subtotalAmount {
+            ...Money
+          }
+        }
+        # Shopify puts a buy-X-get-Y discount on the LINE, not the cart — and
+        # it splits one line into a paid line and a free line to do it. The
+        # cart-level discountAllocations field stays empty, so summing these is
+        # the only way to know what came off.
+        discountAllocations {
+          discountedAmount {
             ...Money
           }
         }
@@ -252,6 +273,20 @@ export const CUSTOMER_CREATE = /* GraphQL */ `
     }
   }
 `;
+
+export const UPDATE_CART_DISCOUNTS = cartDoc(/* GraphQL */ `
+  mutation UpdateCartDiscounts($cartId: ID!, $discountCodes: [String!]!) {
+    cartDiscountCodesUpdate(cartId: $cartId, discountCodes: $discountCodes) {
+      cart {
+        ...Cart
+      }
+      userErrors {
+        field
+        message
+      }
+    }
+  }
+`);
 
 export const GET_CART = cartDoc(/* GraphQL */ `
   query GetCart($id: ID!) {

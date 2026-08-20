@@ -10,6 +10,7 @@ import {
   getCartId,
   removeCartLines,
   setCartId,
+  syncCartDiscounts,
   updateCartLines,
   type CartLineInput,
 } from "@/lib/shopify/cart";
@@ -52,7 +53,8 @@ export async function addItem(
 
     if (cartId) {
       try {
-        await addCartLines(cartId, [line]);
+        const cart = await addCartLines(cartId, [line]);
+        await syncCartDiscounts(cart);
         revalidatePath("/", "layout");
         return { ok: true };
       } catch {
@@ -63,6 +65,7 @@ export async function addItem(
 
     const cart = await createCart([line]);
     await setCartId(cart.id);
+    await syncCartDiscounts(cart);
     revalidatePath("/", "layout");
     return { ok: true };
   } catch (error) {
@@ -78,11 +81,14 @@ export async function updateItemQuantity(
     const cartId = await getCartId();
     if (!cartId) return { ok: false, message: "Your cart has expired." };
 
-    if (quantity <= 0) {
-      await removeCartLines(cartId, [lineId]);
-    } else {
-      await updateCartLines(cartId, [{ id: lineId, quantity }]);
-    }
+    const cart =
+      quantity <= 0
+        ? await removeCartLines(cartId, [lineId])
+        : await updateCartLines(cartId, [{ id: lineId, quantity }]);
+
+    // Re-evaluated on every change, so the discount steps down when the
+    // customer drops below a rung, not just up when they cross one.
+    await syncCartDiscounts(cart);
 
     revalidatePath("/", "layout");
     return { ok: true };
@@ -96,7 +102,8 @@ export async function removeItem(lineId: string): Promise<CartActionResult> {
     const cartId = await getCartId();
     if (!cartId) return { ok: false, message: "Your cart has expired." };
 
-    await removeCartLines(cartId, [lineId]);
+    const cart = await removeCartLines(cartId, [lineId]);
+    await syncCartDiscounts(cart);
     revalidatePath("/", "layout");
     return { ok: true };
   } catch (error) {

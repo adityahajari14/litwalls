@@ -13,6 +13,11 @@ import type { Money } from "@/lib/shopify/types";
  * The threshold is a real Shopify shipping rate and the gap is real
  * arithmetic, so this is a nudge, not a manufactured urgency — the customer
  * can act on it and the promise holds at checkout.
+ *
+ * Takes cart.cost.subtotalAmount deliberately: that figure is already net of
+ * any bundle discount, and Shopify's own free-shipping rate is evaluated
+ * against what the customer actually pays. Passing the full-price sum here
+ * would promise free shipping the checkout then refuses.
  */
 export function FreeShippingBar({ subtotal }: { subtotal: Money }) {
   // The threshold is set in rupees, so this only means anything for an INR
