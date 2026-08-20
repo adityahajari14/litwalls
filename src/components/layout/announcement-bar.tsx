@@ -1,12 +1,10 @@
 import {
-  BUNDLES,
   FIRST_ORDER_CODE,
   FIRST_ORDER_DISCOUNT,
   FREE_SHIPPING_THRESHOLD,
 } from "@/lib/offers";
 import { formatMoney } from "@/lib/money";
-
-const [SMALL_BUNDLE] = BUNDLES;
+import { DISPATCH_HOURS } from "@/lib/company";
 
 export function AnnouncementBar() {
   const threshold = formatMoney({
@@ -15,14 +13,18 @@ export function AnnouncementBar() {
   });
 
   const messages = [
-    {
-      // The bundle leads: it is the only message here that changes how much
-      // someone puts in the basket rather than what they pay for it.
-      text: `Buy ${SMALL_BUNDLE.pay}, get ${SMALL_BUNDLE.total}`,
-      className: "",
-    },
+    // Free delivery leads. It is the only one of these that applies to every
+    // visitor on every order, and the one most likely to be the thing that
+    // decides whether a ₹149 poster is worth the postage.
     {
       text: `Free delivery over ${threshold}`,
+      className: "",
+    },
+    // A fulfilment promise rather than a third discount: the bar reads as pure
+    // promo when all three slots are money off, and this is the claim in the
+    // set that a competitor has to actually match rather than just undercut.
+    {
+      text: `Dispatched within ${DISPATCH_HOURS} hours`,
       className: "hidden sm:flex",
     },
     {
