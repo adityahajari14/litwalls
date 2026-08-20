@@ -6,27 +6,32 @@ import { Hero } from "@/components/home/hero";
 import { Offers } from "@/components/home/offers";
 import { ProductGridSection } from "@/components/home/product-grid-section";
 import { Reviews } from "@/components/home/reviews";
+import { SplitPosters } from "@/components/home/split-posters";
 import { TrustStrip } from "@/components/home/trust-strip";
 import { getReviews } from "@/lib/reviews";
 import { getCollections, getProducts } from "@/lib/shopify/products";
 
+/** 50 is the same ceiling /collections treats as "all" — see COLLECTION_COUNT
+ *  there. Below it, "Browse all collections" would be a lie for any store
+ *  with more than 5 collections. */
+const HOME_COLLECTION_COUNT = 50;
+
 /**
- * Section order is the argument the page makes: want it → trust it → buy more
- * of it → objections.
+ * Section order is the argument the page makes: want it → the range → trust
+ * it → buy more of it → objections.
  *
- * No section on this page is a spec sheet or a price list — those live on the
- * product and custom pages, where a visitor has already decided to look
- * closely. The home page's job is to look like a brand a stranger would trust
- * with a card number, which is a design problem before it is a content
- * problem: fewer, denser blocks of text; product photography carrying the
- * argument instead of bullet lists; one clear offer instead of every discount
- * code spelled out. TrustStrip already covers paper, shipping, replacement and
- * checkout security in one glance — a second section re-asserting the same
- * four facts in more words would read as padding, not proof.
+ * Custom prints move up near the top because they're what nobody else in this
+ * market offers — leading with them, not burying them after two product
+ * shelves, is the actual differentiator. No section on this page is a spec
+ * sheet or a price list — those live on the product and custom pages, where a
+ * visitor has already decided to look closely. TrustStrip already covers
+ * paper, shipping, replacement and checkout security in one glance — a second
+ * section re-asserting the same four facts in more words would read as
+ * padding, not proof.
  */
 export default async function Home() {
   const [collections, bestSellers, newArrivals, reviews] = await Promise.all([
-    getCollections(5),
+    getCollections(HOME_COLLECTION_COUNT),
     getProducts({ first: 4, sortKey: "BEST_SELLING" }),
     getProducts({ first: 4, sortKey: "CREATED_AT", reverse: true }),
     getReviews(),
@@ -39,8 +44,13 @@ export default async function Home() {
 
       {collections.length > 0 ? <Categories collections={collections} /> : null}
 
-      {/* Best sellers lead: it's the highest-converting shelf, and it doubles
-          as social proof — other people bought these. */}
+      {/* The custom range is the part of the catalogue nobody else can copy. */}
+      <CustomPrints />
+
+      <SplitPosters />
+
+      {/* Best sellers: it's the highest-converting shelf, and it doubles as
+          social proof — other people bought these. */}
       {bestSellers.length > 0 ? (
         <ProductGridSection
           title="Best sellers"
@@ -53,10 +63,6 @@ export default async function Home() {
 
       <Offers />
 
-      {/* The custom range is the part of the catalogue nobody else can copy,
-          and two of its four formats exist here and nowhere else on the site. */}
-      <CustomPrints />
-
       {newArrivals.length > 0 ? (
         <ProductGridSection
           title="New arrivals"
@@ -66,8 +72,8 @@ export default async function Home() {
         />
       ) : null}
 
-      {/* Empty in production until a real reviews app is connected — see
-          getReviews. Renders nothing rather than inventing social proof. */}
+      {/* Renders nothing until a real reviews app is connected — see
+          getReviews. Never invents social proof. */}
       <Reviews reviews={reviews} />
 
       <Faq />

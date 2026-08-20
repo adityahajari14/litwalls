@@ -4,14 +4,7 @@ import type { Review } from "@/components/home/reviews";
 import { ButtonLink } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
 import { Rating } from "@/components/ui/rating";
-import {
-  BUNDLES,
-  FIRST_ORDER_DISCOUNT,
-  FIRST_ORDER_MINIMUM,
-} from "@/lib/offers";
 import { ENTRY_PRICE } from "@/lib/pricing";
-
-const [SMALL_BUNDLE] = BUNDLES;
 
 const HERO_POSTERS = [
   { src: "/categories/marvel.jpg", offset: "-translate-y-6" },
@@ -88,19 +81,6 @@ export function Hero({ reviews = [] }: { reviews?: Review[] }) {
               300gsm matte prints of the movies, music and anime you actually
               love — or upload your own. From ₹{ENTRY_PRICE}, on your wall this
               week.
-            </p>
-
-            {/* The bundle sits in the first screenful because it is the offer
-                that changes basket size, and it only works if someone learns
-                about it before they have decided how many to buy. */}
-            <p className="mt-4 inline-flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-ink-800">
-              <span className="rounded-full bg-brand-500 px-2.5 py-1 text-xs font-semibold text-white">
-                Buy {SMALL_BUNDLE.pay}, get {SMALL_BUNDLE.total}
-              </span>
-              <span>
-                and ₹{FIRST_ORDER_DISCOUNT} off your first order over ₹
-                {FIRST_ORDER_MINIMUM}
-              </span>
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">

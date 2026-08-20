@@ -15,13 +15,15 @@ export function Categories({ collections }: { collections: Collection[] }) {
           href="/collections"
           linkLabel="Browse all collections"
         />
-      </Container>
 
-      {/* Scrolls edge-to-edge on phones so the tiles hint at more content. */}
-      <div className="mt-8 w-full overflow-x-auto no-scrollbar lg:overflow-x-visible">
-        <ul className="mx-auto flex w-max gap-4 px-4 sm:px-6 lg:grid lg:w-auto lg:max-w-7xl lg:auto-cols-fr lg:grid-flow-col lg:gap-6 lg:px-8">
+        {/* A wrapping grid, not a single scrolling row — with every collection
+            on the site listed here, "browse all collections" should mean the
+            visitor can actually see all of them without scrolling sideways.
+            The custom-upload tile that used to close this row now lives in
+            its own CustomPrints section, so it isn't repeated here. */}
+        <ul className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6 lg:gap-6">
           {collections.map((collection) => (
-            <li key={collection.id} className="w-40 shrink-0 lg:w-auto">
+            <li key={collection.id}>
               <Link href={`/collections/${collection.handle}`} className="group block">
                 {/* The posters carry their own typography, so the label sits
                     below the frame rather than fighting the artwork. */}
@@ -46,28 +48,8 @@ export function Categories({ collections }: { collections: Collection[] }) {
               </Link>
             </li>
           ))}
-
-          <li className="w-40 shrink-0 lg:w-auto">
-            <Link href="/custom" className="group block">
-              <div className="grid aspect-3/4 place-items-center gap-2 rounded-card border-2 border-dashed border-ink-300 bg-ink-50 px-3 text-center transition-colors group-hover:border-brand-400 group-hover:bg-brand-50">
-                <div>
-                  <span className="mx-auto grid size-11 place-items-center rounded-full bg-ink-950 text-2xl leading-none text-white transition-colors group-hover:bg-brand-500">
-                    +
-                  </span>
-                  <p className="mt-3 text-sm font-medium text-ink-700">
-                    Upload your
-                    <br />
-                    own design
-                  </p>
-                </div>
-              </div>
-              <h3 className="mt-3 font-display text-xl text-ink-950 transition-colors group-hover:text-brand-600">
-                Custom
-              </h3>
-            </Link>
-          </li>
         </ul>
-      </div>
+      </Container>
     </section>
   );
 }

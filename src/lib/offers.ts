@@ -52,6 +52,17 @@ export const SPLIT_BUNDLES: Bundle[] = [
 export const BUNDLES = SINGLE_BUNDLES;
 
 /**
+ * How many come free in a bundle — "buy 4, get 3 free" rather than "buy 4,
+ * get 7". The first phrasing states the deal in terms of what changes for the
+ * customer (their cost stays the same, more shows up); the second makes them
+ * do the subtraction themselves to see the offer at all. One helper here so
+ * every consumer phrases it the same way.
+ */
+export function bundleFreeCount(bundle: Bundle): number {
+  return bundle.total - bundle.pay;
+}
+
+/**
  * The gift-with-purchase.
  *
  * Kept as a separate concept from the bundle ladders because it is the one

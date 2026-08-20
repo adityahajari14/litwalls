@@ -13,6 +13,7 @@ import {
   UserIcon,
 } from "@/components/icons";
 import { useCart } from "@/components/cart/cart-provider";
+import { FREE_SHIPPING_THRESHOLD } from "@/lib/offers";
 import { MAIN_NAV } from "@/lib/navigation";
 import { cn } from "@/lib/cn";
 import type { Collection } from "@/lib/shopify/types";
@@ -306,7 +307,7 @@ export function Header({ collections }: { collections: Collection[] }) {
             </nav>
 
             <p className="border-t border-ink-100 px-6 py-4 text-sm text-ink-500">
-              Free shipping over ₹499
+              Free shipping over ₹{FREE_SHIPPING_THRESHOLD}
             </p>
           </div>
         </div>

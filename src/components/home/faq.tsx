@@ -2,6 +2,7 @@ import { Accordion } from "@/components/ui/accordion";
 import { Container } from "@/components/ui/container";
 import { SectionHeading } from "@/components/ui/section-heading";
 import {
+  bundleFreeCount,
   FIRST_ORDER_CODE,
   FIRST_ORDER_DISCOUNT,
   FIRST_ORDER_MINIMUM,
@@ -35,7 +36,7 @@ const FAQS = [
   {
     question: "What offers can I use?",
     answer:
-      `On single posters: buy ${SINGLE_BUNDLES.map((b) => `${b.pay} and get ${b.total}`).join(", buy ")} — mix any designs you like, the cheapest ones come free. On split-in-3 sets: buy ${SPLIT_BUNDLES.map((b) => `${b.pay} and get ${b.total}`).join(", or buy ")} sets. First orders over ₹${FIRST_ORDER_MINIMUM} also get ₹${FIRST_ORDER_DISCOUNT} off with code ${FIRST_ORDER_CODE}, and first orders over ₹${FREE_SHIPPING_THRESHOLD} include 5 free mini pocket prints.`,
+      `On single posters: buy ${SINGLE_BUNDLES.map((b) => `${b.pay} and get ${bundleFreeCount(b)} free`).join(", buy ")} — mix any designs you like, the cheapest ones come free. On split-in-3 sets: buy ${SPLIT_BUNDLES.map((b) => `${b.pay} and get ${bundleFreeCount(b)} free`).join(", or buy ")}. First orders over ₹${FIRST_ORDER_MINIMUM} also get ₹${FIRST_ORDER_DISCOUNT} off with code ${FIRST_ORDER_CODE}, and first orders over ₹${FREE_SHIPPING_THRESHOLD} include 5 free mini pocket prints.`,
   },
   {
     question: "What if my poster arrives damaged or blurred?",

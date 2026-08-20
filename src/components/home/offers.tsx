@@ -2,6 +2,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
 import { GiftIcon, ReturnIcon, TagIcon, TruckIcon } from "@/components/icons";
 import {
+  bundleFreeCount,
   FIRST_ORDER_CODE,
   FIRST_ORDER_DISCOUNT,
   FIRST_ORDER_MINIMUM,
@@ -49,11 +50,11 @@ export function Offers() {
             <p className="mt-4 max-w-md text-ink-300 text-pretty">
               Mix any designs you like. Up to{" "}
               <span className="text-white">
-                {bestSingle.pay} for the price of {bestSingle.total}
+                buy {bestSingle.pay}, get {bundleFreeCount(bestSingle)} free
               </span>{" "}
               on posters, or{" "}
               <span className="text-white">
-                {bestSplit.pay} for {bestSplit.total}
+                buy {bestSplit.pay}, get {bundleFreeCount(bestSplit)} free
               </span>{" "}
               on split sets — see the codes in the FAQ below.
             </p>

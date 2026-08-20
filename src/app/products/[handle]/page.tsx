@@ -14,6 +14,7 @@ import { Container } from "@/components/ui/container";
 import { Price } from "@/components/ui/price";
 import { LeafIcon, ReturnIcon, TruckIcon } from "@/components/icons";
 import { discountPercent } from "@/lib/money";
+import { FLAT_SHIPPING_FEE, FREE_SHIPPING_THRESHOLD } from "@/lib/offers";
 import {
   getProduct,
   getProductHandles,
@@ -103,13 +104,12 @@ const SHIPPING_FAQ = [
   },
   {
     question: "Shipping",
-    answer:
-      "Dispatched within 24 hours, rolled in a rigid tube — never folded. Metro cities receive in 3–4 days, the rest of India in 4–7. Free over ₹499, otherwise a flat ₹49.",
+    answer: `Dispatched within 24 hours, rolled in a rigid tube — never folded. Metro cities receive in 3–4 days, the rest of India in 4–7. Free over ₹${FREE_SHIPPING_THRESHOLD}, otherwise a flat ₹${FLAT_SHIPPING_FEE}.`,
   },
   {
     question: "Returns",
     answer:
-      "If it arrives damaged, send us a photo within 7 days and we'll ship a replacement free. No return shipping, no arguing.",
+      "If it arrives damaged or blurred, send us a short video within 7 days and we'll ship a replacement free. No return shipping, no arguing.",
   },
 ];
 
