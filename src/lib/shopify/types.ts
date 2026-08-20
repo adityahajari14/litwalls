@@ -122,42 +122,43 @@ export type Cart = {
 };
 
 /**
- * What Shopify actually took off the cart, as a number.
+ * What the cart would cost with no discount at all — every line at full price.
  *
- * Summed from the LINES, not the cart: a buy-X-get-Y discount is allocated per
- * line, and Shopify splits the affected line into a paid one and a free one to
- * express it. The cart-level `discountAllocations` field stays empty for these,
- * which is why this reads the lines instead.
- *
- * Verified against the live store on 2026-08-20: 7 posters at ₹149 with
- * LIT4FOR7 applied yields a 4× line at ₹596 and a 3× line discounted by ₹447.
- */
-export function cartDiscountTotal(cart: Cart): number {
-  return cart.lines.nodes.reduce(
-    (sum, line) =>
-      sum +
-      line.discountAllocations.reduce(
-        (lineSum, allocation) =>
-          lineSum + Number(allocation.discountedAmount.amount),
-        0,
-      ),
-    0,
-  );
-}
-
-/**
- * What the cart would have cost with no discount — the sum of the lines at
- * full price.
- *
- * `cart.cost.subtotalAmount` is already NET of a BXGY discount (₹596 for seven
- * ₹149 posters), so showing it as "Subtotal" above a "you saved ₹447" line
- * would subtract the discount twice and understate the total.
+ * `cart.cost.subtotalAmount` cannot be used for this: it is already NET of a
+ * buy-X-get-Y discount (₹596 for seven ₹149 posters), so showing it above a
+ * "you saved" line would subtract the discount twice.
  */
 export function cartUndiscountedTotal(cart: Cart): number {
   return cart.lines.nodes.reduce(
     (sum, line) => sum + Number(line.cost.subtotalAmount.amount),
     0,
   );
+}
+
+/**
+ * Everything Shopify took off, across every kind of discount.
+ *
+ * Derived as (full price − what Shopify says you owe) rather than by summing
+ * allocations, because the two discount classes report themselves in different
+ * places and a cart can carry both at once:
+ *
+ *   - A buy-X-get-Y (product) discount lands on the LINE. Shopify splits the
+ *     affected line into a paid one and a free one, and `cost.subtotalAmount`
+ *     already reflects it.
+ *   - A ₹100-off-order discount lands on the ORDER. No line allocation appears
+ *     at all; only `cost.totalAmount` drops.
+ *
+ * Summing line allocations alone reported ₹0 for an order discount. Verified
+ * on the live store 2026-08-20 with seven ₹149 posters: bundle alone → ₹447
+ * off; LIT100 alone → ₹100 off; both → ₹547 off, ₹496 to pay.
+ */
+export function cartDiscountTotal(cart: Cart): number {
+  const saving =
+    cartUndiscountedTotal(cart) - Number(cart.cost.totalAmount.amount);
+
+  // Never negative: taxes or fees could in principle push totalAmount above
+  // the line sum, and a "−₹-40 discount" is worse than showing none.
+  return saving > 0 ? saving : 0;
 }
 
 /** Every cart mutation returns this same envelope. */

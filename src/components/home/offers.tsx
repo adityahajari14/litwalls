@@ -93,7 +93,8 @@ export function Offers() {
                   5 free mini prints
                 </p>
                 <p className="mt-1 text-xs text-ink-400">
-                  On first orders over ₹{GIFT_THRESHOLD}.
+                  Added automatically on orders over ₹{GIFT_THRESHOLD} that
+                  aren&apos;t already taking a bundle.
                 </p>
               </div>
             </li>

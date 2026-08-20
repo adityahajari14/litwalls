@@ -76,7 +76,42 @@ export function bundleFreeCount(bundle: Bundle): number {
  * being given away on a single ₹79 poster.
  */
 export const GIFT_THRESHOLD = FREE_SHIPPING_THRESHOLD;
-export const GIFT_DESCRIPTION = "5 free mini pocket prints on your first order";
+export const GIFT_DESCRIPTION = "5 free mini pocket prints";
+
+/**
+ * The free gift, and the two Shopify behaviours that shape how it works.
+ *
+ * 1. **Shopify never adds the free item itself.** A buy-X-get-Y discount whose
+ *    "get" product is absent from the cart is simply inapplicable. So the
+ *    storefront adds the line (see syncCartGift) and the Shopify discount
+ *    makes it cost nothing. Both halves are required.
+ *
+ * 2. **Only one buy-X-get-Y discount applies per order.** Verified on the live
+ *    store 2026-08-20 across every combination: two BXGY discounts never both
+ *    apply, whether both are codes, or one is an automatic discount, and
+ *    regardless of what `combinesWith` says. With LIT4FOR7 on the cart the
+ *    gift stayed at full price; with no bundle code it dropped to ₹0.
+ *
+ * Consequence: the gift is set up in Shopify as an AUTOMATIC discount (no code
+ * to type) and it applies to orders that are not already taking a bundle. A
+ * customer buying 7 posters gets the bundle, which is worth far more than the
+ * gift — so this is the right way round, but it must be said honestly on the
+ * site rather than implying the two stack.
+ */
+/**
+ * True when a cart is already taking a bundle, and therefore cannot also take
+ * the gift. Used to keep the storefront from adding a gift line that Shopify
+ * would then charge for.
+ */
+export function bundleBlocksGift(earnedCodes: string[]): boolean {
+  return earnedCodes.length > 0;
+}
+
+/** Handle of the product given away. Must exist in Shopify and be in stock. */
+export const GIFT_PRODUCT_HANDLE = "mini-pocket-prints-pack-of-5";
+
+/** Marks the line as ours, so the cart can withdraw it if the basket shrinks. */
+export const GIFT_ATTRIBUTE = "_gift";
 
 /** The cheapest thing on the site, for "from ₹X" copy. Re-exported so that
  *  offer components need only one import. */

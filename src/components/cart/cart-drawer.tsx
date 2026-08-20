@@ -4,7 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
 
-import { CloseIcon, LockIcon, ReturnIcon, TagIcon } from "@/components/icons";
+import {
+  CheckIcon,
+  CloseIcon,
+  GiftIcon,
+  LockIcon,
+  ReturnIcon,
+  TagIcon,
+} from "@/components/icons";
 import { useCart } from "@/components/cart/cart-provider";
 import { FreeShippingBar } from "@/components/cart/free-shipping-bar";
 import { ButtonLink } from "@/components/ui/button";
@@ -12,8 +19,19 @@ import { trackMetaInitiateCheckout } from "@/lib/analytics/meta-pixel";
 import { withClaimedDiscount } from "@/lib/checkout-url";
 import { CUSTOM_ART_ATTRIBUTE } from "@/lib/custom-poster";
 import { formatMoney } from "@/lib/money";
-import { bundleFreeCount, nextBundle, SINGLE_BUNDLES } from "@/lib/offers";
-import { removeItem, updateItemQuantity } from "@/lib/shopify/actions";
+import {
+  bundleFreeCount,
+  GIFT_ATTRIBUTE,
+  MANAGED_DISCOUNT_CODES,
+  nextBundle,
+  SINGLE_BUNDLES,
+} from "@/lib/offers";
+import {
+  applyDiscount,
+  removeDiscount,
+  removeItem,
+  updateItemQuantity,
+} from "@/lib/shopify/actions";
 import {
   cartDiscountTotal,
   cartUndiscountedTotal,
@@ -61,6 +79,13 @@ function LineItem({ line }: { line: CartLine }) {
 
   const { product } = line.merchandise;
 
+  // Added by the cart, not chosen by the customer: it has no quantity to
+  // adjust and removing it by hand would only bring it back on the next
+  // change, so it renders as a fact rather than an editable line.
+  const isGift = line.attributes.some(
+    (attribute) => attribute.key === GIFT_ATTRIBUTE,
+  );
+
   // A custom poster's thumbnail should be the customer's own artwork, not the
   // generic product photo — otherwise three custom lines look identical.
   const artwork = line.attributes.find(
@@ -103,15 +128,17 @@ function LineItem({ line }: { line: CartLine }) {
             >
               {product.title}
             </Link>
-            <button
-              type="button"
-              onClick={() => mutate(() => removeItem(line.id))}
-              disabled={pending}
-              aria-label={`Remove ${product.title}`}
-              className="shrink-0 text-ink-400 transition-colors hover:text-ink-900"
-            >
-              <CloseIcon className="size-4" />
-            </button>
+            {isGift ? null : (
+              <button
+                type="button"
+                onClick={() => mutate(() => removeItem(line.id))}
+                disabled={pending}
+                aria-label={`Remove ${product.title}`}
+                className="shrink-0 text-ink-400 transition-colors hover:text-ink-900"
+              >
+                <CloseIcon className="size-4" />
+              </button>
+            )}
           </div>
 
           {/* The variant title IS the size for multi-size products. Without it
@@ -126,9 +153,19 @@ function LineItem({ line }: { line: CartLine }) {
             </p>
           ) : null}
 
-          <p className="mt-1 text-sm text-ink-600">
-            {formatMoney(line.merchandise.price)}
-          </p>
+          {isGift ? (
+            <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-success">
+              <GiftIcon className="size-3.5" />
+              Free gift
+              <span className="font-normal text-ink-400 line-through">
+                {formatMoney(line.merchandise.price)}
+              </span>
+            </p>
+          ) : (
+            <p className="mt-1 text-sm text-ink-600">
+              {formatMoney(line.merchandise.price)}
+            </p>
+          )}
 
           {/* A custom poster is otherwise indistinguishable from a catalogue
               one here — same title, same price. The size and note are what the
@@ -137,7 +174,11 @@ function LineItem({ line }: { line: CartLine }) {
           {line.attributes.length > 0 ? (
             <ul className="mt-1 space-y-0.5">
               {line.attributes
-                .filter((attribute) => attribute.key !== CUSTOM_ART_ATTRIBUTE)
+                .filter(
+                  (attribute) =>
+                    attribute.key !== CUSTOM_ART_ATTRIBUTE &&
+                    attribute.key !== GIFT_ATTRIBUTE,
+                )
                 .map((attribute) => (
                   <li key={attribute.key} className="truncate text-xs text-ink-500">
                     {attribute.key}: {attribute.value}
@@ -147,7 +188,10 @@ function LineItem({ line }: { line: CartLine }) {
           ) : null}
 
           <div className="mt-2 flex items-center justify-between">
-            <div className="inline-flex items-center rounded-full border border-ink-200">
+            {isGift ? (
+              <span className="text-xs text-ink-500">Qty 1</span>
+            ) : (
+              <div className="inline-flex items-center rounded-full border border-ink-200">
               <button
                 type="button"
                 className="grid size-8 place-items-center text-ink-700 transition-colors hover:text-ink-950 disabled:text-ink-300"
@@ -172,16 +216,115 @@ function LineItem({ line }: { line: CartLine }) {
                 aria-label="Increase quantity"
               >
                 +
-              </button>
-            </div>
+                </button>
+              </div>
+            )}
 
             <p className="text-sm font-semibold text-ink-950">
-              {formatMoney(line.cost.totalAmount)}
+              {isGift ? "Free" : formatMoney(line.cost.totalAmount)}
             </p>
           </div>
         </div>
       </div>
     </li>
+  );
+}
+
+/**
+ * Manual code entry, alongside the codes the cart applies for itself.
+ *
+ * Bundle codes are added automatically as the basket crosses a rung, but they
+ * are ordinary Shopify codes, so someone who has one written down can still
+ * type it. Codes this system manages are shown without a remove button — the
+ * cart owns those, and removing one by hand would only have it reappear on the
+ * next line change.
+ */
+function DiscountForm({ cart }: { cart: Cart }) {
+  const { refresh } = useCart();
+  const [code, setCode] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  const managed = new Set(MANAGED_DISCOUNT_CODES);
+  const applied = cart.discountCodes.filter((discount) => discount.applicable);
+
+  function submit(event: React.FormEvent) {
+    event.preventDefault();
+    if (!code.trim() || pending) return;
+
+    startTransition(async () => {
+      const result = await applyDiscount(code);
+      if (result.ok) {
+        setCode("");
+        setError(null);
+      } else {
+        setError(result.message);
+      }
+      await refresh();
+    });
+  }
+
+  return (
+    <div className="mt-4 border-t border-ink-100 pt-4">
+      <form onSubmit={submit} className="flex gap-2">
+        <input
+          value={code}
+          onChange={(event) => {
+            setCode(event.target.value);
+            setError(null);
+          }}
+          placeholder="Discount code"
+          aria-label="Discount code"
+          autoComplete="off"
+          autoCapitalize="characters"
+          className="h-10 min-w-0 flex-1 rounded-lg border border-ink-200 bg-white px-3 text-sm uppercase placeholder:normal-case placeholder:text-ink-400 focus:border-ink-400 focus:outline-none"
+        />
+        <button
+          type="submit"
+          disabled={pending || !code.trim()}
+          className="h-10 shrink-0 rounded-lg bg-ink-950 px-4 text-sm font-medium text-white transition-colors hover:bg-ink-800 disabled:opacity-40"
+        >
+          {pending ? "Applying…" : "Apply"}
+        </button>
+      </form>
+
+      {error ? (
+        <p role="alert" className="mt-2 text-xs text-brand-700">
+          {error}
+        </p>
+      ) : null}
+
+      {applied.length > 0 ? (
+        <ul className="mt-3 flex flex-wrap gap-2">
+          {applied.map((discount) => (
+            <li
+              key={discount.code}
+              className="inline-flex items-center gap-1.5 rounded-full bg-success/10 py-1 pr-1 pl-2.5 text-xs font-medium text-success"
+            >
+              <CheckIcon className="size-3" />
+              {discount.code}
+              {managed.has(discount.code) ? (
+                <span className="pr-1.5 text-success/70">auto</span>
+              ) : (
+                <button
+                  type="button"
+                  aria-label={`Remove ${discount.code}`}
+                  onClick={() =>
+                    startTransition(async () => {
+                      await removeDiscount(discount.code);
+                      await refresh();
+                    })
+                  }
+                  className="grid size-4 place-items-center rounded-full text-success/70 transition-colors hover:bg-success/15 hover:text-success"
+                >
+                  <CloseIcon className="size-2.5" />
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
   );
 }
 
@@ -296,7 +439,7 @@ export function CartDrawer() {
                 <div className="mt-1.5 flex items-baseline justify-between text-sm">
                   <span className="flex items-center gap-1.5 font-medium text-success">
                     <TagIcon className="size-3.5" />
-                    Bundle discount
+                    Discount
                   </span>
                   <span className="font-medium text-success">
                     −
@@ -319,6 +462,7 @@ export function CartDrawer() {
               </p>
 
               {cart ? <BundleNudge cart={cart} /> : null}
+              {cart ? <DiscountForm cart={cart} /> : null}
 
               <a
                 href={cart?.checkoutUrl ?? "#"}

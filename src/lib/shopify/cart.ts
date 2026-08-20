@@ -11,8 +11,16 @@ import {
   UPDATE_CART_DISCOUNTS,
   UPDATE_CART_LINES,
 } from "@/lib/shopify/queries";
-import { earnedDiscountCodes, MANAGED_DISCOUNT_CODES } from "@/lib/offers";
-import { getSplitHandles } from "@/lib/shopify/products";
+import {
+  earnedDiscountCodes,
+  GIFT_ATTRIBUTE,
+  GIFT_PRODUCT_HANDLE,
+  GIFT_THRESHOLD,
+  MANAGED_DISCOUNT_CODES,
+  bundleBlocksGift,
+} from "@/lib/offers";
+import { getProduct, getSplitHandles } from "@/lib/shopify/products";
+import { defaultVariant } from "@/lib/shopify/types";
 import type { Attribute, Cart, CartMutationPayload } from "@/lib/shopify/types";
 
 /**
@@ -159,13 +167,22 @@ export async function updateCartDiscounts(
  *    added and removed. Otherwise adding a fourth poster would silently strip
  *    the first-order discount someone had already applied.
  */
-export async function syncCartDiscounts(cart: Cart): Promise<Cart> {
+/**
+ * The bundle codes this cart has earned, counting each ladder separately.
+ *
+ * Gift lines are excluded from the count: a gift the cart handed out must not
+ * be what tips the customer onto the next bundle rung.
+ */
+async function earnedBundleCodes(cart: Cart): Promise<string[]> {
   const splitHandles = await getSplitHandles();
 
   let singleQuantity = 0;
   let splitQuantity = 0;
 
   for (const line of cart.lines.nodes) {
+    if (line.attributes.some((attribute) => attribute.key === GIFT_ATTRIBUTE)) {
+      continue;
+    }
     if (splitHandles.has(line.merchandise.product.handle)) {
       splitQuantity += line.quantity;
     } else {
@@ -173,7 +190,11 @@ export async function syncCartDiscounts(cart: Cart): Promise<Cart> {
     }
   }
 
-  const earned = earnedDiscountCodes({ singleQuantity, splitQuantity });
+  return earnedDiscountCodes({ singleQuantity, splitQuantity });
+}
+
+export async function syncCartDiscounts(cart: Cart): Promise<Cart> {
+  const earned = await earnedBundleCodes(cart);
 
   // Everything this system owns, so we know which existing codes are ours to
   // drop and which belong to the customer.
@@ -200,4 +221,121 @@ export async function syncCartDiscounts(cart: Cart): Promise<Cart> {
     // an error on an action they didn't take.
     return cart;
   }
+}
+
+
+/**
+ * Adds a code the customer typed, keeping everything already on the cart.
+ *
+ * Whether the code is real, live, and applicable to this cart is Shopify's
+ * decision — the returned cart carries the verdict on
+ * `discountCodes[].applicable`, and the caller reports that rather than
+ * assuming success. Shopify accepts an unknown code without error, so a
+ * missing `applicable` check would silently tell the customer it worked.
+ */
+export async function applyDiscountCode(
+  cart: Cart,
+  code: string,
+): Promise<Cart> {
+  const normalized = code.trim().toUpperCase();
+  const existing = cart.discountCodes.map((discount) => discount.code);
+  if (existing.includes(normalized)) return cart;
+
+  return updateCartDiscounts(cart.id, [...existing, normalized]);
+}
+
+/** Removes one code, leaving the rest — including auto-applied ones — alone. */
+export async function removeDiscountCode(
+  cart: Cart,
+  code: string,
+): Promise<Cart> {
+  const next = cart.discountCodes
+    .map((discount) => discount.code)
+    .filter((existing) => existing !== code);
+
+  return updateCartDiscounts(cart.id, next);
+}
+
+
+/** Lines this system put in the cart, rather than the customer. */
+function giftLines(cart: Cart) {
+  return cart.lines.nodes.filter((line) =>
+    line.attributes.some((attribute) => attribute.key === GIFT_ATTRIBUTE),
+  );
+}
+
+/** What the customer actually chose, ignoring anything we added for them. */
+function customerSubtotal(cart: Cart): number {
+  return cart.lines.nodes
+    .filter(
+      (line) =>
+        !line.attributes.some((attribute) => attribute.key === GIFT_ATTRIBUTE),
+    )
+    .reduce((sum, line) => sum + Number(line.cost.subtotalAmount.amount), 0);
+}
+
+/**
+ * Puts the free gift in the cart once the order qualifies, and takes it back
+ * out when it no longer does.
+ *
+ * Shopify will not add a free item on its own — a buy-X-get-Y discount whose
+ * "get" product isn't in the cart is inapplicable, full stop. So this adds the
+ * line and the automatic gift discount in Shopify makes it cost nothing.
+ *
+ * If that discount doesn't exist in admin, or a bundle has already claimed the
+ * order's one allowed buy-X-get-Y, the guard below takes the line straight
+ * back out rather than billing someone for a gift.
+ *
+ * The threshold is measured on what the CUSTOMER chose. Counting the gift's
+ * own value toward the threshold would let a ₹300 order qualify on the
+ * strength of the gift it hasn't earned.
+ */
+export async function syncCartGift(cart: Cart): Promise<Cart> {
+  const existing = giftLines(cart);
+
+  // Shopify applies only one buy-X-get-Y discount per order, and the bundle is
+  // worth far more than the gift. A cart taking a bundle therefore gets no
+  // gift line at all — adding one would put an item Shopify won't discount in
+  // front of the customer at full price. See bundleBlocksGift.
+  const earned = await earnedBundleCodes(cart);
+  const qualifies =
+    !bundleBlocksGift(earned) && customerSubtotal(cart) >= GIFT_THRESHOLD;
+
+  if (!qualifies) {
+    if (existing.length === 0) return cart;
+    return removeCartLines(
+      cart.id,
+      existing.map((line) => line.id),
+    );
+  }
+
+  // Qualifies, and the gift is already there — but only keep it if it is
+  // actually free. A gift line the customer is being charged for is worse
+  // than no gift at all.
+  if (existing.length > 0) {
+    const charged = existing.filter(
+      (line) => Number(line.cost.totalAmount.amount) > 0,
+    );
+    if (charged.length === 0) return cart;
+
+    return removeCartLines(
+      cart.id,
+      charged.map((line) => line.id),
+    );
+  }
+
+  const product = await getProduct(GIFT_PRODUCT_HANDLE);
+  const variant = product ? defaultVariant(product) : null;
+
+  // No gift product published, or it's out of stock. Say nothing and carry on
+  // — the order is still perfectly valid without it.
+  if (!variant?.availableForSale) return cart;
+
+  return addCartLines(cart.id, [
+    {
+      merchandiseId: variant.id,
+      quantity: 1,
+      attributes: [{ key: GIFT_ATTRIBUTE, value: "1" }],
+    },
+  ]);
 }

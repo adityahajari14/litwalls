@@ -36,7 +36,7 @@ const FAQS = [
   {
     question: "What offers can I use?",
     answer:
-      `On single posters: buy ${SINGLE_BUNDLES.map((b) => `${b.pay} and get ${bundleFreeCount(b)} free`).join(", buy ")} — mix any designs you like, the cheapest ones come free. On split-in-3 sets: buy ${SPLIT_BUNDLES.map((b) => `${b.pay} and get ${bundleFreeCount(b)} free`).join(", or buy ")}. First orders over ₹${FIRST_ORDER_MINIMUM} also get ₹${FIRST_ORDER_DISCOUNT} off with code ${FIRST_ORDER_CODE}, and first orders over ₹${FREE_SHIPPING_THRESHOLD} include 5 free mini pocket prints.`,
+      `On single posters: buy ${SINGLE_BUNDLES.map((b) => `${b.pay} and get ${bundleFreeCount(b)} free`).join(", buy ")} — mix any designs you like, the cheapest ones come free. On split-in-3 sets: buy ${SPLIT_BUNDLES.map((b) => `${b.pay} and get ${bundleFreeCount(b)} free`).join(", or buy ")}. First orders over ₹${FIRST_ORDER_MINIMUM} also get ₹${FIRST_ORDER_DISCOUNT} off with code ${FIRST_ORDER_CODE}, and orders over ₹${FREE_SHIPPING_THRESHOLD} that aren't already taking a bundle get 5 free mini pocket prints, added automatically. The bundle and the free gift can't both apply to one order — you'll always get whichever is worth more.`,
   },
   {
     question: "What if my poster arrives damaged or blurred?",

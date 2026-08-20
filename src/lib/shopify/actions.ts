@@ -5,12 +5,15 @@ import { revalidatePath } from "next/cache";
 import { createStagedUpload, type StagedTarget } from "@/lib/shopify/admin";
 import {
   addCartLines,
+  applyDiscountCode,
   createCart,
   getCart,
   getCartId,
   removeCartLines,
+  removeDiscountCode,
   setCartId,
   syncCartDiscounts,
+  syncCartGift,
   updateCartLines,
   type CartLineInput,
 } from "@/lib/shopify/cart";
@@ -25,9 +28,23 @@ import {
   CUSTOM_SIZE_ATTRIBUTE,
   printSize,
 } from "@/lib/custom-poster";
-import { defaultVariant, type Attribute } from "@/lib/shopify/types";
+import { defaultVariant, type Attribute, type Cart } from "@/lib/shopify/types";
 
 export type CartActionResult = { ok: true } | { ok: false; message: string };
+
+/**
+ * Brings the cart's automatic parts in line with what's in it.
+ *
+ * Order matters: the gift is settled first, then the bundle codes are
+ * recalculated against the resulting lines. The gift itself is an automatic
+ * Shopify discount, so it needs no code — but whether it belongs in the cart
+ * at all depends on which bundle the cart earned, so it has to be decided
+ * before the codes are written.
+ */
+async function reconcileCart(cart: Cart): Promise<void> {
+  const withGift = await syncCartGift(cart);
+  await syncCartDiscounts(withGift);
+}
 
 function toResult(error: unknown): CartActionResult {
   if (error instanceof ShopifyError) {
@@ -54,7 +71,7 @@ export async function addItem(
     if (cartId) {
       try {
         const cart = await addCartLines(cartId, [line]);
-        await syncCartDiscounts(cart);
+        await reconcileCart(cart);
         revalidatePath("/", "layout");
         return { ok: true };
       } catch {
@@ -65,7 +82,7 @@ export async function addItem(
 
     const cart = await createCart([line]);
     await setCartId(cart.id);
-    await syncCartDiscounts(cart);
+    await reconcileCart(cart);
     revalidatePath("/", "layout");
     return { ok: true };
   } catch (error) {
@@ -88,7 +105,7 @@ export async function updateItemQuantity(
 
     // Re-evaluated on every change, so the discount steps down when the
     // customer drops below a rung, not just up when they cross one.
-    await syncCartDiscounts(cart);
+    await reconcileCart(cart);
 
     revalidatePath("/", "layout");
     return { ok: true };
@@ -103,7 +120,60 @@ export async function removeItem(lineId: string): Promise<CartActionResult> {
     if (!cartId) return { ok: false, message: "Your cart has expired." };
 
     const cart = await removeCartLines(cartId, [lineId]);
-    await syncCartDiscounts(cart);
+    await reconcileCart(cart);
+    revalidatePath("/", "layout");
+    return { ok: true };
+  } catch (error) {
+    return toResult(error);
+  }
+}
+
+/**
+ * Applies a code the customer typed into the cart.
+ *
+ * Reports Shopify's verdict rather than assuming the code worked: Shopify
+ * accepts an unknown or expired code without raising an error, marking it
+ * `applicable: false`. Telling someone a dead code was accepted, and letting
+ * them find out at checkout, is worse than saying no here.
+ */
+export async function applyDiscount(code: string): Promise<CartActionResult> {
+  const normalized = code.trim().toUpperCase();
+  if (!normalized) return { ok: false, message: "Enter a code." };
+
+  try {
+    const cart = await getCart();
+    if (!cart) return { ok: false, message: "Your cart is empty." };
+
+    const updated = await applyDiscountCode(cart, normalized);
+
+    const accepted = updated.discountCodes.some(
+      (discount) => discount.code === normalized && discount.applicable,
+    );
+
+    if (!accepted) {
+      // Take it straight back off. Leaving an inapplicable code on the cart
+      // means it silently starts working later if the basket changes, which
+      // is not what the customer was told just now.
+      await removeDiscountCode(updated, normalized);
+      return {
+        ok: false,
+        message: `${normalized} can't be used on this order.`,
+      };
+    }
+
+    revalidatePath("/", "layout");
+    return { ok: true };
+  } catch (error) {
+    return toResult(error);
+  }
+}
+
+export async function removeDiscount(code: string): Promise<CartActionResult> {
+  try {
+    const cart = await getCart();
+    if (!cart) return { ok: false, message: "Your cart is empty." };
+
+    await removeDiscountCode(cart, code);
     revalidatePath("/", "layout");
     return { ok: true };
   } catch (error) {
