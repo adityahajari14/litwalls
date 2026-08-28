@@ -26,12 +26,14 @@ export function CustomPrints({ products }: { products: Product[] }) {
       <Container>
         <SectionHeading
           title="Design your own"
-          subtitle="Your photo or artwork, printed on the same 300gsm matte paper as everything else here."
+          subtitle="Upload your own photo or artwork and we'll print it on the same 300gsm matte paper as the rest of our posters."
           href="/custom"
-          linkLabel="Start uploading"
+          linkLabel="Get started"
         />
 
-        <ul className="mt-8 grid grid-cols-2 gap-x-4 gap-y-6 lg:grid-cols-4 lg:gap-6">
+        {/* 2 columns, then straight to 4 — see the matching comment in
+            ProductGridSection for why 3 and 5 both leave a dead gap here. */}
+        <ul className="mt-8 grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-4 sm:gap-6">
           {products.map((product) => (
             <li key={product.id} className="h-full">
               <ProductCard product={product} />
@@ -41,8 +43,8 @@ export function CustomPrints({ products }: { products: Product[] }) {
 
         <p className="mt-8 flex items-center justify-center gap-2 text-center text-sm text-ink-500">
           <UploadIcon className="size-4 shrink-0 text-ink-400" />
-          We check your file&apos;s resolution before you pay, so nothing prints
-          soft.
+          We check your file&apos;s resolution before checkout, so nothing
+          prints blurry.
         </p>
       </Container>
     </section>

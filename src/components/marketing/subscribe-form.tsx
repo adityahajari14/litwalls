@@ -56,7 +56,7 @@ export function SubscribeForm({
     return (
       <div
         className={cn(
-          "flex items-start gap-2.5 rounded-2xl border border-success/30 bg-success/5 px-4 py-3",
+          "flex items-start gap-2.5 rounded-card border border-success/30 bg-success/5 px-4 py-3",
           className,
         )}
       >

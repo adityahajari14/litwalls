@@ -30,12 +30,19 @@ export type Bundle = {
   code: string;
 };
 
-/** Buy-X-get-Y on single posters only. */
+/**
+ * Buy-X-get-Y on single posters only.
+ *
+ * Codes are named BUY{pay}GET{free}FREE — not BUY{pay}FOR{total}, which was
+ * the original naming and reads backwards. "LIT4FOR7" sounds like paying for
+ * 7 to get 4, the opposite of the deal; a code should be legible on its own,
+ * before anyone reads what it does.
+ */
 export const SINGLE_BUNDLES: Bundle[] = [
-  { pay: 4, total: 7, code: "LIT4FOR7" },
-  { pay: 5, total: 10, code: "LIT5FOR10" },
-  { pay: 6, total: 18, code: "LIT6FOR18" },
-  { pay: 10, total: 36, code: "LIT10FOR36" },
+  { pay: 4, total: 7, code: "BUY4GET3FREE" },
+  { pay: 5, total: 10, code: "BUY5GET5FREE" },
+  { pay: 6, total: 18, code: "BUY6GET12FREE" },
+  { pay: 10, total: 36, code: "BUY10GET26FREE" },
 ];
 
 /**
@@ -43,8 +50,8 @@ export const SINGLE_BUNDLES: Bundle[] = [
  * and priced as a single unit — this ladder counts sets, not panels.
  */
 export const SPLIT_BUNDLES: Bundle[] = [
-  { pay: 1, total: 3, code: "LITSPLIT1FOR3" },
-  { pay: 2, total: 8, code: "LITSPLIT2FOR8" },
+  { pay: 1, total: 3, code: "SPLITBUY1GET2FREE" },
+  { pay: 2, total: 8, code: "SPLITBUY2GET6FREE" },
 ];
 
 /** Backward-compatible alias — existing components read BUNDLES for the
@@ -72,11 +79,22 @@ export function bundleFreeCount(bundle: Bundle): number {
  * customer who has held one is the one who orders a ₹149 pack next time. That
  * makes it an acquisition cost, not a discount.
  *
- * Gated behind the free-shipping threshold so it lifts basket size instead of
- * being given away on a single ₹79 poster.
+ * Its own milestone, not tied to the free-shipping threshold — the two used
+ * to share a number by coincidence (both were 349), which read as one offer
+ * with two names instead of two separate reasons to spend more. ₹799 is
+ * comfortably past a typical single-poster order, so reaching it means the
+ * customer built a real basket rather than adding one extra ₹79 print to
+ * trip a threshold that happened to be nearby.
+ *
+ * A milestone on the ORDER, not on being a first order: anyone's basket
+ * qualifies, not just someone who has never bought before. See
+ * customerSubtotal in cart.ts for what counts toward it.
  */
-export const GIFT_THRESHOLD = FREE_SHIPPING_THRESHOLD;
-export const GIFT_DESCRIPTION = "5 free mini pocket prints";
+export const GIFT_THRESHOLD = 799;
+
+/** One line describing the gift as a whole, for copy that doesn't need to
+ *  single out either option. */
+export const GIFT_DESCRIPTION = "5 mini pocket prints or retro prints";
 
 /**
  * The free gift, and the two Shopify behaviours that shape how it works.
@@ -107,8 +125,35 @@ export function bundleBlocksGift(earnedCodes: string[]): boolean {
   return earnedCodes.length > 0;
 }
 
-/** Handle of the product given away. Must exist in Shopify and be in stock. */
-export const GIFT_PRODUCT_HANDLE = "mini-pocket-prints-pack-of-5";
+export type GiftOption = {
+  /** Stable key stored in the preference cookie — never shown to the customer. */
+  id: string;
+  label: string;
+  /** Must exist in Shopify and be in stock. */
+  handle: string;
+};
+
+/**
+ * The two products a customer can choose between as their free gift. Both are
+ * real, published Shopify products — `defaultVariant` (shopify/types.ts) picks
+ * the cheapest variant of whichever one is chosen, which is the "5" both
+ * descriptions promise (the Set of 5 tier on each).
+ */
+export const GIFT_OPTIONS: GiftOption[] = [
+  { id: "mini", label: "Mini pocket prints", handle: "mini-pocket-prints-pack-of-5" },
+  { id: "retro", label: "Retro prints", handle: "retro-prints" },
+];
+
+export const DEFAULT_GIFT_OPTION = GIFT_OPTIONS[0].id;
+
+/**
+ * Where the customer's pick is remembered. Not httpOnly: it's a display
+ * preference, not a credential, and the cart drawer reads it straight off
+ * `document.cookie` to highlight the current choice without a round trip —
+ * `syncCartGift` (shopify/cart.ts) is the only place that treats it as
+ * authoritative.
+ */
+export const GIFT_CHOICE_COOKIE = "litwalls_gift_choice";
 
 /** Marks the line as ours, so the cart can withdraw it if the basket shrinks. */
 export const GIFT_ATTRIBUTE = "_gift";

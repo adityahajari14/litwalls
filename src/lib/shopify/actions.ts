@@ -12,6 +12,7 @@ import {
   removeCartLines,
   removeDiscountCode,
   setCartId,
+  setGiftChoice,
   syncCartDiscounts,
   syncCartGift,
   updateCartLines,
@@ -19,16 +20,9 @@ import {
 } from "@/lib/shopify/cart";
 import { ShopifyError, storefront } from "@/lib/shopify/client";
 import { CUSTOMER_CREATE } from "@/lib/shopify/queries";
-import { getProduct } from "@/lib/shopify/products";
-import {
-  checkFile,
-  CUSTOM_ART_ATTRIBUTE,
-  CUSTOM_NOTE_ATTRIBUTE,
-  CUSTOM_POSTER_HANDLE,
-  CUSTOM_SIZE_ATTRIBUTE,
-  printSize,
-} from "@/lib/custom-poster";
-import { defaultVariant, type Attribute, type Cart } from "@/lib/shopify/types";
+import { checkFile, CUSTOM_ART_ATTRIBUTE, CUSTOM_NOTE_ATTRIBUTE } from "@/lib/custom-poster";
+import { GIFT_OPTIONS } from "@/lib/offers";
+import type { Attribute, Cart } from "@/lib/shopify/types";
 
 export type CartActionResult = { ok: true } | { ok: false; message: string };
 
@@ -168,6 +162,29 @@ export async function applyDiscount(code: string): Promise<CartActionResult> {
   }
 }
 
+/**
+ * Records which free gift the customer wants and, if the cart already
+ * qualifies for one, swaps the line immediately rather than waiting for the
+ * next unrelated cart change to notice the preference changed.
+ */
+export async function setGiftPreference(id: string): Promise<CartActionResult> {
+  if (!GIFT_OPTIONS.some((option) => option.id === id)) {
+    return { ok: false, message: "That isn't a gift option." };
+  }
+
+  try {
+    await setGiftChoice(id);
+
+    const cart = await getCart();
+    if (cart) await reconcileCart(cart);
+
+    revalidatePath("/", "layout");
+    return { ok: true };
+  } catch (error) {
+    return toResult(error);
+  }
+}
+
 export async function removeDiscount(code: string): Promise<CartActionResult> {
   try {
     const cart = await getCart();
@@ -261,25 +278,29 @@ export async function createArtworkUpload(file: {
 }
 
 /**
- * Step 2: add the custom poster to the cart, with the uploaded artwork's URL
- * attached as a line-item attribute so it travels through to the order.
+ * Step 2: add a custom-print variant to the cart, with the uploaded artwork's
+ * URL attached as a line-item attribute so it travels through to the order.
  *
- * The price is whatever the "custom-poster" product costs in Shopify — this
- * never invents a price, so the store stays the single source of truth.
+ * `variantId` is resolved on the client via `variantForOptions` against the
+ * real product data the page already fetched — the same trust model
+ * `add-to-cart.tsx` already uses for every ordinary product (Shopify's cart
+ * is the price authority regardless of who picked the variant). This used to
+ * always add the cheapest variant of a single hardcoded product no matter
+ * which size the customer picked; resolving a real variant on the client
+ * instead of a free-text size label is the fix.
  */
-export async function addCustomPoster({
+export async function addCustomUpload({
+  variantId,
   artworkUrl,
-  sizeId,
   note,
   quantity = 1,
 }: {
+  variantId: string;
   artworkUrl: string;
-  sizeId: string;
   note?: string;
   quantity?: number;
 }): Promise<CartActionResult> {
-  const size = printSize(sizeId);
-  if (!size) return { ok: false, message: "Pick a size." };
+  if (!variantId) return { ok: false, message: "Pick your options." };
 
   // The artwork URL is echoed back by the browser after it uploads. Pin it to
   // Shopify's own storage so a compromised client can't put an arbitrary link
@@ -294,37 +315,18 @@ export async function addCustomPoster({
     return { ok: false, message: "That artwork link isn't valid." };
   }
 
+  const attributes: Attribute[] = [{ key: CUSTOM_ART_ATTRIBUTE, value: artworkUrl }];
+
+  const trimmedNote = note?.trim();
+  if (trimmedNote) {
+    attributes.push({
+      key: CUSTOM_NOTE_ATTRIBUTE,
+      value: trimmedNote.slice(0, 500),
+    });
+  }
+
   try {
-    const product = await getProduct(CUSTOM_POSTER_HANDLE);
-    if (!product) {
-      return {
-        ok: false,
-        message: "Custom posters are unavailable right now.",
-      };
-    }
-
-    const variant = defaultVariant(product);
-    if (!variant?.availableForSale) {
-      return {
-        ok: false,
-        message: "Custom posters are unavailable right now.",
-      };
-    }
-
-    const attributes: Attribute[] = [
-      { key: CUSTOM_ART_ATTRIBUTE, value: artworkUrl },
-      { key: CUSTOM_SIZE_ATTRIBUTE, value: size.label },
-    ];
-
-    const trimmedNote = note?.trim();
-    if (trimmedNote) {
-      attributes.push({
-        key: CUSTOM_NOTE_ATTRIBUTE,
-        value: trimmedNote.slice(0, 500),
-      });
-    }
-
-    return await addItem(variant.id, quantity, attributes);
+    return await addItem(variantId, quantity, attributes);
   } catch (error) {
     return toResult(error);
   }

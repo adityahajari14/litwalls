@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Bebas_Neue, Inter } from "next/font/google";
 import { Suspense } from "react";
 
+import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 import { MetaPixel } from "@/components/analytics/meta-pixel";
 import { ShopifyAnalytics } from "@/components/analytics/shopify-analytics";
 import { CartDrawer } from "@/components/cart/cart-drawer";
@@ -37,7 +38,7 @@ export const metadata: Metadata = {
     template: "%s | Litwalls",
   },
   description:
-    "300gsm matte posters of the movies, music and anime you love. From ₹79, free delivery over ₹349, free replacement on damage.",
+    "300gsm matte posters of everything you love. From ₹79, free delivery over ₹349, free replacement on damage.",
   openGraph: {
     type: "website",
     siteName: "Litwalls",
@@ -68,6 +69,7 @@ export default async function RootLayout({
         <Suspense fallback={null}>
           <ShopifyAnalytics />
           <MetaPixel />
+          <GoogleAnalytics />
         </Suspense>
         <CartProvider>
           <CartLoader />

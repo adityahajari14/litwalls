@@ -1,11 +1,12 @@
 import { cn } from "@/lib/cn";
 
-type Tone = "sale" | "new" | "neutral";
+type Tone = "sale" | "new" | "neutral" | "outline";
 
 const TONES: Record<Tone, string> = {
   sale: "bg-brand-500 text-white",
   new: "bg-ink-950 text-white",
   neutral: "bg-white/90 text-ink-800 ring-1 ring-ink-200",
+  outline: "bg-transparent text-ink-600 ring-1 ring-ink-200",
 };
 
 export function Badge({

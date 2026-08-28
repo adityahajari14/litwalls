@@ -81,10 +81,9 @@ export const SPLIT_TAG = "split";
 /**
  * Products the customer supplies the artwork for.
  *
- * Returns whatever Shopify actually has tagged — one product today, more as
- * split posters, mini prints and polaroids are published. Callers render
- * nothing when this is empty rather than showing a section promising products
- * that do not exist yet.
+ * Returns whatever Shopify actually has tagged. Callers render nothing when
+ * this is empty rather than showing a section promising products that do not
+ * exist yet.
  */
 export async function getCustomProducts(first = 8): Promise<Product[]> {
   return getProducts({ first, query: `tag:${CUSTOM_TAG}` });
@@ -112,13 +111,24 @@ export async function getStandardProducts(options: {
   return getProducts({ ...options, query: `-tag:${CUSTOM_TAG}` });
 }
 
+/**
+ * Collections that exist in Shopify but must never show up in browse
+ * navigation. `custom-prints` is the customer-upload range: it has its own
+ * entry point (`/custom`, "Design your own") and its own on-page treatment, so
+ * listing it in the header, footer or /collections index alongside Marvel, DC
+ * and the rest would present it as just another poster collection.
+ */
+const HIDDEN_COLLECTION_HANDLES = new Set(["custom-prints"]);
+
 export async function getCollections(first = 12): Promise<Collection[]> {
   const data = await storefront<{ collections: { nodes: Collection[] } }>(
     GET_COLLECTIONS,
     { variables: { first }, revalidate: CATALOGUE_REVALIDATE, tags: ["collections"] },
   );
 
-  return data.collections.nodes;
+  return data.collections.nodes.filter(
+    (collection) => !HIDDEN_COLLECTION_HANDLES.has(collection.handle),
+  );
 }
 
 export async function getCollectionProducts(

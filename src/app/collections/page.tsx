@@ -7,7 +7,7 @@ import { getCollections } from "@/lib/shopify/products";
 
 export const metadata: Metadata = {
   title: "Collections",
-  description: "Shop Litwalls posters by universe — Marvel, DC, movies, music and more.",
+  description: "Shop Litwalls posters, organised by collection.",
 };
 
 /** Same ceiling as the collection page's generateStaticParams — one list, one limit. */
@@ -23,7 +23,7 @@ export default async function CollectionsPage() {
           Collections
         </h1>
         <p className="mt-3 text-ink-600 text-pretty">
-          Every poster, sorted by universe.
+          Every poster, sorted by collection.
         </p>
       </header>
 

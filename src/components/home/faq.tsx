@@ -8,6 +8,8 @@ import {
   FIRST_ORDER_MINIMUM,
   FLAT_SHIPPING_FEE,
   FREE_SHIPPING_THRESHOLD,
+  GIFT_DESCRIPTION,
+  GIFT_THRESHOLD,
   SINGLE_BUNDLES,
   SPLIT_BUNDLES,
 } from "@/lib/offers";
@@ -16,7 +18,7 @@ const FAQS = [
   {
     question: "What paper do you print on?",
     answer:
-      "Every poster is printed on 300gsm matte paper. It's thick enough to hang without curling, and the matte finish means no glare from lamps or windows — unlike the thin 150gsm stock a lot of cheap prints use.",
+      "Every poster is printed on 300gsm matte paper. It's thick enough to hang without curling, and the matte finish means no glare from lamps or windows, unlike the thinner stock many low-cost prints use.",
   },
   {
     question: "What sizes are available, and how do I choose?",
@@ -36,17 +38,17 @@ const FAQS = [
   {
     question: "What offers can I use?",
     answer:
-      `On single posters: buy ${SINGLE_BUNDLES.map((b) => `${b.pay} and get ${bundleFreeCount(b)} free`).join(", buy ")} — mix any designs you like, the cheapest ones come free. On split-in-3 sets: buy ${SPLIT_BUNDLES.map((b) => `${b.pay} and get ${bundleFreeCount(b)} free`).join(", or buy ")}. First orders over ₹${FIRST_ORDER_MINIMUM} also get ₹${FIRST_ORDER_DISCOUNT} off with code ${FIRST_ORDER_CODE}, and orders over ₹${FREE_SHIPPING_THRESHOLD} that aren't already taking a bundle get 5 free mini pocket prints, added automatically. The bundle and the free gift can't both apply to one order — you'll always get whichever is worth more.`,
+      `On single posters, buy ${SINGLE_BUNDLES.map((b) => `${b.pay} and get ${bundleFreeCount(b)} free`).join(", buy ")} — mix and match any design. On split-in-3 sets, buy ${SPLIT_BUNDLES.map((b) => `${b.pay} and get ${bundleFreeCount(b)} free`).join(", or buy ")}. Orders over ₹${FIRST_ORDER_MINIMUM} qualify for ₹${FIRST_ORDER_DISCOUNT} off with code ${FIRST_ORDER_CODE}; we'll suggest it in your cart once your order reaches that amount. Orders over ₹${GIFT_THRESHOLD} that aren't already using a bundle discount receive ${GIFT_DESCRIPTION}, free — pick which one in your cart. Only one of the bundle discount or the free gift applies per order — whichever is worth more.`,
   },
   {
     question: "What if my poster arrives damaged or blurred?",
     answer:
-      "Send us a short video of the print within 7 days and we ship a replacement free — you keep the original, and there's no return shipping to pay. We ask for a video rather than a photo because it shows the damage clearly enough to approve the replacement on the spot, without a back-and-forth. Posters travel rolled in a rigid tube, so this is rare, but couriers are couriers.",
+      "Send us a short video of the print within 7 days and we'll ship a replacement, free — you keep the original, and there's no return shipping required. We ask for a video rather than a photo because it lets us approve the replacement immediately, without back and forth. Posters are shipped rolled in a rigid tube, so damage is rare, but it can still happen in transit.",
   },
   {
     question: "Can I print my own photo or design?",
     answer:
-      `Yes — that's a big part of what we do. Upload any image on our Custom page and we'll print it as a single poster, a three-panel split poster, mini pocket prints or polaroids. Mini prints start at ₹99 for a pack of 5. We check your file's resolution as you upload it and tell you before you pay if it's too small to print sharply at the size you picked.`,
+      `Yes. Upload any image on our Custom page and we'll print it as a single poster, a three-panel split poster, mini pocket prints or retro prints. Mini prints start at ₹99 for a pack of 5. We check your file's resolution at upload and let you know before checkout if it's too small to print sharply at your chosen size.`,
   },
   {
     question: "Do you do bulk or corporate orders?",
@@ -63,14 +65,14 @@ export function Faq() {
           <div>
             <SectionHeading title="FAQ" />
             <p className="mt-3 text-ink-600 text-pretty">
-              Still stuck? Email{" "}
+              Have a question we haven&apos;t covered? Email{" "}
               <a
                 href="mailto:hello@litwalls.in"
                 className="font-medium text-brand-600 underline underline-offset-4"
               >
                 hello@litwalls.in
               </a>{" "}
-              and a human replies within a day.
+              and a real person will reply within a day.
             </p>
           </div>
 

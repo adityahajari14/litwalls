@@ -78,9 +78,8 @@ export function Hero({ reviews = [] }: { reviews?: Review[] }) {
             </h1>
 
             <p className="mt-5 max-w-md text-lg text-ink-700 text-pretty">
-              300gsm matte prints of the movies, music and anime you actually
-              love — or upload your own. From ₹{ENTRY_PRICE}, on your wall this
-              week.
+              300gsm matte prints of everything you love — or upload your own
+              design. Posters start from ₹{ENTRY_PRICE}.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">

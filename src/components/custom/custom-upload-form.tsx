@@ -15,13 +15,16 @@ import {
   checkFile,
   formatBytes,
   MAX_FILE_BYTES,
-  PRINT_SIZES,
   resolutionFor,
-  type PrintSizeId,
 } from "@/lib/custom-poster";
-import { addCustomPoster, createArtworkUpload } from "@/lib/shopify/actions";
+import {
+  resolutionRequirementFor,
+  selectionsComplete,
+  type CustomProductConfig,
+} from "@/lib/custom-products";
+import { addCustomUpload, createArtworkUpload } from "@/lib/shopify/actions";
 import type { StagedTarget } from "@/lib/shopify/admin";
-import type { Money } from "@/lib/shopify/types";
+import { variantForOptions, type Product } from "@/lib/shopify/types";
 import { cn } from "@/lib/cn";
 
 type Picked = {
@@ -37,9 +40,10 @@ type Phase = "idle" | "uploading" | "adding";
 /**
  * Reads the image's true pixel dimensions by decoding it in the browser.
  *
- * This is the only way to know whether a file can actually print at A3 — the
- * file's byte size says nothing about it. A 200KB vector-flat PNG can be huge
- * in pixels; a 12MB phone photo can be a 1000px screenshot someone upscaled.
+ * This is the only way to know whether a file can actually print at the
+ * chosen size — the file's byte size says nothing about it. A 200KB
+ * vector-flat PNG can be huge in pixels; a 12MB phone photo can be a 1000px
+ * screenshot someone upscaled.
  */
 function readImage(file: File) {
   return new Promise<{ url: string; width: number; height: number } | null>(
@@ -80,9 +84,29 @@ async function uploadToShopify(target: StagedTarget, file: File) {
   }
 }
 
-export function CustomPosterForm({ price }: { price: Money }) {
+/**
+ * The upload page for one custom-print product. Renders one button group per
+ * Shopify option (Size, and — for Retro Prints and Mini Pocket Prints —
+ * Quantity too), resolves the real variant those selections point to via
+ * `variantForOptions`, and shows and charges that variant's actual price.
+ *
+ * This replaces a version that only ever tracked a free-text size label and
+ * always added the product's cheapest variant regardless of what was picked
+ * — see the comment on `addCustomUpload`.
+ */
+export function CustomUploadForm({
+  product,
+  config,
+}: {
+  product: Product;
+  config: CustomProductConfig;
+}) {
   const [picked, setPicked] = useState<Picked | null>(null);
-  const [sizeId, setSizeId] = useState<PrintSizeId>("A4");
+  const [selections, setSelections] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      config.axes.map((axis) => [axis.name, axis.values[0]?.value ?? ""]),
+    ),
+  );
   const [note, setNote] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [phase, setPhase] = useState<Phase>("idle");
@@ -157,6 +181,13 @@ export function CustomPosterForm({ price }: { price: Money }) {
     if (inputRef.current) inputRef.current.value = "";
   }
 
+  const variant = variantForOptions(product, selections);
+  const displayPrice = variant?.price ?? product.priceRange.minVariantPrice;
+  const requirement = resolutionRequirementFor(config, selections);
+  const resolution = picked && requirement ? resolutionFor(requirement, picked) : null;
+  const busy = phase !== "idle";
+  const ready = picked && variant && selectionsComplete(config, selections);
+
   /**
    * Unlike a catalogue product, there is no cart line to add to until the
    * artwork has actually finished uploading — so "Buy now" here means upload
@@ -164,7 +195,7 @@ export function CustomPosterForm({ price }: { price: Money }) {
    * the regular AddToCart button gets to do.
    */
   async function submit(then: "drawer" | "checkout") {
-    if (!picked) return;
+    if (!picked || !variant) return;
 
     setError(null);
     if (then === "checkout") setBuying(true);
@@ -188,9 +219,9 @@ export function CustomPosterForm({ price }: { price: Money }) {
 
       setPhase("adding");
 
-      const result = await addCustomPoster({
+      const result = await addCustomUpload({
         artworkUrl: staged.target.resourceUrl,
-        sizeId,
+        variantId: variant.id,
         note,
         quantity,
       });
@@ -226,10 +257,6 @@ export function CustomPosterForm({ price }: { price: Money }) {
       setBuying(false);
     }
   }
-
-  const size = PRINT_SIZES.find((entry) => entry.id === sizeId)!;
-  const resolution = picked ? resolutionFor(size, picked) : null;
-  const busy = phase !== "idle";
 
   return (
     <>
@@ -315,71 +342,92 @@ export function CustomPosterForm({ price }: { price: Money }) {
           </p>
 
           <h1 className="mt-3 font-display text-4xl text-ink-950 sm:text-5xl">
-            Your image, our paper
+            {config.label}
           </h1>
+          <p className="mt-2 text-ink-600">{config.tagline}</p>
 
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            <Price price={price} showDiscount={false} className="text-xl" />
+            <Price price={displayPrice} showDiscount={false} className="text-xl" />
           </div>
           <p className="mt-1 text-sm text-ink-500">
             Inclusive of all taxes. Shipping calculated at checkout.
           </p>
 
-          <fieldset className="mt-8" disabled={busy}>
-            <legend className="text-sm font-medium text-ink-900">Size</legend>
-            <div className="mt-3 grid grid-cols-3 gap-3">
-              {PRINT_SIZES.map((entry) => {
-                const selected = entry.id === sizeId;
-                // Flag a size the file can't reach, but don't disable it —
-                // explaining beats blocking, and they may want to swap the file.
-                const tooSmall = picked ? !resolutionFor(entry, picked).ok : false;
+          {config.axes.map((axis) => (
+            <fieldset key={axis.name} className="mt-8" disabled={busy}>
+              <legend className="text-sm font-medium text-ink-900">{axis.name}</legend>
+              <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {axis.values.map((entry) => {
+                  const selected = selections[axis.name] === entry.value;
+                  // Only flag a value as too-small when it's the axis that
+                  // actually drives the resolution requirement (Quantity
+                  // never does). Simulates picking this value while keeping
+                  // every other axis as currently selected.
+                  const candidateRequirement = resolutionRequirementFor(config, {
+                    ...selections,
+                    [axis.name]: entry.value,
+                  });
+                  const tooSmall =
+                    picked && candidateRequirement
+                      ? !resolutionFor(candidateRequirement, picked).ok
+                      : false;
 
-                return (
-                  <button
-                    key={entry.id}
-                    type="button"
-                    onClick={() => setSizeId(entry.id)}
-                    aria-pressed={selected}
-                    className={cn(
-                      "rounded-xl border px-3 py-3 text-left transition-colors",
-                      selected
-                        ? "border-brand-500 bg-brand-50"
-                        : "border-ink-200 bg-white hover:border-ink-300",
-                    )}
-                  >
-                    <span className="block font-medium text-ink-950">
-                      {entry.label}
-                    </span>
-                    <span className="mt-0.5 block text-xs text-ink-500">
-                      {entry.mm}
-                    </span>
-                    {tooSmall ? (
-                      <span className="mt-1 block text-xs font-medium text-brand-600">
-                        Low res
+                  return (
+                    <button
+                      key={entry.value}
+                      type="button"
+                      onClick={() =>
+                        setSelections((previous) => ({
+                          ...previous,
+                          [axis.name]: entry.value,
+                        }))
+                      }
+                      aria-pressed={selected}
+                      className={cn(
+                        "rounded-card border px-3 py-3 text-left transition-colors",
+                        selected
+                          ? "border-brand-500 bg-brand-50"
+                          : "border-ink-200 bg-white hover:border-ink-300",
+                      )}
+                    >
+                      <span className="block font-medium text-ink-950">
+                        {entry.value}
                       </span>
-                    ) : null}
-                  </button>
-                );
-              })}
-            </div>
-          </fieldset>
+                      {entry.detail ? (
+                        <span className="mt-0.5 block text-xs text-ink-500">
+                          {entry.detail}
+                        </span>
+                      ) : null}
+                      {tooSmall ? (
+                        <span className="mt-1 block text-xs font-medium text-brand-600">
+                          Low res
+                        </span>
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </div>
+            </fieldset>
+          ))}
 
           {resolution ? (
             resolution.ok ? (
               <p className="mt-4 flex items-start gap-2 text-sm text-ink-600">
                 <CheckIcon className="mt-0.5 size-4 shrink-0 text-success" />
-                Sharp enough for {size.label}. This will print beautifully.
+                Sharp enough for this size. This will print beautifully.
               </p>
             ) : (
-              <div className="mt-4 rounded-xl border border-brand-200 bg-brand-50 p-4">
+              <div className="mt-4 rounded-card border border-brand-200 bg-brand-50 p-4">
                 <p className="text-sm font-medium text-ink-950">
-                  This image is soft for {size.label}
+                  This image is soft for the size you picked
                 </p>
                 <p className="mt-1 text-sm text-ink-600 text-pretty">
-                  It&apos;s {picked?.width} × {picked?.height}. For a crisp{" "}
-                  {size.label} we&apos;d want at least {resolution.needShort} ×{" "}
-                  {resolution.needLong}. You can still order it — it will look
-                  slightly fuzzy up close — or pick a smaller size.
+                  It&apos;s {picked?.width} × {picked?.height}. For a crisp
+                  print we&apos;d want at least {resolution.needShort} ×{" "}
+                  {resolution.needLong}
+                  {config.splitPanels ? " — this one spans three panels side by side" : ""}
+                  . You can still order it — it will look slightly fuzzy up
+                  close — or pick a smaller size.
                 </p>
               </div>
             )
@@ -398,7 +446,7 @@ export function CustomPosterForm({ price }: { price: Money }) {
               disabled={busy}
               maxLength={500}
               placeholder="Crop it square, keep the border, that sort of thing."
-              className="mt-2 w-full rounded-2xl border border-ink-200 bg-white px-4 py-3 text-sm text-ink-900 placeholder:text-ink-400 focus:border-brand-400 focus:outline-none disabled:opacity-60"
+              className="mt-2 w-full rounded-card border border-ink-200 bg-white px-4 py-3 text-sm text-ink-900 placeholder:text-ink-400 focus:border-brand-400 focus:outline-none disabled:opacity-60"
             />
           </div>
 
@@ -419,7 +467,7 @@ export function CustomPosterForm({ price }: { price: Money }) {
               size="lg"
               variant="secondary"
               className="flex-1"
-              disabled={!picked || busy}
+              disabled={!ready || busy}
               onClick={() => submit("checkout")}
             >
               {buying
@@ -431,7 +479,7 @@ export function CustomPosterForm({ price }: { price: Money }) {
             <Button
               size="lg"
               className="flex-1"
-              disabled={!picked || busy}
+              disabled={!ready || busy}
               onClick={() => submit("drawer")}
             >
               {!buying && phase === "uploading"
@@ -473,13 +521,13 @@ export function CustomPosterForm({ price }: { price: Money }) {
       >
         <div className="flex items-center gap-3 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs text-ink-600">Custom poster</p>
-            <Price price={price} showDiscount={false} className="mt-0.5" />
+            <p className="truncate text-xs text-ink-600">{config.label}</p>
+            <Price price={displayPrice} showDiscount={false} className="mt-0.5" />
           </div>
           <Button
             size="lg"
             className="shrink-0 px-7"
-            disabled={!picked || busy}
+            disabled={!ready || busy}
             onClick={() => submit("drawer")}
           >
             {busy ? "Working…" : "Add to cart"}

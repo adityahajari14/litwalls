@@ -61,16 +61,16 @@ export const PRICE_GROUPS: PriceGroup[] = [
     id: "mini",
     title: "Mini pocket prints",
     blurb: "Wallet-sized prints for a desk, a mirror or a phone case.",
-    customOnly: false,
+    customOnly: true,
     tiers: [
       { label: "Pack of 5", dimensions: "2.5″ × 3.5″", price: 99 },
       { label: "Pack of 10", dimensions: "2.5″ × 3.5″", price: 149 },
     ],
   },
   {
-    id: "polaroid",
-    title: "Polaroids",
-    blurb: "Your photos as polaroid-style prints. Ready to peg up or gift.",
+    id: "retro",
+    title: "Retro Prints",
+    blurb: "Your photos, printed retro-print style. Ready to peg up or gift.",
     customOnly: true,
     tiers: [
       { label: "Pack of 5", dimensions: "3.5″ × 4.2″", price: 99 },

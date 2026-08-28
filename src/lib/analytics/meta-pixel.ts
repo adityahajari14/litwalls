@@ -1,7 +1,7 @@
 "use client";
 
 import { isMetaPixelConfigured } from "@/lib/analytics/meta-config";
-import type { Cart, Product, ProductVariant } from "@/lib/shopify/types";
+import type { Cart, Collection, Product, ProductVariant } from "@/lib/shopify/types";
 
 declare global {
   interface Window {
@@ -29,6 +29,54 @@ function fbq(...args: unknown[]) {
  */
 export function trackMetaPageView() {
   fbq("track", "PageView");
+}
+
+/**
+ * ViewContent — the PDP counterpart of Shopify's PRODUCT_VIEW and GA4's
+ * view_item. This is the event Meta's dynamic-ads retargeting keys on, so the
+ * content_ids here must match the ids in the catalog feed (per-variant, see
+ * trackMetaAddToCart).
+ */
+export function trackMetaViewContent(
+  product: Product,
+  variant: ProductVariant | null,
+) {
+  const price = variant?.price ?? product.priceRange.minVariantPrice;
+
+  fbq("track", "ViewContent", {
+    content_ids: [variant?.id ?? product.id],
+    content_type: "product",
+    content_name: product.title,
+    content_category: product.productType || undefined,
+    contents: [{ id: variant?.id ?? product.id, quantity: 1 }],
+    currency: price.currencyCode,
+    value: Number(price.amount),
+  });
+}
+
+/**
+ * Search — mirrors Shopify's SEARCH_VIEW / GA4's `search`. Meta uses this to
+ * build search-intent audiences.
+ */
+export function trackMetaSearch(searchString: string) {
+  fbq("track", "Search", { search_string: searchString });
+}
+
+/**
+ * A collection landing. Meta has no standard event for a category page, so
+ * this is a custom event (`trackCustom`) — it still feeds custom audiences and
+ * conversion rules, it just won't appear under the standard-event reports.
+ */
+export function trackMetaViewCategory(
+  collection: Collection,
+  products: Product[],
+) {
+  fbq("trackCustom", "ViewCategory", {
+    content_name: collection.title,
+    content_category: collection.handle,
+    content_type: "product_group",
+    content_ids: products.slice(0, 10).map((product) => product.id),
+  });
 }
 
 /**

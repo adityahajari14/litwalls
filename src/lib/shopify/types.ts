@@ -194,22 +194,53 @@ export function hasSizeChoice(product: Product): boolean {
   return product.variants.nodes.length > 1;
 }
 
-/** The size values offered, in the order Shopify returns them. */
-export function sizeOptions(product: Product): string[] {
-  const option = product.options.find((o) => o.name === SIZE_OPTION);
+/** The values offered for one named option, in the order Shopify returns them. */
+export function optionValues(product: Product, optionName: string): string[] {
+  const option = product.options.find((o) => o.name === optionName);
   if (option) return option.values;
 
   // Fall back to reading the variants directly. `options` is a recent addition
   // to the query, and a cached or partial payload should degrade to something
-  // usable rather than rendering a product with no sizes at all.
+  // usable rather than rendering a product with no choices at all.
   const seen = new Set<string>();
   for (const variant of product.variants.nodes) {
     const value = variant.selectedOptions.find(
-      (o) => o.name === SIZE_OPTION,
+      (o) => o.name === optionName,
     )?.value;
     if (value) seen.add(value);
   }
   return [...seen];
+}
+
+/** The size values offered, in the order Shopify returns them. */
+export function sizeOptions(product: Product): string[] {
+  return optionValues(product, SIZE_OPTION);
+}
+
+/**
+ * The variant matching every given option (name → value), or null if no
+ * variant matches. Works for one option (an ordinary size selector) or
+ * several at once (e.g. Size + Quantity on a custom-print product) — a
+ * variant qualifies only when ALL of its `selectedOptions` for the given
+ * names match, so a partial selection deliberately resolves to nothing
+ * rather than the first variant that happens to match on one axis.
+ */
+export function variantForOptions(
+  product: Product,
+  selections: Record<string, string>,
+): ProductVariant | null {
+  const entries = Object.entries(selections);
+  if (entries.length === 0) return null;
+
+  return (
+    product.variants.nodes.find((variant) =>
+      entries.every(([name, value]) =>
+        variant.selectedOptions.some(
+          (option) => option.name === name && option.value === value,
+        ),
+      ),
+    ) ?? null
+  );
 }
 
 /** The variant for a given size, or null if that size is not offered. */
@@ -217,11 +248,5 @@ export function variantForSize(
   product: Product,
   size: string,
 ): ProductVariant | null {
-  return (
-    product.variants.nodes.find((variant) =>
-      variant.selectedOptions.some(
-        (option) => option.name === SIZE_OPTION && option.value === size,
-      ),
-    ) ?? null
-  );
+  return variantForOptions(product, { [SIZE_OPTION]: size });
 }

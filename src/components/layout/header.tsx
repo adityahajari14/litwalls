@@ -94,7 +94,7 @@ export function Header({ collections }: { collections: Collection[] }) {
 
   return (
     <header className="sticky top-0 z-50 border-b border-ink-100 bg-paper/85 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-4 sm:gap-4 sm:px-6 lg:h-20 lg:gap-8 lg:px-8">
+      <div className="mx-auto flex h-16 max-w-8xl items-center gap-2 px-4 sm:gap-4 sm:px-6 lg:h-20 lg:gap-8 lg:px-8 2xl:px-12">
         <button
           type="button"
           onClick={() => setMenuOpen(true)}
@@ -107,10 +107,11 @@ export function Header({ collections }: { collections: Collection[] }) {
 
         <Link href="/" className="shrink-0" aria-label="Litwalls home">
           <Image
-            src="/brand/logo.png"
+            src="/brand/logo-animated.gif"
             alt="Litwalls"
-            width={156}
-            height={75}
+            width={1123}
+            height={387}
+            unoptimized
             priority
             className="h-8 w-auto lg:h-10"
           />
@@ -151,12 +152,12 @@ export function Header({ collections }: { collections: Collection[] }) {
                       onMouseEnter={openCollectionsMenu}
                       onMouseLeave={scheduleCloseCollectionsMenu}
                     >
-                      <ul className="rounded-2xl border border-ink-100 bg-white p-2 shadow-lift">
+                      <ul className="rounded-card border border-ink-100 bg-white p-2 shadow-lift">
                         {collections.map((collection) => (
                           <li key={collection.id}>
                             <Link
                               href={`/collections/${collection.handle}`}
-                              className="block rounded-lg px-3.5 py-2.5 text-sm text-ink-700 transition-colors hover:bg-ink-50 hover:text-ink-950"
+                              className="block rounded-card px-3.5 py-2.5 text-sm text-ink-700 transition-colors hover:bg-ink-50 hover:text-ink-950"
                             >
                               {collection.title}
                             </Link>
@@ -209,10 +210,11 @@ export function Header({ collections }: { collections: Collection[] }) {
           <div className="absolute inset-y-0 left-0 flex w-[min(20rem,85vw)] flex-col bg-paper shadow-lift">
             <div className="flex h-16 items-center justify-between border-b border-ink-100 px-4">
               <Image
-                src="/brand/logo.png"
+                src="/brand/logo-animated.gif"
                 alt="Litwalls"
-                width={156}
-                height={75}
+                width={1123}
+                height={387}
+                unoptimized
                 className="h-8 w-auto"
               />
               <button
@@ -236,7 +238,7 @@ export function Header({ collections }: { collections: Collection[] }) {
                         <Link
                           href={item.href}
                           onClick={closeMenu}
-                          className="block rounded-lg px-4 py-3.5 font-medium text-ink-800 transition-colors hover:bg-ink-100"
+                          className="block rounded-card px-4 py-3.5 font-medium text-ink-800 transition-colors hover:bg-ink-100"
                         >
                           {item.label}
                         </Link>
@@ -248,7 +250,7 @@ export function Header({ collections }: { collections: Collection[] }) {
                   // disclosure here instead of the desktop hover panel.
                   return (
                     <li key={item.href}>
-                      <div className="flex items-center rounded-lg hover:bg-ink-100">
+                      <div className="flex items-center rounded-card hover:bg-ink-100">
                         <Link
                           href={item.href}
                           onClick={closeMenu}
@@ -283,7 +285,7 @@ export function Header({ collections }: { collections: Collection[] }) {
                               <Link
                                 href={`/collections/${collection.handle}`}
                                 onClick={closeMenu}
-                                className="block rounded-lg px-4 py-3 text-sm text-ink-600 transition-colors hover:bg-ink-100 hover:text-ink-900"
+                                className="block rounded-card px-4 py-3 text-sm text-ink-600 transition-colors hover:bg-ink-100 hover:text-ink-900"
                               >
                                 {collection.title}
                               </Link>
@@ -298,7 +300,7 @@ export function Header({ collections }: { collections: Collection[] }) {
                   <Link
                     href="/account"
                     onClick={closeMenu}
-                    className="block rounded-lg px-4 py-3.5 font-medium text-ink-800 transition-colors hover:bg-ink-100 sm:hidden"
+                    className="block rounded-card px-4 py-3.5 font-medium text-ink-800 transition-colors hover:bg-ink-100 sm:hidden"
                   >
                     Account
                   </Link>

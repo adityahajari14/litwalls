@@ -11,12 +11,12 @@ const ITEMS = [
   {
     icon: LeafIcon,
     title: "300gsm matte paper",
-    body: "Thick, non-glare stock. Hangs flat, no curling.",
+    body: "Thick, non-glare stock that hangs flat without curling.",
   },
   {
     icon: ReturnIcon,
     title: "Free replacement on damage",
-    body: "Arrived damaged or blurred? Send a video, we reprint it.",
+    body: "If it arrives damaged or blurred, send a short video and we'll send a replacement.",
   },
   {
     icon: ShieldIcon,

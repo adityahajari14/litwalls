@@ -6,10 +6,16 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Price } from "@/components/ui/price";
 import { QuantityStepper } from "@/components/product/quantity-stepper";
+import { withGaLinker } from "@/lib/analytics/ga-linker";
+import {
+  trackGaAddToCart,
+  trackGaBeginCheckout,
+} from "@/lib/analytics/google-analytics";
 import { trackAddToCart } from "@/lib/analytics/shopify";
 import { trackMetaAddToCart, trackMetaInitiateCheckout } from "@/lib/analytics/meta-pixel";
 import { withClaimedDiscount } from "@/lib/checkout-url";
 import { LOW_STOCK_THRESHOLD } from "@/lib/marketing";
+import { formatMoney } from "@/lib/money";
 import { addItem } from "@/lib/shopify/actions";
 import { useCart } from "@/components/cart/cart-provider";
 import {
@@ -28,6 +34,21 @@ function sizeOf(variant: ProductVariant): string {
       ?.value ?? variant.title
   );
 }
+
+/**
+ * Real millimetre dimensions for a size value, so the selector shows "210 ×
+ * 297 mm" under "A4" rather than making the customer look it up. Matches the
+ * SizeGuide / PRINT_SIZES numbers. Unknown values just render without a
+ * dimension line.
+ */
+const SIZE_DIMENSIONS: Record<string, string> = {
+  A5: "148 × 210 mm",
+  A4: "210 × 297 mm",
+  A3: "297 × 420 mm",
+  '13″ × 19″': "330 × 483 mm",
+  '13" x 19"': "330 × 483 mm",
+  '13" × 19"': "330 × 483 mm",
+};
 
 export function AddToCart({
   product,
@@ -54,6 +75,11 @@ export function AddToCart({
 
   const sizes = sizeOptions(product);
   const showSizes = hasSizeChoice(product) && sizes.length > 1;
+  // Only show a per-size price when sizes actually differ in price — otherwise
+  // it's noise repeated four times.
+  const priceVaries =
+    product.priceRange.minVariantPrice.amount !==
+    product.priceRange.maxVariantPrice.amount;
 
   const merchandiseId = selected?.id ?? null;
   const [quantity, setQuantity] = useState(1);
@@ -130,13 +156,17 @@ export function AddToCart({
         // the customer actually bought.
         trackAddToCart(cart, product, selected, quantity);
         trackMetaAddToCart(product, selected, quantity);
+        trackGaAddToCart(product, selected, quantity);
       }
 
       if (then === "checkout") {
         if (cart?.checkoutUrl) {
-          if (cart) trackMetaInitiateCheckout(cart);
+          if (cart) {
+            trackMetaInitiateCheckout(cart);
+            trackGaBeginCheckout(cart);
+          }
           // Full navigation: checkout is hosted on Shopify's domain.
-          window.location.href = withClaimedDiscount(cart.checkoutUrl);
+          window.location.href = withGaLinker(withClaimedDiscount(cart.checkoutUrl));
           return;
         }
         setBuying(false);
@@ -152,15 +182,19 @@ export function AddToCart({
   const busy = pending || buying;
 
   // Stock for the SELECTED size, falling back to the page's initial value.
-  const stock =
+  const rawStock =
     (selected && quantityBySize?.[selected.id] !== undefined
       ? quantityBySize[selected.id]
       : maxQuantity) ?? null;
 
-  // Only claim scarcity when Shopify actually told us the number. A null count
-  // means the token lacks the inventory scope — say nothing rather than invent
-  // pressure.
-  const lowStock = stock !== null && stock > 0 && stock <= LOW_STOCK_THRESHOLD;
+  // A count is only meaningful when Shopify is actually tracking inventory for
+  // this variant. A null (missing scope) OR a zero (inventory not tracked, the
+  // whole live catalogue right now) both mean "no known limit" — cap nothing
+  // and make no scarcity claim, rather than locking the stepper at one and
+  // quietly breaking every buy-more-than-one bundle.
+  const tracked = rawStock !== null && rawStock > 0;
+  const stepperMax = tracked ? rawStock : undefined;
+  const lowStock = tracked && rawStock <= LOW_STOCK_THRESHOLD;
 
   const displayPrice = selected?.price ?? product.priceRange.minVariantPrice;
   const displayCompareAt =
@@ -168,13 +202,12 @@ export function AddToCart({
 
   return (
     <>
-      <div className="space-y-4">
+      <div className="space-y-5">
         <div>
           <Price
             price={displayPrice}
             compareAt={displayCompareAt}
-            showDiscount={false}
-            className="text-2xl"
+            size="xl"
           />
           <p className="mt-1 text-sm text-ink-500">
             Inclusive of all taxes. Shipping calculated at checkout.
@@ -183,34 +216,57 @@ export function AddToCart({
 
         {showSizes ? (
           <fieldset>
-            <legend className="text-sm font-medium text-ink-900">
+            <legend className="mb-2 flex items-baseline gap-2 text-sm font-medium text-ink-900">
               Size
               {selected ? (
-                <span className="ml-2 font-normal text-ink-600">
-                  {sizeOf(selected)}
-                </span>
+                <span className="font-normal text-ink-500">{sizeOf(selected)}</span>
               ) : null}
             </legend>
-            <div className="mt-2 flex flex-wrap gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {sizes.map((size) => {
                 const candidate = variantForSize(product, size);
                 const isSelected = candidate?.id === selected?.id;
                 const soldOut = candidate ? !candidate.availableForSale : true;
+                const dimension = SIZE_DIMENSIONS[size];
 
                 return (
                   <button
                     key={size}
                     type="button"
                     onClick={() => chooseSize(size)}
-                    disabled={busy || !candidate}
+                    disabled={busy || !candidate || soldOut}
                     aria-pressed={isSelected}
-                    className={`rounded-lg border px-3.5 py-2 text-sm transition-colors disabled:opacity-40 ${
+                    className={`flex flex-col gap-0.5 rounded-card border px-3 py-2.5 text-left transition-colors disabled:cursor-not-allowed ${
                       isSelected
                         ? "border-ink-900 bg-ink-900 text-paper"
                         : "border-ink-200 text-ink-800 hover:border-ink-400"
-                    } ${soldOut && !isSelected ? "line-through" : ""}`}
+                    } ${soldOut && !isSelected ? "opacity-45" : ""}`}
                   >
-                    {size}
+                    <span className="text-sm font-medium">{size}</span>
+                    {soldOut ? (
+                      <span
+                        className={`text-[11px] ${isSelected ? "text-paper/70" : "text-ink-400"}`}
+                      >
+                        Sold out
+                      </span>
+                    ) : (
+                      <>
+                        {dimension ? (
+                          <span
+                            className={`text-[11px] ${isSelected ? "text-paper/70" : "text-ink-500"}`}
+                          >
+                            {dimension}
+                          </span>
+                        ) : null}
+                        {priceVaries && candidate ? (
+                          <span
+                            className={`text-[11px] font-medium ${isSelected ? "text-paper" : "text-ink-700"}`}
+                          >
+                            {formatMoney(candidate.price)}
+                          </span>
+                        ) : null}
+                      </>
+                    )}
                   </button>
                 );
               })}
@@ -222,13 +278,13 @@ export function AddToCart({
           <QuantityStepper
             value={quantity}
             onChange={setQuantity}
-            max={stock ?? undefined}
+            max={stepperMax}
             disabled={busy}
           />
           {lowStock ? (
             <p className="flex items-center gap-1.5 text-sm font-medium text-brand-600">
               <span className="size-1.5 animate-pulse rounded-full bg-brand-500" />
-              Only {stock} left
+              Only {rawStock} left
             </p>
           ) : (
             <p className="flex items-center gap-1.5 text-sm text-ink-600">
@@ -241,20 +297,20 @@ export function AddToCart({
         <div ref={actionsRef} className="flex flex-col gap-3 sm:flex-row">
           <Button
             size="lg"
+            className="flex-1"
+            disabled={busy}
+            onClick={() => submit("drawer")}
+          >
+            {pending && !buying ? "Adding…" : "Add to cart"}
+          </Button>
+          <Button
+            size="lg"
             variant="secondary"
             className="flex-1"
             disabled={busy}
             onClick={() => submit("checkout")}
           >
             {buying ? "Starting checkout…" : "Buy now"}
-          </Button>
-          <Button
-            size="lg"
-            className="flex-1"
-            disabled={busy}
-            onClick={() => submit("drawer")}
-          >
-            {pending && !buying ? "Adding…" : "Add to cart"}
           </Button>
         </div>
 
@@ -279,7 +335,10 @@ export function AddToCart({
       >
         <div className="flex items-center gap-3 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs text-ink-600">{product.title}</p>
+            <p className="truncate text-xs text-ink-600">
+              {product.title}
+              {showSizes && selected ? ` · ${sizeOf(selected)}` : ""}
+            </p>
             <Price
               price={selected?.price ?? product.priceRange.minVariantPrice}
               compareAt={selected?.compareAtPrice}

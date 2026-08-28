@@ -12,9 +12,11 @@ import {
   UPDATE_CART_LINES,
 } from "@/lib/shopify/queries";
 import {
+  DEFAULT_GIFT_OPTION,
   earnedDiscountCodes,
   GIFT_ATTRIBUTE,
-  GIFT_PRODUCT_HANDLE,
+  GIFT_CHOICE_COOKIE,
+  GIFT_OPTIONS,
   GIFT_THRESHOLD,
   MANAGED_DISCOUNT_CODES,
   bundleBlocksGift,
@@ -59,6 +61,28 @@ export async function setCartId(id: string) {
 export async function clearCartId() {
   const store = await cookies();
   store.delete(CART_COOKIE);
+}
+
+/** The customer's chosen gift, falling back to the default for anyone who
+ *  hasn't picked yet (or whose cookie holds a since-removed option id). */
+export async function getGiftChoice(): Promise<string> {
+  const store = await cookies();
+  const value = store.get(GIFT_CHOICE_COOKIE)?.value;
+  return GIFT_OPTIONS.some((option) => option.id === value)
+    ? value!
+    : DEFAULT_GIFT_OPTION;
+}
+
+/** Only callable from a Server Action or Route Handler. */
+export async function setGiftChoice(id: string) {
+  const store = await cookies();
+  store.set(GIFT_CHOICE_COOKIE, id, {
+    // Not httpOnly — see the comment on GIFT_CHOICE_COOKIE in offers.ts.
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: CART_COOKIE_MAX_AGE,
+  });
 }
 
 function unwrap(payload: CartMutationPayload): Cart {
@@ -289,6 +313,11 @@ function customerSubtotal(cart: Cart): number {
  * The threshold is measured on what the CUSTOMER chose. Counting the gift's
  * own value toward the threshold would let a ₹300 order qualify on the
  * strength of the gift it hasn't earned.
+ *
+ * Which product is added follows `getGiftChoice()` — the customer picks
+ * between GIFT_OPTIONS in the cart drawer, and every reconcile re-checks that
+ * the cart actually holds the one they most recently chose, swapping it out
+ * if not (a poster added after they picked doesn't re-run this on its own).
  */
 export async function syncCartGift(cart: Cart): Promise<Cart> {
   const existing = giftLines(cart);
@@ -309,22 +338,30 @@ export async function syncCartGift(cart: Cart): Promise<Cart> {
     );
   }
 
-  // Qualifies, and the gift is already there — but only keep it if it is
-  // actually free. A gift line the customer is being charged for is worse
-  // than no gift at all.
-  if (existing.length > 0) {
-    const charged = existing.filter(
-      (line) => Number(line.cost.totalAmount.amount) > 0,
-    );
-    if (charged.length === 0) return cart;
+  const chosenId = await getGiftChoice();
+  const chosen =
+    GIFT_OPTIONS.find((option) => option.id === chosenId) ?? GIFT_OPTIONS[0];
 
-    return removeCartLines(
+  // Already exactly right — the chosen product, alone, and actually free.
+  // Anything else (wrong product, a stale second line, one Shopify is
+  // charging for because the discount isn't configured) gets cleared below
+  // and re-added, rather than patched in place.
+  if (
+    existing.length === 1 &&
+    existing[0].merchandise.product.handle === chosen.handle &&
+    Number(existing[0].cost.totalAmount.amount) === 0
+  ) {
+    return cart;
+  }
+
+  if (existing.length > 0) {
+    cart = await removeCartLines(
       cart.id,
-      charged.map((line) => line.id),
+      existing.map((line) => line.id),
     );
   }
 
-  const product = await getProduct(GIFT_PRODUCT_HANDLE);
+  const product = await getProduct(chosen.handle);
   const variant = product ? defaultVariant(product) : null;
 
   // No gift product published, or it's out of stock. Say nothing and carry on

@@ -3,13 +3,12 @@ import Link from "next/link";
 
 import { InstagramIcon, TwitterIcon } from "@/components/icons";
 import { SubscribeForm } from "@/components/marketing/subscribe-form";
+import { PAYMENT_METHODS } from "@/components/payment-icons";
 import { Container } from "@/components/ui/container";
 import { SUBSCRIBE_DISCOUNT_PERCENT } from "@/lib/marketing";
 import { SUPPORT_EMAIL } from "@/lib/company";
 import { FOOTER_NAV } from "@/lib/navigation";
 import { getCollections } from "@/lib/shopify/products";
-
-const PAYMENT_METHODS = ["UPI", "Visa", "Mastercard", "RuPay", "Net Banking"];
 
 /** Enough to fill the column without it outgrowing "Help" and "Company" next to it. */
 const FOOTER_COLLECTION_COUNT = 4;
@@ -47,8 +46,8 @@ export async function Footer() {
               className="h-9 w-auto"
             />
             <p className="mt-4 text-sm text-ink-600 text-pretty">
-              Posters of the movies, music and anime you love, on 300gsm matte paper.
-              Printed in India, shipped to your wall.
+              Posters of everything you love, on 300gsm matte paper. Printed
+              in India, shipped to your wall.
             </p>
 
             <div className="mt-6">
@@ -104,10 +103,10 @@ export async function Footer() {
 
         {/* Fan-art disclaimer. It sits above the copyright line and is
             deliberately the loudest thing in the footer: for a store selling
-            prints of films, music and anime, saying plainly that these are not
-            official merchandise is both the honest position and the one that
-            keeps a takedown notice from being the first time the question gets
-            asked. */}
+            prints of copyrighted and trademarked material, saying plainly
+            that these are not official merchandise is both the honest
+            position and the one that keeps a takedown notice from being the
+            first time the question gets asked. */}
         <div className="mt-12 rounded-card bg-brand-500 px-6 py-5 text-center">
           <p className="text-sm/6 font-medium text-white text-pretty">
             All artwork on this site is fan art and is not presented as official
@@ -127,13 +126,10 @@ export async function Footer() {
           <p className="text-sm text-ink-500">
             © {new Date().getFullYear()} Litwalls. All rights reserved.
           </p>
-          <ul className="flex flex-wrap items-center gap-2">
-            {PAYMENT_METHODS.map((method) => (
-              <li
-                key={method}
-                className="rounded-md border border-ink-200 px-2.5 py-1 text-xs font-medium text-ink-500"
-              >
-                {method}
+          <ul className="flex flex-wrap items-center gap-1.5">
+            {PAYMENT_METHODS.map(({ name, Icon }) => (
+              <li key={name} title={name}>
+                <Icon />
               </li>
             ))}
           </ul>

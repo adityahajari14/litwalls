@@ -7,7 +7,7 @@ import { getProducts } from "@/lib/shopify/products";
 export const metadata: Metadata = {
   title: "All posters",
   description:
-    "Every Litwalls poster — movies, music, anime and more, printed on 300gsm matte paper.",
+    "Every Litwalls poster, printed on 300gsm matte paper.",
 };
 
 export default async function ProductsPage() {
@@ -31,7 +31,7 @@ export default async function ProductsPage() {
           here.
         </p>
       ) : (
-        <ul className="mt-10 grid grid-cols-2 gap-x-4 gap-y-6 lg:grid-cols-4 lg:gap-6">
+        <ul className="mt-10 grid grid-cols-2 gap-x-4 gap-y-6 md:grid-cols-3 lg:grid-cols-4 lg:gap-6 2xl:grid-cols-5">
           {products.map((product, index) => (
             <li key={product.id} className="h-full">
               <ProductCard product={product} priority={index < 4} />

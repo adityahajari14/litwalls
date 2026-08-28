@@ -6,12 +6,8 @@
  * its own — a file that passes here is one we have committed to printing.
  */
 
-/** The Shopify product that prices a custom print. Its real price is fetched. */
-export const CUSTOM_POSTER_HANDLE = "custom-poster";
-
 /** Line-item attribute keys. These appear verbatim on the Shopify order. */
 export const CUSTOM_ART_ATTRIBUTE = "Artwork";
-export const CUSTOM_SIZE_ATTRIBUTE = "Size";
 export const CUSTOM_NOTE_ATTRIBUTE = "Note";
 
 export const ACCEPTED_MIME_TYPES = [
@@ -35,6 +31,10 @@ export const PRINT_SIZES = [
   { id: "A5", label: "A5", mm: "148 × 210 mm", minWidth: 1748, minHeight: 2480 },
   { id: "A4", label: "A4", mm: "210 × 297 mm", minWidth: 2480, minHeight: 3508 },
   { id: "A3", label: "A3", mm: "297 × 420 mm", minWidth: 3508, minHeight: 4961 },
+  // Not part of the litwalls-studio drift check (check-drift.mjs only
+  // compares A5/A4/A3) — this is the same "Super B" size Studio already
+  // offers under its own name for the AI-poster catalogue.
+  { id: "13x19", label: '13" × 19"', mm: "330 × 483 mm", minWidth: 3250, minHeight: 4750 },
 ] as const;
 
 export type PrintSizeId = (typeof PRINT_SIZES)[number]["id"];

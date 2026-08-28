@@ -30,8 +30,6 @@ export function Reviews({ reviews = [] }: { reviews?: Review[] }) {
         <SectionHeading
           title="What people say"
           subtitle={`${reviews.length.toLocaleString("en-IN")} reviews, ${average.toFixed(1)} average.`}
-          href="/reviews"
-          linkLabel="Read all reviews"
         />
 
         <ul className="mt-10 grid gap-6 lg:grid-cols-3">

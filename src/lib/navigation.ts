@@ -3,7 +3,6 @@ export const MAIN_NAV = [
   { label: "Collections", href: "/collections" },
   { label: "Custom", href: "/custom" },
   { label: "About", href: "/about" },
-  { label: "Reviews", href: "/reviews" },
 ] as const;
 
 /**

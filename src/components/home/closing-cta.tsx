@@ -9,6 +9,11 @@ import { formatMoney } from "@/lib/money";
  * The last screen of the home page. Someone who has read this far is as warm
  * as they will ever be — before this, the page ended on the FAQ and left them
  * to scroll back up to find a buy button.
+ *
+ * The headline echoes the hero's "walls talk" line rather than leaning on a
+ * pain-point ("your wall is still empty") or a countdown ("tonight", "this
+ * week") to close. The offer is already stated earlier on the page; this
+ * section's job is just to make the buy button easy to find again.
  */
 export function ClosingCta() {
   const threshold = formatMoney({
@@ -27,11 +32,11 @@ export function ClosingCta() {
       <Container>
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="font-display text-5xl text-ink-950 sm:text-6xl text-balance">
-            Your wall is still empty
+            Give your walls something to say
           </h2>
           <p className="mx-auto mt-4 max-w-md text-lg text-ink-600 text-pretty">
-            300gsm matte prints from ₹{ENTRY_PRICE}. Pick one tonight and
-            it&apos;s on your wall this week.
+            300gsm matte prints from ₹{ENTRY_PRICE}, printed to order in
+            India.
           </p>
 
           <div className="mt-8 flex flex-wrap justify-center gap-3">

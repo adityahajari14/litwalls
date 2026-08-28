@@ -1,31 +1,34 @@
 import type { Metadata } from "next";
 
-import { CustomPosterForm } from "@/components/custom/custom-poster-form";
+import { ProductCard } from "@/components/product-card";
 import { Container } from "@/components/ui/container";
-import { CUSTOM_POSTER_HANDLE } from "@/lib/custom-poster";
-import { getProduct } from "@/lib/shopify/products";
-import { defaultVariant } from "@/lib/shopify/types";
+import { getCustomProducts } from "@/lib/shopify/products";
 
 export const metadata: Metadata = {
-  title: "Custom posters",
+  title: "Custom prints",
   description:
-    "Turn any image into a poster. Upload your artwork, pick a size, and we print it on 300gsm matte paper.",
+    "Turn your own photos into posters, split panels, retro prints or pocket prints. Upload your artwork, pick your options, and we print it on 300gsm matte paper.",
 };
 
 export default async function CustomPage() {
-  const product = await getProduct(CUSTOM_POSTER_HANDLE);
-  const variant = product ? defaultVariant(product) : null;
+  const products = await getCustomProducts();
 
-  // No invented price and no upload form we can't honour. If the
-  // "custom-poster" product is missing or sold out in Shopify, say so plainly
-  // rather than take an order we cannot fulfil.
-  if (!variant?.availableForSale) {
-    return (
-      <Container className="flex flex-1 flex-col items-center justify-center py-24 text-center">
-        <h1 className="font-display text-4xl text-ink-950">
-          Custom printing is paused
-        </h1>
-        <p className="mt-3 max-w-md text-ink-600 text-pretty">
+  return (
+    <Container className="py-8 lg:py-12">
+      <p className="text-xs font-semibold tracking-[0.18em] text-brand-600 uppercase">
+        Custom
+      </p>
+      <h1 className="mt-3 font-display text-4xl text-ink-950 sm:text-5xl">
+        Design your own
+      </h1>
+      <p className="mt-3 max-w-lg text-ink-600 text-pretty">
+        Upload your own photo or artwork and we&apos;ll print it on the same
+        300gsm matte paper as the rest of our posters. Pick one below to get
+        started.
+      </p>
+
+      {products.length === 0 ? (
+        <p className="mt-10 text-ink-600">
           We&apos;re not taking custom orders at the moment. Email{" "}
           <a
             href="mailto:hello@litwalls.in"
@@ -35,18 +38,15 @@ export default async function CustomPage() {
           </a>{" "}
           and we&apos;ll tell you the moment it&apos;s back.
         </p>
-      </Container>
-    );
-  }
-
-  return (
-    // Same padding rhythm as the regular product page (py-8 lg:py-12, not the
-    // pt-12 lg:pt-16 that content pages use) so the two feel like one template.
-    <Container className="py-8 lg:py-12">
-      <CustomPosterForm price={variant.price} />
-
-      {/* Clears the sticky mobile buy bar, exactly like the regular PDP. */}
-      <div aria-hidden className="h-20 sm:hidden" />
+      ) : (
+        <ul className="mt-10 grid grid-cols-2 gap-x-4 gap-y-6 lg:grid-cols-4 lg:gap-6">
+          {products.map((product) => (
+            <li key={product.id} className="h-full">
+              <ProductCard product={product} />
+            </li>
+          ))}
+        </ul>
+      )}
     </Container>
   );
 }

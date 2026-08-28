@@ -32,7 +32,19 @@
   --font-display: var(--font-bebas), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
-  --radius-card: 0.75rem;
+  /* One shared page width. `max-w-7xl` (80rem) left a third of a 1920 screen
+     empty; 90rem fills large desktops while still capping line length on
+     ultrawide. Every full-bleed surface — Container, header, announcement
+     bar — uses this so their edges line up. */
+  --container-8xl: 90rem;
+
+  /* The one corner radius for every panel, card, media frame and input on the
+     site — `rounded-card` everywhere a rounded rectangle isn't a full pill
+     (`rounded-full`, for buttons/badges/avatars) or the deliberately near-
+     square `rounded-xs` on the hero's decorative posters, which mimic an
+     actual printed corner. A single tighter value reads calmer and more
+     deliberate than the mix of lg/xl/2xl/3xl this replaced. */
+  --radius-card: 0.5rem;
 
   --shadow-card:
     0 1px 2px rgb(17 16 16 / 0.04), 0 8px 24px -12px rgb(17 16 16 / 0.12);

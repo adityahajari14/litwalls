@@ -36,8 +36,10 @@ export default async function Home() {
       getCollections(HOME_COLLECTION_COUNT),
       getCustomProducts(SHELF_SIZE),
       // Split posters live in Shopify like anything else. Until they're
-      // published the shelf simply doesn't render.
-      getProducts({ first: SHELF_SIZE, query: "tag:split" }),
+      // published the shelf simply doesn't render. Custom split posters are
+      // excluded here — the customer-upload range only appears in "Design your
+      // own" on this page.
+      getProducts({ first: SHELF_SIZE, query: "tag:split AND -tag:custom" }),
       getStandardProducts({ first: SHELF_SIZE, sortKey: "BEST_SELLING" }),
       getStandardProducts({
         first: SHELF_SIZE,
@@ -59,7 +61,7 @@ export default async function Home() {
       {bestSellers.length > 0 ? (
         <ProductGridSection
           title="Best sellers"
-          subtitle="The prints that leave our shelves fastest."
+          subtitle="Our most popular prints."
           href="/products"
           products={bestSellers}
           priority
@@ -71,7 +73,7 @@ export default async function Home() {
       {splitProducts.length > 0 ? (
         <ProductGridSection
           title="Split posters"
-          subtitle="One image across three panels. Covers a lot more wall."
+          subtitle="One image, split across three panels, for a larger wall display."
           href="/products"
           products={splitProducts}
           tone="paper"
@@ -83,7 +85,7 @@ export default async function Home() {
       {newArrivals.length > 0 ? (
         <ProductGridSection
           title="New arrivals"
-          subtitle="Fresh off the press this month."
+          subtitle="Recently added to the collection."
           href="/products"
           products={newArrivals}
           tone="white"

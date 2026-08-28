@@ -5,16 +5,22 @@ import { Suspense } from "react";
 
 import { ProductViewTracker } from "@/components/analytics/product-view";
 import { AddToCart } from "@/components/product/add-to-cart";
-import { BuyReassurance } from "@/components/product/buy-reassurance";
+import { DeliveryEstimate } from "@/components/product/delivery-estimate";
+import { CustomCtaCard } from "@/components/product/custom-cta-card";
 import { Gallery } from "@/components/product/gallery";
+import { OffersBlock } from "@/components/product/offers-block";
+import { PaymentMarks } from "@/components/product/payment-marks";
+import { SizeGuide } from "@/components/product/size-guide";
+import { CustomBanner } from "@/components/home/custom-banner";
 import { ProductGridSection } from "@/components/home/product-grid-section";
-import { Accordion } from "@/components/ui/accordion";
+import { Accordion, type AccordionItem } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
 import { LeafIcon, ReturnIcon, TruckIcon } from "@/components/icons";
 import { discountPercent, formatMoney } from "@/lib/money";
 import { FLAT_SHIPPING_FEE, FREE_SHIPPING_THRESHOLD } from "@/lib/offers";
+import { displayTitle, productCategory } from "@/lib/product";
 import {
   CUSTOM_TAG,
   getProduct,
@@ -24,7 +30,13 @@ import {
 } from "@/lib/shopify/products";
 import { defaultVariant, hasSizeChoice } from "@/lib/shopify/types";
 
-function Breadcrumb({ productType, title }: { productType: string; title: string }) {
+function Breadcrumb({
+  category,
+  title,
+}: {
+  category: string | null;
+  title: string;
+}) {
   return (
     <nav aria-label="Breadcrumb" className="mb-6 hidden lg:block">
       <ol className="flex flex-wrap items-center gap-1.5 text-sm text-ink-500">
@@ -41,12 +53,12 @@ function Breadcrumb({ productType, title }: { productType: string; title: string
             All posters
           </Link>
         </li>
-        {productType ? (
+        {category ? (
           <>
             <li aria-hidden className="text-ink-300">
               /
             </li>
-            <li className="text-ink-700">{productType}</li>
+            <li className="text-ink-700">{category}</li>
           </>
         ) : null}
         <li aria-hidden className="text-ink-300">
@@ -59,6 +71,12 @@ function Breadcrumb({ productType, title }: { productType: string; title: string
     </nav>
   );
 }
+
+const TRUST = [
+  { icon: LeafIcon, text: "300gsm matte paper" },
+  { icon: TruckIcon, text: "Dispatched within 24 hours" },
+  { icon: ReturnIcon, text: "7-day replacement if damaged" },
+];
 
 type Params = { handle: string };
 
@@ -97,29 +115,6 @@ export async function generateMetadata({
   };
 }
 
-const SHIPPING_FAQ = [
-  {
-    question: "Paper & printing",
-    answer:
-      "Printed on 300gsm matte paper. The matte finish means no glare from lamps or windows, and the stock is thick enough to hang flat without curling.",
-  },
-  {
-    question: "Shipping",
-    answer: `Dispatched within 24 hours, rolled in a rigid tube — never folded. Metro cities receive in 3–4 days, the rest of India in 4–7. Free over ₹${FREE_SHIPPING_THRESHOLD}, otherwise a flat ₹${FLAT_SHIPPING_FEE}.`,
-  },
-  {
-    question: "Returns",
-    answer:
-      "If it arrives damaged or blurred, send us a short video within 7 days and we'll ship a replacement free. No return shipping, no arguing.",
-  },
-];
-
-const HIGHLIGHTS = [
-  { icon: LeafIcon, text: "300gsm matte paper" },
-  { icon: TruckIcon, text: "Ships in 24 hours, rolled in a tube" },
-  { icon: ReturnIcon, text: "7-day replacement if damaged" },
-];
-
 async function RelatedProducts({ handle }: { handle: string }) {
   // Excludes custom prints: they need an upload before they can be bought, so
   // offering one as a one-click "you might also like" sends the customer down
@@ -157,18 +152,58 @@ export default async function ProductPage({
   const available = product.availableForSale && (variant?.availableForSale ?? false);
   const isCustom = product.tags.includes(CUSTOM_TAG);
 
+  const category = productCategory(product);
+  const heading = displayTitle(product);
+
   // Fetched separately from the product so a store without inventory-read
-  // access still renders the page — see getVariantQuantityAvailable.
-  //
-  // Every variant, not just the default: stock differs per size, and the
-  // quantity stepper caps against whichever one is selected. Batched into one
-  // request — asking per variant multiplies every page's round trips by the
-  // number of sizes, which is enough to get a full build's connections reset.
-  const quantityBySize = await getVariantQuantities(
+  // access still renders the page — see getVariantQuantityAvailable. One
+  // request for every variant, since stock differs per size.
+  const rawQuantities = await getVariantQuantities(
     product.variants.nodes.map((node) => node.id),
   );
 
+  // Shopify returns 0 for every variant when inventory isn't tracked (which is
+  // the whole live catalogue right now). Treat a non-positive count as
+  // "unknown", not "none" — otherwise the quantity stepper caps at one and
+  // quietly breaks every buy-more-than-one bundle.
+  const quantityBySize: Record<string, number | null> = {};
+  for (const [id, qty] of Object.entries(rawQuantities)) {
+    quantityBySize[id] = qty !== null && qty > 0 ? qty : null;
+  }
+
   const maxQuantity = variant ? (quantityBySize[variant.id] ?? null) : null;
+
+  const details: AccordionItem[] = [
+    {
+      question: "Size guide",
+      content: <SizeGuide />,
+    },
+    {
+      question: "Shipping",
+      answer: `Dispatched within 24 hours of your order. Metro cities receive it in about 3–4 working days, the rest of India in 4–7. Free over ₹${FREE_SHIPPING_THRESHOLD}, otherwise a flat ₹${FLAT_SHIPPING_FEE} anywhere in India.`,
+    },
+    {
+      question: "Returns",
+      answer:
+        "If it arrives damaged or blurred, send us a short video within 7 days and we'll ship a replacement free. You keep the original, there's no return shipping, and no arguing.",
+    },
+  ];
+
+  // The Shopify description leads the list and opens by default — it's the copy
+  // the merchandiser wrote for this specific poster — but it's a closable row
+  // like the rest, so a long description never forces a scroll past it.
+  if (product.descriptionHtml) {
+    details.unshift({
+      question: "Description",
+      defaultOpen: true,
+      content: (
+        <div
+          className="text-sm/6 text-ink-600 [&>*:first-child]:mt-0 [&_a]:text-brand-600 [&_a]:underline [&_a]:underline-offset-2 [&_h3]:mt-6 [&_h3]:font-display [&_h3]:text-lg [&_h3]:text-ink-950 [&_h4]:mt-5 [&_h4]:font-medium [&_h4]:text-ink-900 [&_h5]:mt-5 [&_h5]:font-medium [&_h5]:text-ink-900 [&_img]:my-4 [&_img]:max-h-104 [&_img]:w-auto [&_img]:max-w-full [&_img]:rounded-card [&_li]:mt-1 [&_p]:mt-3 [&_strong]:font-semibold [&_strong]:text-ink-900 [&_ul]:mt-3 [&_ul]:list-disc [&_ul]:pl-5"
+          dangerouslySetInnerHTML={{ __html: product.descriptionHtml }}
+        />
+      ),
+    });
+  }
 
   // Feeds Google's product rich results — price and availability show up in
   // the SERP, which qualifies the click before it costs anything. Deliberately
@@ -220,9 +255,9 @@ export default async function ProductPage({
       />
 
       <Container className="py-8 lg:py-12">
-        <Breadcrumb productType={product.productType} title={product.title} />
+        <Breadcrumb category={category} title={heading} />
 
-        <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
+        <div className="grid gap-8 lg:grid-cols-2 lg:gap-12 xl:gap-20">
           <Gallery
             images={product.images.nodes}
             title={product.title}
@@ -235,15 +270,15 @@ export default async function ProductPage({
             }
           />
 
-          <div className="lg:py-4">
-            {product.productType ? (
+          <div className="lg:py-2">
+            {category ? (
               <p className="text-xs font-semibold tracking-[0.18em] text-brand-600 uppercase">
-                {product.productType}
+                {category}
               </p>
             ) : null}
 
-            <h1 className="mt-3 font-display text-4xl text-ink-950 sm:text-5xl">
-              {product.title}
+            <h1 className="mt-2 font-display text-4xl text-ink-950 sm:text-5xl">
+              {heading}
             </h1>
 
             {/* Price lives inside AddToCart because it must track the selected
@@ -256,13 +291,17 @@ export default async function ProductPage({
                 — gallery, price, specs, shipping — is identical to any other
                 product, because the product is identical. Only the step that
                 collects the file differs. */}
-            <div className="mt-8">
+            <div className="mt-6">
               {isCustom ? (
                 <>
-                  <p className="text-2xl font-semibold text-ink-950">
+                  <p className="text-3xl font-semibold text-ink-950">
                     From {formatMoney(product.priceRange.minVariantPrice)}
                   </p>
-                  <ButtonLink href="/custom" size="lg" className="mt-5 w-full sm:w-auto">
+                  <ButtonLink
+                    href={`/custom/${product.handle}`}
+                    size="lg"
+                    className="mt-5 w-full"
+                  >
                     Upload your image
                   </ButtonLink>
                   <p className="mt-3 text-sm text-ink-500">
@@ -281,40 +320,47 @@ export default async function ProductPage({
               )}
             </div>
 
-            {/* Directly under the button, where the hesitation actually happens. */}
-            <BuyReassurance />
+            {!isCustom ? (
+              <div className="mt-6 space-y-3">
+                <OffersBlock product={product} />
+                <CustomCtaCard />
+              </div>
+            ) : null}
 
-            {/* A 3-up card row reads as a set of facts, not a checklist buried
-                in the page — concrete specs a customer can compare, rather
-                than adjectives asserted in prose. */}
-            <ul className="mt-8 grid grid-cols-3 gap-3 border-t border-ink-100 pt-8">
-              {HIGHLIGHTS.map((highlight) => (
+            {/* A slim row of checkable facts, directly under the button where
+                the hesitation happens — concrete specs, not adjectives. */}
+            <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2 border-t border-ink-100 pt-6">
+              {TRUST.map((item) => (
                 <li
-                  key={highlight.text}
-                  className="flex flex-col items-center gap-2 rounded-xl border border-ink-100 bg-white px-3 py-4 text-center shadow-card"
+                  key={item.text}
+                  className="flex items-center gap-2 text-xs font-medium text-ink-700"
                 >
-                  <highlight.icon className="size-5 shrink-0 text-brand-500" />
-                  <span className="text-xs font-medium text-ink-700 text-pretty">
-                    {highlight.text}
-                  </span>
+                  <item.icon className="size-4 shrink-0 text-brand-500" />
+                  {item.text}
                 </li>
               ))}
             </ul>
 
-            {product.description ? (
-              <div className="mt-8 rounded-card border border-ink-100 bg-white p-5">
-                <h2 className="text-sm font-semibold tracking-wide text-ink-950 uppercase">
-                  Description
-                </h2>
-                <div
-                  className="mt-3 space-y-3 text-sm/6 text-ink-600 [&_a]:text-brand-600 [&_a]:underline [&_li]:list-disc [&_ul]:pl-5"
-                  dangerouslySetInnerHTML={{ __html: product.descriptionHtml }}
-                />
-              </div>
-            ) : null}
+            <div className="mt-6">
+              <DeliveryEstimate />
+            </div>
 
-            <div className="mt-6 rounded-card bg-white px-5">
-              <Accordion items={SHIPPING_FAQ} />
+            <div className="mt-6">
+              <PaymentMarks />
+            </div>
+
+            {/* Lives in the buy column, not spanning the full page width below
+                it: a full-bleed block here left a lone paragraph pinned to the
+                left edge with a metre of dead space beside it on anything
+                wider than a laptop. Matching the column keeps it under the
+                sticky gallery, which stays in view while it's read. */}
+            <div className="mt-10 border-t border-ink-100 pt-8">
+              <h2 className="font-display text-2xl text-ink-950">
+                Product details
+              </h2>
+              <div className="mt-4">
+                <Accordion items={details} />
+              </div>
             </div>
           </div>
         </div>
@@ -323,6 +369,8 @@ export default async function ProductPage({
       <Suspense fallback={null}>
         <RelatedProducts handle={handle} />
       </Suspense>
+
+      {!isCustom ? <CustomBanner /> : null}
 
       {/* Clears the sticky mobile buy bar, which would otherwise sit on top of
           the last row of related products. */}

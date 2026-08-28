@@ -26,7 +26,7 @@ function OrderRow({ order }: { order: CustomerOrder }) {
           {items.slice(0, 3).map((item, index) => (
             <div
               key={`${item.title}-${index}`}
-              className="relative size-14 overflow-hidden rounded-lg bg-ink-100 ring-2 ring-white"
+              className="relative size-14 overflow-hidden rounded-card bg-ink-100 ring-2 ring-white"
             >
               {item.image ? (
                 <Image
@@ -40,7 +40,7 @@ function OrderRow({ order }: { order: CustomerOrder }) {
             </div>
           ))}
           {extra > 0 ? (
-            <div className="grid size-14 place-items-center rounded-lg bg-ink-100 text-xs font-medium text-ink-600 ring-2 ring-white">
+            <div className="grid size-14 place-items-center rounded-card bg-ink-100 text-xs font-medium text-ink-600 ring-2 ring-white">
               +{extra}
             </div>
           ) : null}

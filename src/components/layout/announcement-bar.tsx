@@ -35,7 +35,7 @@ export function AnnouncementBar() {
 
   return (
     <div className="bg-ink-950 text-white">
-      <div className="mx-auto flex h-10 max-w-7xl items-center justify-center px-4">
+      <div className="mx-auto flex h-10 max-w-8xl items-center justify-center px-4">
         <ul className="flex items-center gap-4 text-xs font-medium sm:gap-6 sm:text-[13px]">
           {messages.map((message, index) => (
             <li

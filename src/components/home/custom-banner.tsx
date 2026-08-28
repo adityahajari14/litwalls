@@ -5,15 +5,15 @@ import { Container } from "@/components/ui/container";
 
 const STEPS = [
   "Upload any image, artwork or photo",
-  "Pick your size — A5, A4 or A3",
+  "Pick your size, up to 13″ × 19″",
   "We print it on 300gsm matte and ship it",
 ];
 
 export function CustomBanner() {
   return (
-    <section className="py-4">
+    <section className="py-12 lg:py-16">
       <Container>
-        <div className="grid overflow-hidden rounded-3xl bg-ink-950 lg:grid-cols-2">
+        <div className="grid overflow-hidden rounded-card bg-ink-950 lg:grid-cols-2">
           <div className="p-8 sm:p-12 lg:p-16">
             <p className="text-xs font-semibold tracking-[0.2em] text-brand-400 uppercase">
               Custom posters

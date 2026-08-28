@@ -14,14 +14,21 @@ import {
 } from "@/components/icons";
 import { useCart } from "@/components/cart/cart-provider";
 import { FreeShippingBar } from "@/components/cart/free-shipping-bar";
+import { GiftMilestoneBar } from "@/components/cart/gift-milestone-bar";
 import { ButtonLink } from "@/components/ui/button";
+import { withGaLinker } from "@/lib/analytics/ga-linker";
+import { trackGaBeginCheckout } from "@/lib/analytics/google-analytics";
 import { trackMetaInitiateCheckout } from "@/lib/analytics/meta-pixel";
 import { withClaimedDiscount } from "@/lib/checkout-url";
 import { CUSTOM_ART_ATTRIBUTE } from "@/lib/custom-poster";
 import { formatMoney } from "@/lib/money";
 import {
   bundleFreeCount,
+  FIRST_ORDER_CODE,
+  FIRST_ORDER_DISCOUNT,
+  FIRST_ORDER_MINIMUM,
   GIFT_ATTRIBUTE,
+  GIFT_OPTIONS,
   MANAGED_DISCOUNT_CODES,
   nextBundle,
   SINGLE_BUNDLES,
@@ -30,6 +37,7 @@ import {
   applyDiscount,
   removeDiscount,
   removeItem,
+  setGiftPreference,
   updateItemQuantity,
 } from "@/lib/shopify/actions";
 import {
@@ -58,12 +66,69 @@ function BundleNudge({ cart }: { cart: Cart }) {
   const needed = target.pay - cart.totalQuantity;
 
   return (
-    <p className="mt-3 flex items-start gap-2 rounded-lg bg-brand-50 px-3 py-2.5 text-xs text-brand-800">
+    <p className="mt-3 flex items-start gap-2 rounded-card bg-brand-50 px-3 py-2.5 text-xs text-brand-800">
       <TagIcon className="mt-px size-3.5 shrink-0" />
       <span>
         Add {needed} more and {bundleFreeCount(target)} come free.
       </span>
     </p>
+  );
+}
+
+/**
+ * "You qualify for ₹100 off — Apply LIT100."
+ *
+ * Deliberately not auto-applied. The other two auto-applying offers (bundles,
+ * the gift) each change what's physically in the cart — more posters, a gift
+ * line — so applying them without asking is just completing an action the
+ * customer's own basket already implies. LIT100 doesn't: it's a discount on
+ * money already being spent, and silently taking ₹100 off a total the
+ * customer was about to accept can read as the price being unstable, not as a
+ * win. Surfacing it and asking for one tap keeps the customer in control of
+ * when the total changes.
+ *
+ * Hidden once applied (the code appears in DiscountForm's applied list
+ * instead) and hidden below the threshold — no point suggesting a discount
+ * the cart doesn't yet qualify for.
+ */
+function DiscountSuggestion({ cart }: { cart: Cart }) {
+  const { refresh } = useCart();
+  const [pending, startTransition] = useTransition();
+  const [dismissed, setDismissed] = useState(false);
+
+  const alreadyApplied = cart.discountCodes.some(
+    (discount) => discount.code === FIRST_ORDER_CODE,
+  );
+  const qualifies =
+    Number(cart.cost.subtotalAmount.amount) >= FIRST_ORDER_MINIMUM;
+
+  if (alreadyApplied || !qualifies || dismissed) return null;
+
+  return (
+    <div className="mt-3 flex items-start gap-2 rounded-card bg-success/10 px-3 py-2.5 text-xs text-success">
+      <TagIcon className="mt-px size-3.5 shrink-0" />
+      <span className="flex-1">
+        You qualify for ₹{FIRST_ORDER_DISCOUNT} off with{" "}
+        <span className="font-semibold">{FIRST_ORDER_CODE}</span>.
+      </span>
+      <button
+        type="button"
+        disabled={pending}
+        onClick={() =>
+          startTransition(async () => {
+            const result = await applyDiscount(FIRST_ORDER_CODE);
+            // A failed apply (code doesn't exist in Shopify yet, or was
+            // already used) should stop the banner from offering it again
+            // this session rather than nag on every render.
+            if (!result.ok) setDismissed(true);
+            await refresh();
+          })
+        }
+        className="shrink-0 font-semibold underline decoration-success/40 underline-offset-2 hover:decoration-success disabled:opacity-50"
+      >
+        {pending ? "Applying…" : "Apply"}
+      </button>
+    </div>
   );
 }
 
@@ -97,7 +162,7 @@ function LineItem({ line }: { line: CartLine }) {
       <div className="flex gap-4">
         <Link
           href={`/products/${product.handle}`}
-          className="relative size-20 shrink-0 overflow-hidden rounded-lg bg-ink-100"
+          className="relative size-20 shrink-0 overflow-hidden rounded-card bg-ink-100"
         >
           {artwork ? (
             // Custom artwork sits on Shopify's staged-upload bucket, not the
@@ -154,13 +219,41 @@ function LineItem({ line }: { line: CartLine }) {
           ) : null}
 
           {isGift ? (
-            <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-success">
-              <GiftIcon className="size-3.5" />
-              Free gift
-              <span className="font-normal text-ink-400 line-through">
-                {formatMoney(line.merchandise.price)}
-              </span>
-            </p>
+            <>
+              <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-success">
+                <GiftIcon className="size-3.5" />
+                Free gift
+                <span className="font-normal text-ink-400 line-through">
+                  {formatMoney(line.merchandise.price)}
+                </span>
+              </p>
+
+              {/* Lets the customer change their mind after the fact — the
+                  active option is read off which product is actually in the
+                  cart, not a stored preference, so it can never disagree with
+                  what they're looking at. */}
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {GIFT_OPTIONS.map((option) => {
+                  const active = product.handle === option.handle;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => mutate(() => setGiftPreference(option.id))}
+                      disabled={pending || active}
+                      aria-pressed={active}
+                      className={`rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-colors disabled:cursor-default ${
+                        active
+                          ? "border-ink-900 bg-ink-900 text-white"
+                          : "border-ink-200 text-ink-600 hover:border-ink-400"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
           ) : (
             <p className="mt-1 text-sm text-ink-600">
               {formatMoney(line.merchandise.price)}
@@ -277,12 +370,12 @@ function DiscountForm({ cart }: { cart: Cart }) {
           aria-label="Discount code"
           autoComplete="off"
           autoCapitalize="characters"
-          className="h-10 min-w-0 flex-1 rounded-lg border border-ink-200 bg-white px-3 text-sm uppercase placeholder:normal-case placeholder:text-ink-400 focus:border-ink-400 focus:outline-none"
+          className="h-10 min-w-0 flex-1 rounded-card border border-ink-200 bg-white px-3 text-sm uppercase placeholder:normal-case placeholder:text-ink-400 focus:border-ink-400 focus:outline-none"
         />
         <button
           type="submit"
           disabled={pending || !code.trim()}
-          className="h-10 shrink-0 rounded-lg bg-ink-950 px-4 text-sm font-medium text-white transition-colors hover:bg-ink-800 disabled:opacity-40"
+          className="h-10 shrink-0 rounded-card bg-ink-950 px-4 text-sm font-medium text-white transition-colors hover:bg-ink-800 disabled:opacity-40"
         >
           {pending ? "Applying…" : "Apply"}
         </button>
@@ -361,6 +454,9 @@ export function CartDrawer() {
   const currency = cart?.cost.totalAmount.currencyCode ?? "INR";
   const undiscounted = cart ? cartUndiscountedTotal(cart) : 0;
   const isEmpty = lines.length === 0;
+  const hasGift = lines.some((line) =>
+    line.attributes.some((attribute) => attribute.key === GIFT_ATTRIBUTE),
+  );
 
   return (
     <div className="fixed inset-0 z-60">
@@ -407,8 +503,16 @@ export function CartDrawer() {
             {/* Above the items, not below: the customer decides whether to add
                 another poster while they're still looking at the list. */}
             {cart ? (
-              <div className="border-b border-ink-100 px-5 py-4">
+              <div className="space-y-4 border-b border-ink-100 px-5 py-4">
                 <FreeShippingBar subtotal={cart.cost.subtotalAmount} />
+                {/* Hidden once the gift line itself is in the cart — see
+                    GiftMilestoneBar's own note on why this decision belongs
+                    here rather than inside the bar. A bundle blocks the gift
+                    (Shopify allows only one buy-X-get-Y per order), and the
+                    absence of a gift line is what actually reflects that. */}
+                {hasGift ? null : (
+                  <GiftMilestoneBar subtotal={cart.cost.subtotalAmount} />
+                )}
               </div>
             ) : null}
 
@@ -462,6 +566,7 @@ export function CartDrawer() {
               </p>
 
               {cart ? <BundleNudge cart={cart} /> : null}
+              {cart ? <DiscountSuggestion cart={cart} /> : null}
               {cart ? <DiscountForm cart={cart} /> : null}
 
               <a
@@ -473,7 +578,10 @@ export function CartDrawer() {
                   event.preventDefault();
                   setCheckingOut(true);
                   trackMetaInitiateCheckout(cart);
-                  window.location.href = withClaimedDiscount(cart.checkoutUrl);
+                  trackGaBeginCheckout(cart);
+                  window.location.href = withGaLinker(
+                    withClaimedDiscount(cart.checkoutUrl),
+                  );
                 }}
                 aria-disabled={!cart?.checkoutUrl}
                 className="mt-4 flex h-13 w-full items-center justify-center rounded-full bg-brand-500 px-8 font-medium text-white transition-colors hover:bg-brand-600"

@@ -171,7 +171,7 @@ export function SubscribePopup() {
         role="dialog"
         aria-modal="true"
         aria-labelledby="subscribe-popup-title"
-        className="relative w-full max-w-sm rounded-2xl bg-paper p-8 text-center shadow-lift"
+        className="relative w-full max-w-sm rounded-card bg-paper p-8 text-center shadow-lift"
       >
         <button
           type="button"

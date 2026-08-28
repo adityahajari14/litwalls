@@ -20,7 +20,7 @@ const SIZES: Record<Size, string> = {
 };
 
 const BASE =
-  "inline-flex items-center justify-center gap-2 rounded-full font-medium " +
+  "inline-flex items-center justify-center gap-2 rounded-card font-medium " +
   "transition-colors duration-200 disabled:pointer-events-none disabled:opacity-50";
 
 export function buttonClass({

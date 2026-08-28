@@ -36,8 +36,8 @@ export function Categories({ collections }: { collections: Collection[] }) {
     <section className="bg-paper py-16 lg:py-24">
       <Container>
         <SectionHeading
-          title="Shop by universe"
-          subtitle="Find the wall that matches the fandom."
+          title="Shop by collection"
+          subtitle="Explore our posters by collection."
           href="/collections"
           linkLabel="Browse all collections"
         />

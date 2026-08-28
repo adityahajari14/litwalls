@@ -42,11 +42,24 @@ export const SAME_DAY_DISPATCH_CUTOFF_HOUR = 16;
 export const LOW_STOCK_THRESHOLD = 5;
 
 export function amountToFreeShipping(subtotal: number) {
-  return Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
+  return amountToMilestone(subtotal, FREE_SHIPPING_THRESHOLD);
 }
 
 export function freeShippingProgress(subtotal: number) {
-  return Math.min(1, Math.max(0, subtotal / FREE_SHIPPING_THRESHOLD));
+  return milestoneProgress(subtotal, FREE_SHIPPING_THRESHOLD);
+}
+
+/**
+ * How far a subtotal is from any rupee milestone — free shipping, the gift,
+ * or whatever else gets measured this way. Shared so "₹120 away" always means
+ * the same arithmetic regardless of which threshold it's measured against.
+ */
+export function amountToMilestone(subtotal: number, threshold: number) {
+  return Math.max(0, threshold - subtotal);
+}
+
+export function milestoneProgress(subtotal: number, threshold: number) {
+  return Math.min(1, Math.max(0, subtotal / threshold));
 }
 
 /**

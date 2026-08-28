@@ -63,7 +63,7 @@ export default async function CollectionPage({
           </ButtonLink>
         </div>
       ) : (
-        <ul className="mt-10 grid grid-cols-2 gap-x-4 gap-y-10 lg:grid-cols-4 lg:gap-x-6">
+        <ul className="mt-10 grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 lg:grid-cols-4 lg:gap-x-6 2xl:grid-cols-5">
           {products.map((product, index) => (
             <li key={product.id}>
               <ProductCard product={product} priority={index < 4} />
