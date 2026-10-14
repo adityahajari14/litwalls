@@ -48,6 +48,13 @@ export type OrderInput = {
   lineItems: {
     variantId: string;
     quantity: number;
+    /**
+     * Must be sent. orderCreate does NOT take it from the variant: the first
+     * live Fastrr order came out "Shipping not required" although every
+     * variant in the store is a physical product, which keeps the order out
+     * of a shipping app's queue.
+     */
+    requiresShipping: boolean;
     properties?: { name: string; value: string }[];
   }[];
   shippingAddress?: OrderAddress;

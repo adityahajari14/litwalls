@@ -227,6 +227,7 @@ async function resolveLines(order: FastrrOrder): Promise<OrderInput["lineItems"]
     if (heldQuantity !== quantity) {
       lineItems.push({
         variantId: `gid://shopify/ProductVariant/${id}`,
+        requiresShipping: true,
         quantity,
       });
       continue;
@@ -235,6 +236,7 @@ async function resolveLines(order: FastrrOrder): Promise<OrderInput["lineItems"]
     for (const line of lines) {
       lineItems.push({
         variantId: line.merchandise.id,
+        requiresShipping: true,
         quantity: line.quantity,
         ...(line.attributes.length
           ? {
