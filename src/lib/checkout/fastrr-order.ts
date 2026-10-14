@@ -142,17 +142,40 @@ function provinceCode(state: string | null | undefined): string | undefined {
   return PROVINCE_CODES[key];
 }
 
+/**
+ * A first and last name Shopify will accept.
+ *
+ * Shopify rejects a customer with a blank last name ("Customer last name can't
+ * be blank") — found on the first live order, whose shopper had given Fastrr a
+ * single name. A full name typed into the first-name field is split; a single
+ * word is used for both, because the alternative is losing the customer link.
+ */
+function personName(
+  first: string | null | undefined,
+  last: string | null | undefined,
+): { firstName?: string; lastName?: string } {
+  const given = first?.trim() ?? "";
+  const family = last?.trim() ?? "";
+
+  if (family) return { firstName: given || undefined, lastName: family };
+  if (!given) return {};
+
+  const parts = given.split(/\s+/);
+  return parts.length > 1
+    ? { firstName: parts[0], lastName: parts.slice(1).join(" ") }
+    : { firstName: given, lastName: given };
+}
+
 function toAddress(
-  address: FastrrAddress | null,
+  address: FastrrAddress | null | undefined,
   phone: string | undefined,
 ): OrderAddress | undefined {
-  if (!address) return undefined;
+  if (!address || !address.line1) return undefined;
 
   const line2 = [address.line2, address.landmark].filter(Boolean).join(", ");
 
   return {
-    firstName: address.first_name ?? undefined,
-    lastName: address.last_name ?? undefined,
+    ...personName(address.first_name, address.last_name),
     address1: address.line1 ?? undefined,
     address2: line2 || undefined,
     city: address.city ?? undefined,
@@ -228,7 +251,45 @@ async function resolveLines(order: FastrrOrder): Promise<OrderInput["lineItems"]
   return lineItems;
 }
 
-async function buildOrder(order: FastrrOrder): Promise<OrderInput> {
+/**
+ * Where the order is going.
+ *
+ * The signed order-details record is the source. The first live order came
+ * back from it with no shipping address, so two fallbacks follow: the billing
+ * address on the same signed record, and then the address in the webhook body.
+ *
+ * The webhook body is unsigned, which is why it is used only for an order the
+ * signed record has already confirmed, and only when the body names the same
+ * order and the same phone number. Someone who could forge it would still need
+ * a real paid order id and that customer's number to redirect a parcel.
+ */
+function deliveryAddress(
+  order: FastrrOrder,
+  hint: unknown,
+): FastrrAddress | null {
+  if (order.shipping_address?.line1) return order.shipping_address;
+  if (order.billing_address?.line1) return order.billing_address;
+
+  const body = hint as Partial<FastrrOrder> | null | undefined;
+  const digits = (value: unknown) =>
+    typeof value === "string" ? value.replace(/\D/g, "").slice(-10) : "";
+
+  if (
+    body?.order_id === order.order_id &&
+    digits(body.phone) !== "" &&
+    digits(body.phone) === digits(order.phone) &&
+    body.shipping_address?.line1
+  ) {
+    return body.shipping_address;
+  }
+
+  return null;
+}
+
+async function buildOrder(
+  order: FastrrOrder,
+  hint?: unknown,
+): Promise<OrderInput> {
   const lineItems = await resolveLines(order);
   if (lineItems.length === 0) {
     throw new Error(`Fastrr order ${order.order_id} has no items`);
@@ -331,11 +392,24 @@ async function buildOrder(order: FastrrOrder): Promise<OrderInput> {
       ];
 
   // ---- people ---------------------------------------------------------
-  const email = validEmail(order.email ?? order.shipping_address?.email);
   const phone = indianPhone(order.phone);
-  const shippingAddress = toAddress(order.shipping_address, phone);
+  const delivery = deliveryAddress(order, hint);
+  const email = validEmail(order.email ?? delivery?.email);
+  const shippingAddress = toAddress(delivery, phone);
   const billingAddress =
     toAddress(order.billing_address, phone) ?? shippingAddress;
+
+  if (!shippingAddress) {
+    // Logged as field NAMES only, never values: enough to see what Fastrr
+    // sent without putting a customer's address in the server log.
+    console.warn(
+      `Fastrr order ${order.order_id}: no usable shipping address. Fields present: ${Object.keys(order).join(", ")}`,
+    );
+    notes.push(
+      "NO SHIPPING ADDRESS was received from Fastrr. Copy it from the Fastrr dashboard before shipping.",
+    );
+    needsReview = true;
+  }
 
   const customAttributes = [
     { key: "Fastrr order id", value: order.order_id },
@@ -357,8 +431,7 @@ async function buildOrder(order: FastrrOrder): Promise<OrderInput> {
           customer: {
             toUpsert: {
               email,
-              firstName: order.shipping_address?.first_name ?? undefined,
-              lastName: order.shipping_address?.last_name ?? undefined,
+              ...personName(delivery?.first_name, delivery?.last_name),
             },
           },
         }
@@ -418,7 +491,7 @@ function stripped(input: OrderInput, order: FastrrOrder, why: string): OrderInpu
   return retry;
 }
 
-async function sync(orderId: string): Promise<EnsureResult> {
+async function sync(orderId: string, hint?: unknown): Promise<EnsureResult> {
   const order = await getFastrrOrder(orderId);
 
   // INITIATED is an opened checkout, FAILED a declined payment. Neither is an
@@ -430,7 +503,7 @@ async function sync(orderId: string): Promise<EnsureResult> {
   const existing = await findOrderByTag(orderTag(order.order_id));
   if (existing) return { status: "exists", shopifyOrder: existing.name };
 
-  const input = await buildOrder(order);
+  const input = await buildOrder(order, hint);
   const sendReceipt = Boolean(input.customer);
 
   try {
@@ -463,11 +536,15 @@ const inFlight = new Map<string, Promise<EnsureResult>>();
  * Fastrr arrive well outside it, and a duplicate is visible at a glance — both
  * carry the same `fastrr-<id>` tag.
  */
-export function ensureShopifyOrder(orderId: string): Promise<EnsureResult> {
+export function ensureShopifyOrder(
+  orderId: string,
+  /** The webhook body, when there is one. See deliveryAddress for its limits. */
+  hint?: unknown,
+): Promise<EnsureResult> {
   const pending = inFlight.get(orderId);
   if (pending) return pending;
 
-  const attempt = sync(orderId).finally(() => inFlight.delete(orderId));
+  const attempt = sync(orderId, hint).finally(() => inFlight.delete(orderId));
   inFlight.set(orderId, attempt);
   return attempt;
 }

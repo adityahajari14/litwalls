@@ -15,9 +15,11 @@ import { ensureShopifyOrder } from "@/lib/checkout/fastrr-order";
  * reconcile job, gets another go at it.
  */
 export async function POST(request: Request) {
+  let body: unknown;
   let orderId: unknown;
   try {
-    orderId = ((await request.json()) as { order_id?: unknown })?.order_id;
+    body = await request.json();
+    orderId = (body as { order_id?: unknown } | null)?.order_id;
   } catch {
     return Response.json({ ok: false, error: "Invalid JSON" }, { status: 400 });
   }
@@ -27,7 +29,9 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await ensureShopifyOrder(orderId);
+    // The body rides along only as a fallback for the delivery address —
+    // see deliveryAddress in fastrr-order.ts for the checks it must pass.
+    const result = await ensureShopifyOrder(orderId, body);
     return Response.json({ ok: true, ...result });
   } catch (error) {
     console.error(`Fastrr order webhook failed for ${orderId}`, error);
