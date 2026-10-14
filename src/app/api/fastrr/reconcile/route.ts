@@ -15,7 +15,7 @@ import { ensureShopifyOrder } from "@/lib/checkout/fastrr-order";
  *   GET /api/fastrr/reconcile?hours=24
  *   Authorization: Bearer $CRON_SECRET
  *
- * Point any scheduler at it — hourly is plenty. Vercel Cron sends exactly this
+ * vercel.json runs it daily (03:00 IST, 48h window — the most a Hobby plan allows). Vercel Cron sends exactly this
  * header when CRON_SECRET is set. Without the secret the route is off: it
  * would otherwise let anyone trigger a burst of Admin API calls.
  */
