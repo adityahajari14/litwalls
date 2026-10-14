@@ -494,7 +494,7 @@ They append `?page=1&limit=100` (and `collection_id=`) themselves.
 Also set in the Fastrr dashboard, because Fastrr — not Shopify — now decides
 them at checkout:
 
-- **Shipping charges.** The site promises free over ₹349 and a flat ₹49 below
+- **Shipping charges.** The site promises free over ₹349 and a flat ₹80 below
   (`lib/offers.ts`). Fastrr's shipping rule has to say the same.
 - **COD charges and prepaid discounts**, if you want either. Whatever Fastrr
   charges is what the Shopify order records.

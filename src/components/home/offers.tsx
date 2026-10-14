@@ -7,6 +7,7 @@ import {
   FIRST_ORDER_CODE,
   FIRST_ORDER_DISCOUNT,
   FIRST_ORDER_MINIMUM,
+  FLAT_SHIPPING_FEE,
   FREE_SHIPPING_THRESHOLD,
   GIFT_THRESHOLD,
   SINGLE_BUNDLES,
@@ -78,7 +79,7 @@ export function Offers() {
                   Free delivery over ₹{FREE_SHIPPING_THRESHOLD}
                 </p>
                 <p className="mt-1 text-xs text-ink-400">
-                  A flat ₹49 below that, anywhere in India.
+                  A flat ₹{FLAT_SHIPPING_FEE} below that, anywhere in India.
                 </p>
               </div>
             </li>

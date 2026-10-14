@@ -20,7 +20,7 @@ import type { Cart } from "@/lib/shopify/types";
 export const FREE_SHIPPING_THRESHOLD = 349;
 
 /** Flat rate below the threshold. Must match Shopify's shipping profile. */
-export const FLAT_SHIPPING_FEE = 49;
+export const FLAT_SHIPPING_FEE = 80;
 
 /** First-order flat discount. Must match a real Shopify code. */
 export const FIRST_ORDER_DISCOUNT = 100;
