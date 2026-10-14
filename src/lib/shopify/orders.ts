@@ -42,9 +42,14 @@ export type OrderInput = {
   tags: string[];
   sourceIdentifier?: string;
   customAttributes?: { key: string; value: string }[];
-  customer?: {
-    toUpsert: { email: string; firstName?: string; lastName?: string };
-  };
+  /**
+   * Exactly one of the two. An existing customer is ASSOCIATED, never
+   * upserted: an upsert overwrites the saved name with whatever the order
+   * carries, which renamed a real customer on the second live test order.
+   */
+  customer?:
+    | { toAssociate: { id: string } }
+    | { toUpsert: { email: string; firstName?: string; lastName?: string } };
   lineItems: {
     variantId: string;
     quantity: number;
@@ -71,6 +76,32 @@ export type OrderInput = {
     amountSet: MoneyBag;
   }[];
 };
+
+const FIND_CUSTOMER = /* GraphQL */ `
+  query FindCustomer($query: String!) {
+    customers(first: 1, query: $query) {
+      nodes {
+        id
+        email
+      }
+    }
+  }
+`;
+
+/** The customer already holding this email, if there is one. */
+export async function findCustomerByEmail(
+  email: string,
+): Promise<{ id: string } | null> {
+  const data = await admin<{
+    customers: { nodes: { id: string; email: string | null }[] };
+  }>(FIND_CUSTOMER, { query: `email:"${email.replace(/"/g, "")}"` });
+
+  // The search is fuzzy; only an exact (case-insensitive) match counts.
+  const match = data.customers.nodes.find(
+    (customer) => customer.email?.toLowerCase() === email.toLowerCase(),
+  );
+  return match ? { id: match.id } : null;
+}
 
 const FIND_ORDER = /* GraphQL */ `
   query FindOrder($query: String!) {

@@ -14,6 +14,7 @@ import { getCartById } from "@/lib/shopify/cart";
 import type { CartLine } from "@/lib/shopify/types";
 import {
   createOrder,
+  findCustomerByEmail,
   findOrderByTag,
   getVariants,
   inr,
@@ -413,6 +414,21 @@ async function buildOrder(
     needsReview = true;
   }
 
+  // Someone who has ordered before keeps the name on their record — the
+  // name Fastrr holds may be a single word (see personName) and must not
+  // replace a full one. Only a first-time customer is created from it.
+  const existing = email ? await findCustomerByEmail(email) : null;
+  const customer: OrderInput["customer"] = existing
+    ? { toAssociate: { id: existing.id } }
+    : email
+      ? {
+          toUpsert: {
+            email,
+            ...personName(delivery?.first_name, delivery?.last_name),
+          },
+        }
+      : undefined;
+
   const customAttributes = [
     { key: "Fastrr order id", value: order.order_id },
     { key: "Shiprocket order id", value: order.fastrr_order_id ?? "" },
@@ -428,15 +444,8 @@ async function buildOrder(
     currency: "INR",
     // With an email the customer is upserted and the order's contact details
     // follow from that; without one, the phone is all there is to go on.
-    ...(email
-      ? {
-          customer: {
-            toUpsert: {
-              email,
-              ...personName(delivery?.first_name, delivery?.last_name),
-            },
-          },
-        }
+    ...(customer
+      ? { customer }
       : phone
         ? { phone }
         : {}),
@@ -478,10 +487,12 @@ function stripped(input: OrderInput, order: FastrrOrder, why: string): OrderInpu
   const withoutPhone = (address?: OrderAddress) =>
     address ? { ...address, phone: undefined } : undefined;
 
+  const retryEmail = validEmail(order.email ?? order.shipping_address?.email);
+
   const retry: OrderInput = {
     ...input,
     // Still emailed their receipt — just not linked to a customer record.
-    ...(input.customer ? { email: input.customer.toUpsert.email } : {}),
+    ...(retryEmail ? { email: retryEmail } : {}),
     shippingAddress: withoutPhone(input.shippingAddress),
     billingAddress: withoutPhone(input.billingAddress),
     tags: [...new Set([...input.tags, REVIEW_TAG])],
