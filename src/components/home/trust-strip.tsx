@@ -1,5 +1,6 @@
 import { LeafIcon, ReturnIcon, ShieldIcon, TruckIcon } from "@/components/icons";
 import { Container } from "@/components/ui/container";
+import { DAMAGE_PROOF } from "@/lib/company";
 import { FREE_SHIPPING_THRESHOLD } from "@/lib/offers";
 
 const ITEMS = [
@@ -16,7 +17,7 @@ const ITEMS = [
   {
     icon: ReturnIcon,
     title: "Free replacement on damage",
-    body: "If it arrives damaged or blurred, send a short video and we'll send a replacement.",
+    body: `If it arrives damaged or blurred, send ${DAMAGE_PROOF} and we'll send a replacement.`,
   },
   {
     icon: ShieldIcon,
@@ -29,7 +30,7 @@ export function TrustStrip() {
   return (
     <section aria-label="Why you can buy with confidence" className="border-b border-ink-100 bg-white">
       <Container className="py-10">
-        <ul className="grid gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
+        <ul className="reveal-stagger grid gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
           {ITEMS.map((item) => (
             <li key={item.title} className="flex gap-3.5">
               <item.icon className="mt-0.5 size-6 shrink-0 text-brand-500" />

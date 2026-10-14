@@ -1,17 +1,53 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
-import { ProductCard } from "@/components/product-card";
+import { CatalogueToolbar } from "@/components/catalogue/catalogue-toolbar";
+import { ProductFeed } from "@/components/catalogue/product-feed";
+import { ButtonLink } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
-import { getProducts } from "@/lib/shopify/products";
+import {
+  buildProductQuery,
+  hasActiveFilters,
+  priceBandsFor,
+  sortOption,
+} from "@/lib/catalogue";
+import {
+  getCatalogueFacets,
+  getCataloguePage,
+  getProductCount,
+} from "@/lib/shopify/products";
 
 export const metadata: Metadata = {
   title: "All posters",
-  description:
-    "Every Litwalls poster, printed on 300gsm matte paper.",
+  description: "Every Litwalls poster, printed on 300gsm matte paper.",
 };
 
-export default async function ProductsPage() {
-  const products = await getProducts({ first: 48 });
+/** One server page. Four columns at the widest step, so this is six full rows. */
+const PAGE_SIZE = 24;
+
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ sort?: string; size?: string; price?: string }>;
+}) {
+  const { sort, size, price } = await searchParams;
+  const option = sortOption(sort);
+
+  // Facets first: the query depends on which filters are real, so a value from
+  // a stale bookmark can't produce a query that matches nothing.
+  const [facets, total] = await Promise.all([
+    getCatalogueFacets(),
+    getProductCount(),
+  ]);
+  const bands = priceBandsFor(facets.priceMin, facets.priceMax);
+
+  const page = await getCataloguePage({
+    first: PAGE_SIZE,
+    query: buildProductQuery({ size, price, sizes: facets.sizes, bands }),
+    ...option.product,
+  });
+
+  const filtered = hasActiveFilters({ size, price, sizes: facets.sizes, bands });
 
   return (
     <Container className="py-12 lg:py-16">
@@ -20,25 +56,56 @@ export default async function ProductsPage() {
           All posters
         </h1>
         <p className="mt-3 text-ink-600 text-pretty">
-          {products.length} print{products.length === 1 ? "" : "s"}, each on
-          300gsm matte paper.
+          Every print we make, on 300gsm matte paper. Mix and match any designs
+          — the bundle discount applies across the whole catalogue.
         </p>
       </header>
 
-      {products.length === 0 ? (
-        <p className="mt-12 text-ink-600">
-          No products yet. Add some in your Shopify admin and they&apos;ll appear
-          here.
-        </p>
-      ) : (
-        <ul className="mt-10 grid grid-cols-2 gap-x-4 gap-y-6 md:grid-cols-3 lg:grid-cols-4 lg:gap-6 2xl:grid-cols-5">
-          {products.map((product, index) => (
-            <li key={product.id} className="h-full">
-              <ProductCard product={product} priority={index < 4} />
-            </li>
-          ))}
-        </ul>
-      )}
+      {/* useSearchParams inside the toolbar and feed opts them out of
+          prerendering; the boundary keeps that from reaching the header above. */}
+      <Suspense fallback={<div className="mt-10 h-32" />}>
+        <div className="mt-10">
+          <CatalogueToolbar
+            total={total}
+            showing={page.products.length}
+            sizes={facets.sizes}
+            bands={bands}
+          />
+        </div>
+
+        <div className="mt-10">
+          {page.products.length === 0 ? (
+            <div className="py-8">
+              <p className="text-ink-900">
+                {filtered
+                  ? "No posters match those filters."
+                  : "No products yet."}
+              </p>
+              <p className="mt-1 text-ink-600 text-pretty">
+                {filtered
+                  ? "Try widening the price range or clearing the size."
+                  : "Add some in your Shopify admin and they'll appear here."}
+              </p>
+              {filtered ? (
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <ButtonLink href="/products" variant="ghost">
+                    Clear filters
+                  </ButtonLink>
+                  <ButtonLink href="/custom">Make a custom poster</ButtonLink>
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <ProductFeed
+              key={`${sort ?? ""}|${size ?? ""}|${price ?? ""}`}
+              initialProducts={page.products}
+              initialCursor={page.endCursor}
+              initialHasNextPage={page.hasNextPage}
+              pageSize={PAGE_SIZE}
+            />
+          )}
+        </div>
+      </Suspense>
     </Container>
   );
 }

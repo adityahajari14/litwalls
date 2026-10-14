@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { ProsePage } from "@/components/ui/prose-page";
 import {
@@ -65,7 +66,7 @@ export default function PrivacyPage() {
 
       <h2>Your custom artwork</h2>
       <p>
-        If you upload an image on our <a href="/custom">custom poster page</a>,
+        If you upload an image on our <Link href="/custom">custom poster page</Link>,
         it is stored with Shopify and used for exactly one thing: printing your
         poster.
       </p>

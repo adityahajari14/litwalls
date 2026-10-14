@@ -3,17 +3,14 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 
+import { SubscribeForm } from "@/components/marketing/subscribe-form";
 import { Button } from "@/components/ui/button";
 import { Price } from "@/components/ui/price";
 import { QuantityStepper } from "@/components/product/quantity-stepper";
-import { withGaLinker } from "@/lib/analytics/ga-linker";
-import {
-  trackGaAddToCart,
-  trackGaBeginCheckout,
-} from "@/lib/analytics/google-analytics";
+import { trackGaAddToCart } from "@/lib/analytics/google-analytics";
 import { trackAddToCart } from "@/lib/analytics/shopify";
-import { trackMetaAddToCart, trackMetaInitiateCheckout } from "@/lib/analytics/meta-pixel";
-import { withClaimedDiscount } from "@/lib/checkout-url";
+import { trackMetaAddToCart } from "@/lib/analytics/meta-pixel";
+import { startCheckout } from "@/lib/checkout/start-checkout";
 import { LOW_STOCK_THRESHOLD } from "@/lib/marketing";
 import { formatMoney } from "@/lib/money";
 import { addItem } from "@/lib/shopify/actions";
@@ -122,13 +119,28 @@ export function AddToCart({
 
   if (!available || !merchandiseId) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-4">
         <Button disabled variant="secondary" size="lg" className="w-full">
           Sold out
         </Button>
-        <p className="text-sm text-ink-600">
-          This poster is out of stock. Check back soon.
-        </p>
+
+        {/* Someone who wanted this specific poster enough to reach this page is
+            the highest-intent visitor there is, and the page used to ask them
+            to remember to come back on their own. */}
+        <div className="rounded-card border border-ink-200 bg-white p-4">
+          <p className="text-sm font-medium text-ink-950">
+            Tell me when it&apos;s back
+          </p>
+          <p className="mt-1 text-sm text-ink-600 text-pretty">
+            We print to order, so this one usually returns within a week. Leave
+            your email and you&apos;ll be first to know.
+          </p>
+          <SubscribeForm
+            id={`back-in-stock-${product.handle}`}
+            className="mt-3"
+            source={`back-in-stock:${product.handle}`}
+          />
+        </div>
       </div>
     );
   }
@@ -161,12 +173,13 @@ export function AddToCart({
 
       if (then === "checkout") {
         if (cart?.checkoutUrl) {
-          if (cart) {
-            trackMetaInitiateCheckout(cart);
-            trackGaBeginCheckout(cart);
-          }
-          // Full navigation: checkout is hosted on Shopify's domain.
-          window.location.href = withGaLinker(withClaimedDiscount(cart.checkoutUrl));
+          // Fastrr when the cart can be represented in it, Shopify otherwise —
+          // see startCheckout. Analytics fire inside, for both destinations.
+          const outcome = await startCheckout(cart);
+
+          // Shopify navigates away, so the button can stay in its loading
+          // state. Fastrr opens an overlay over this page, so it must not.
+          if (outcome.via === "fastrr") setBuying(false);
           return;
         }
         setBuying(false);

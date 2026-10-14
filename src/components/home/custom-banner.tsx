@@ -9,11 +9,20 @@ const STEPS = [
   "We print it on 300gsm matte and ship it",
 ];
 
-export function CustomBanner() {
+/**
+ * The three-step explainer for custom prints.
+ *
+ * Written for the home page, never imported anywhere, and dead code until now.
+ * Its real home is /custom, which was a heading, one paragraph and a grid of
+ * four cards — the thinnest page on the site, and the landing page for the
+ * higher-margin product. Someone arriving from an ad learned less there than
+ * they would have on the home page.
+ */
+export function CustomBanner({ className }: { className?: string }) {
   return (
-    <section className="py-12 lg:py-16">
+    <section className={className ?? "py-12 lg:py-16"}>
       <Container>
-        <div className="grid overflow-hidden rounded-card bg-ink-950 lg:grid-cols-2">
+        <div className="reveal grid overflow-hidden rounded-card bg-ink-950 lg:grid-cols-2">
           <div className="p-8 sm:p-12 lg:p-16">
             <p className="text-xs font-semibold tracking-[0.2em] text-brand-400 uppercase">
               Custom posters

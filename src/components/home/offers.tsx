@@ -1,4 +1,5 @@
 import { ButtonLink } from "@/components/ui/button";
+import { DAMAGE_PROOF } from "@/lib/company";
 import { Container } from "@/components/ui/container";
 import { GiftIcon, ReturnIcon, TagIcon, TruckIcon } from "@/components/icons";
 import {
@@ -41,7 +42,7 @@ export function Offers() {
   return (
     <section id="offers" className="scroll-mt-24 bg-ink-950 py-16 lg:py-24">
       <Container>
-        <div className="grid items-center gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
+        <div className="reveal grid items-center gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
           <div>
             <p className="text-xs font-semibold tracking-[0.2em] text-brand-400 uppercase">
               Offers
@@ -113,7 +114,7 @@ export function Offers() {
                   Free reprint on damage
                 </p>
                 <p className="mt-1 text-xs text-ink-400">
-                  Send a short video and we&apos;ll ship a free replacement.
+                  Send {DAMAGE_PROOF} and we&apos;ll ship a free replacement.
                 </p>
               </div>
             </li>

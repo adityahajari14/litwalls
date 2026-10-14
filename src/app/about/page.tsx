@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { ButtonLink } from "@/components/ui/button";
 import { ProsePage } from "@/components/ui/prose-page";
-import { SUPPORT_EMAIL } from "@/lib/company";
+import { DAMAGE_PROOF, SUPPORT_EMAIL } from "@/lib/company";
 
 export const metadata: Metadata = {
   title: "About",
@@ -49,17 +50,17 @@ export default function AboutPage() {
         Nothing sits in a warehouse. Your poster is printed after you order it,
         which is why we can offer thousands of designs without a stockroom — and
         why we can print{" "}
-        <a href="/custom">whatever image you send us</a> on the same paper, at
+        <Link href="/custom">whatever image you send us</Link> on the same paper, at
         the same quality, for the same price.
       </p>
 
       <h2>If we get it wrong</h2>
       <p>
-        Sometimes a courier folds something they shouldn&apos;t. Send us a photo
-        and we&apos;ll reprint it and ship a replacement free — you don&apos;t
+        Sometimes a courier folds something they shouldn&apos;t. Send us{" "}
+        {DAMAGE_PROOF} and we&apos;ll reprint it and ship a replacement free — you don&apos;t
         need to post the damaged one back, and we&apos;re not going to argue with
         you about it. The full policy is on our{" "}
-        <a href="/returns">returns page</a>, but that&apos;s the whole of it.
+        <Link href="/returns">returns page</Link>, but that&apos;s the whole of it.
       </p>
 
       <h2>Talk to us</h2>

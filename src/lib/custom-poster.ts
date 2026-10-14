@@ -9,6 +9,11 @@
 /** Line-item attribute keys. These appear verbatim on the Shopify order. */
 export const CUSTOM_ART_ATTRIBUTE = "Artwork";
 export const CUSTOM_NOTE_ATTRIBUTE = "Note";
+/**
+ * Only present when the customer's crop could not be baked into the file (see
+ * exportEdit): the original was uploaded instead, and this says how to crop it.
+ */
+export const CUSTOM_CROP_ATTRIBUTE = "Crop";
 
 export const ACCEPTED_MIME_TYPES = [
   "image/jpeg",
@@ -18,6 +23,14 @@ export const ACCEPTED_MIME_TYPES = [
 
 /** Generous enough for a phone photo at full resolution; short of absurd. */
 export const MAX_FILE_BYTES = 25 * 1024 * 1024;
+
+/**
+ * The largest file that can actually be SENT. Shopify will not keep an image
+ * file over 20MB, so this — not MAX_FILE_BYTES — bounds what is uploaded. A
+ * picked file may still be bigger: anything the customer crops is re-encoded
+ * as a JPEG on the way out, which brings it well under.
+ */
+export const MAX_UPLOAD_BYTES = 20 * 1000 * 1000;
 
 /**
  * Print sizes, with the pixel dimensions needed to hit a decent print density.
@@ -55,16 +68,17 @@ export function formatBytes(bytes: number) {
 export type FileProblem = { message: string };
 
 /** Cheap checks that need only the file's metadata — no decoding. */
-export function checkFile(file: {
-  type: string;
-  size: number;
-}): FileProblem | null {
+export function checkFile(
+  file: { type: string; size: number },
+  /** MAX_UPLOAD_BYTES when checking what is about to be sent. */
+  maxBytes = MAX_FILE_BYTES,
+): FileProblem | null {
   if (!isAcceptedMimeType(file.type)) {
     return { message: "That file type isn't supported. Use a JPG, PNG or WebP." };
   }
-  if (file.size > MAX_FILE_BYTES) {
+  if (file.size > maxBytes) {
     return {
-      message: `That file is ${formatBytes(file.size)}. The limit is ${formatBytes(MAX_FILE_BYTES)}.`,
+      message: `That file is ${formatBytes(file.size)}. The limit is ${formatBytes(maxBytes)}.`,
     };
   }
   if (file.size === 0) {

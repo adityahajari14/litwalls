@@ -20,12 +20,15 @@ export function SubscribeForm({
   id,
   className,
   onSubscribed,
+  source,
 }: {
-  /** Distinguishes the two instances' inputs when both are on the page. */
+  /** Distinguishes the instances' inputs when several are on the page. */
   id: string;
   className?: string;
   /** Lets the popup suppress itself once the offer has been taken. */
   onSubscribed?: () => void;
+  /** Tags the customer in Shopify — see subscribeToNewsletter. */
+  source?: string;
 }) {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
@@ -37,7 +40,7 @@ export function SubscribeForm({
     setStatus("idle");
 
     startTransition(async () => {
-      const result = await subscribeToNewsletter(email);
+      const result = await subscribeToNewsletter(email, source);
 
       if (!result.ok) {
         setStatus("error");
@@ -46,13 +49,18 @@ export function SubscribeForm({
       }
 
       setStatus("success");
-      // Makes good on "it applies itself at checkout" — see withClaimedDiscount.
-      rememberClaimedDiscount();
+      // Only the marketing surfaces promise the welcome code, so only they
+      // claim it. A back-in-stock signup that silently armed a discount would
+      // be a nice surprise exactly once and a support ticket every time the
+      // customer could not work out where the code came from.
+      if (!source?.startsWith("back-in-stock")) rememberClaimedDiscount();
       onSubscribed?.();
     });
   }
 
   if (status === "success") {
+    const backInStock = source?.startsWith("back-in-stock");
+
     return (
       <div
         className={cn(
@@ -62,11 +70,17 @@ export function SubscribeForm({
       >
         <CheckIcon className="mt-0.5 size-4 shrink-0 text-success" />
         <p className="text-sm text-ink-700 text-pretty">
-          You&apos;re in. Your code{" "}
-          <span className="font-medium text-ink-950">
-            {SUBSCRIBE_DISCOUNT_CODE}
-          </span>{" "}
-          applies itself at checkout.
+          {backInStock ? (
+            <>We&apos;ll email you the moment this one is back in stock.</>
+          ) : (
+            <>
+              You&apos;re in. Your code{" "}
+              <span className="font-medium text-ink-950">
+                {SUBSCRIBE_DISCOUNT_CODE}
+              </span>{" "}
+              applies itself at checkout.
+            </>
+          )}
         </p>
       </div>
     );

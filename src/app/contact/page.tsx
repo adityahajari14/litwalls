@@ -4,6 +4,7 @@ import Link from "next/link";
 import { InstagramIcon, MailIcon } from "@/components/icons";
 import { Container } from "@/components/ui/container";
 import {
+  DAMAGE_PROOF,
   SUPPORT_EMAIL,
   SUPPORT_HOURS,
   SUPPORT_RESPONSE,
@@ -50,7 +51,7 @@ const SHORTCUTS = [
   {
     question: "It arrived damaged.",
     answer:
-      "Send a photo and we'll reprint it free. No return posting, no arguing.",
+      `Send ${DAMAGE_PROOF} and we'll reprint it free. No return posting, no arguing.`,
     href: "/returns",
     cta: "Read the policy",
   },

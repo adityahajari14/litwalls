@@ -10,7 +10,7 @@ import {
   SPLIT_BUNDLES,
   type Bundle,
 } from "@/lib/offers";
-import { SPLIT_TAG } from "@/lib/shopify/products";
+import { SPLIT_TAG } from "@/lib/product";
 import type { Product } from "@/lib/shopify/types";
 
 /**
@@ -46,9 +46,13 @@ export function OffersBlock({ product }: { product: Product }) {
       aria-label="Offers"
       className="overflow-hidden rounded-card border border-ink-200 bg-white"
     >
+      {/* Leads with the offer itself. "Buy more, pay the same" made the reader
+          work out what it was the same as, when the first rung below already
+          states the deal plainly. */}
       <p className="flex items-center gap-2 bg-brand-50/60 px-4 py-3 text-sm font-semibold text-ink-950">
         <TagIcon className="size-4 shrink-0 text-brand-500" />
-        Buy more, pay the same — mix any designs
+        Buy {bundles[0].pay}, get {bundleFreeCount(bundles[0])} free — mix any
+        designs
       </p>
 
       <ul className="grid grid-cols-2 gap-2.5 p-3">
@@ -89,7 +93,10 @@ export function OffersBlock({ product }: { product: Product }) {
       <ul className="space-y-3 border-t border-ink-100 px-4 py-4 text-sm text-ink-600">
         <li className="flex items-start gap-2.5">
           <CheckIcon className="mt-0.5 size-4 shrink-0 text-success" />
-          <span>No code needed — the discount is applied automatically at checkout.</span>
+          <span>
+            Add all {bundles[0].total} to your cart — the {bundleFreeCount(bundles[0])}{" "}
+            free ones come off automatically. No code needed.
+          </span>
         </li>
         <li className="flex items-start gap-2.5">
           <GiftIcon className="mt-0.5 size-4 shrink-0 text-brand-500" />

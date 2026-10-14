@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { ProsePage } from "@/components/ui/prose-page";
-import { REPLACEMENT_WINDOW_DAYS, SUPPORT_EMAIL } from "@/lib/company";
+import { DAMAGE_PROOF, REPLACEMENT_WINDOW_DAYS, SUPPORT_EMAIL } from "@/lib/company";
 
 export const metadata: Metadata = {
   title: "Returns & refunds",
-  description: `Damaged or misprinted? Send a photo within ${REPLACEMENT_WINDOW_DAYS} days and we'll reprint it free — no return posting required.`,
+  description: `Damaged or misprinted? Send ${DAMAGE_PROOF} within ${REPLACEMENT_WINDOW_DAYS} days and we'll reprint it free — no return posting required.`,
 };
 
 export default function ReturnsPage() {
@@ -17,9 +18,12 @@ export default function ReturnsPage() {
     >
       <h2>Damaged, misprinted, or wrong</h2>
       <p>
-        Email <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a> with a
-        photo within <strong>{REPLACEMENT_WINDOW_DAYS} days</strong> of delivery
-        and we&apos;ll reprint your poster and ship a replacement free.
+        Email <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a> with{" "}
+        {DAMAGE_PROOF} within <strong>{REPLACEMENT_WINDOW_DAYS} days</strong> of
+        delivery and we&apos;ll reprint your poster and ship a replacement free.
+        We ask for a video rather than a photo because it shows the damage and
+        the print in one take, which lets us approve the replacement
+        immediately instead of writing back for another angle.
       </p>
       <p>
         You don&apos;t need to post the damaged one back to us — return shipping
@@ -48,7 +52,7 @@ export default function ReturnsPage() {
       <h2>Custom posters</h2>
       <p>
         The same applies, with one addition: we can&apos;t refund a{" "}
-        <a href="/custom">custom poster</a> because the uploaded image turned out
+        <Link href="/custom">custom poster</Link> because the uploaded image turned out
         blurry, since we warn you before you pay when a file is too low-resolution
         for the size you picked.
       </p>

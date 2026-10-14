@@ -7,12 +7,14 @@ import { useState, useTransition } from "react";
 import { useCart } from "@/components/cart/cart-provider";
 import { CheckIcon } from "@/components/icons";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { Price } from "@/components/ui/price";
 import { trackGaAddToCart } from "@/lib/analytics/google-analytics";
 import { trackAddToCart } from "@/lib/analytics/shopify";
 import { trackMetaAddToCart } from "@/lib/analytics/meta-pixel";
 import { discountPercent } from "@/lib/money";
+import { IMAGE_PLACEHOLDER } from "@/lib/image-placeholder";
+import { isCustomProduct } from "@/lib/product";
 import { addItem } from "@/lib/shopify/actions";
 import { cn } from "@/lib/cn";
 import {
@@ -53,16 +55,23 @@ function startingVariant(product: Product): ProductVariant | null {
 
 export function ProductCard({
   product,
-  priority = false,
+  eager = false,
   className,
 }: {
   product: Product;
-  priority?: boolean;
+  /** Load immediately instead of lazily — for cards above the fold. Not
+   *  `preload`: a row of four cards is four LCP candidates, and preloading all
+   *  of them just splits the same bandwidth four ways. */
+  eager?: boolean;
   className?: string;
 }) {
   const isNew = product.tags.includes("new");
   const soldOut = !product.availableForSale;
-  const needsSizeChoice = hasSizeChoice(product);
+  // A custom print cannot be bought from a card: there is no artwork yet, and
+  // the size is chosen against the artwork on the upload page. So the card
+  // offers neither a size nor a quick add — only the way in.
+  const isCustom = isCustomProduct(product);
+  const needsSizeChoice = !isCustom && hasSizeChoice(product);
   const sizes = sizeOptions(product);
 
   const initial = startingVariant(product);
@@ -75,7 +84,7 @@ export function ProductCard({
   const picked = pickedSize ? variantForSize(product, pickedSize) : null;
   const selected = picked ?? initial;
 
-  const showFrom = needsSizeChoice && !picked;
+  const showFrom = (needsSizeChoice || isCustom) && !picked;
   const price = selected?.price ?? product.priceRange.minVariantPrice;
   const compareAt = selected?.compareAtPrice ?? null;
   // Tied to the price actually on screen, so the badge and the number under
@@ -92,7 +101,7 @@ export function ProductCard({
   // same reasoning as the size buttons below.
   function addToCart(event: React.MouseEvent) {
     event.preventDefault();
-    if (!selected || pending || unavailable) return;
+    if (!selected || pending || unavailable || isCustom) return;
 
     startTransition(async () => {
       const result = await addItem(selected.id, 1);
@@ -113,7 +122,9 @@ export function ProductCard({
     });
   }
 
-  const href = `/products/${product.handle}`;
+  const href = isCustom
+    ? `/custom/${product.handle}`
+    : `/products/${product.handle}`;
 
   return (
     <article className={cn("group flex h-full flex-col", className)}>
@@ -133,7 +144,8 @@ export function ProductCard({
               src={product.featuredImage.url}
               alt={product.featuredImage.altText ?? product.title}
               fill
-              priority={priority}
+              loading={eager ? "eager" : "lazy"}
+              placeholder={IMAGE_PLACEHOLDER}
               sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 80vw"
               className={cn(
                 "object-cover transition-transform duration-500 ease-out-soft",
@@ -175,6 +187,12 @@ export function ProductCard({
             <span className="text-[11px] font-medium tracking-wide text-ink-400 uppercase">
               From
             </span>
+          ) : null}
+          {/* The "% off" badge lives inside the image link, which is
+              aria-hidden to avoid a duplicate stop — so without this a screen
+              reader announced two prices and never said one was a discount. */}
+          {percent > 0 ? (
+            <span className="sr-only">{percent}% off. </span>
           ) : null}
           <Price
             price={price}
@@ -237,27 +255,33 @@ export function ProductCard({
             buttons on one line, whether or not a card has size options. */}
         <div className="mt-3 flex-1" />
 
-        <Button
-          type="button"
-          size="sm"
-          variant={unavailable ? "ghost" : "secondary"}
-          disabled={unavailable || pending}
-          onClick={addToCart}
-          className="w-full"
-        >
-          {unavailable ? (
-            "Sold out"
-          ) : added ? (
-            <>
-              <CheckIcon className="size-4" />
-              Added to cart
-            </>
-          ) : pending ? (
-            "Adding…"
-          ) : (
-            "Add to cart"
-          )}
-        </Button>
+        {isCustom && !unavailable ? (
+          <ButtonLink href={href} size="sm" variant="secondary" className="w-full">
+            Upload your artwork
+          </ButtonLink>
+        ) : (
+          <Button
+            type="button"
+            size="sm"
+            variant={unavailable ? "ghost" : "secondary"}
+            disabled={unavailable || pending}
+            onClick={addToCart}
+            className="w-full"
+          >
+            {unavailable ? (
+              "Sold out"
+            ) : added ? (
+              <>
+                <CheckIcon className="size-4 animate-tick-in" />
+                Added to cart
+              </>
+            ) : pending ? (
+              "Adding…"
+            ) : (
+              "Add to cart"
+            )}
+          </Button>
+        )}
       </div>
     </article>
   );

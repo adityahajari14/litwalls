@@ -8,11 +8,14 @@ import { ShopifyAnalytics } from "@/components/analytics/shopify-analytics";
 import { CartDrawer } from "@/components/cart/cart-drawer";
 import { CartLoader } from "@/components/cart/cart-loader";
 import { CartProvider } from "@/components/cart/cart-provider";
+import { FastrrScript } from "@/components/checkout/fastrr-script";
 import { AnnouncementBar } from "@/components/layout/announcement-bar";
 import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
 import { SubscribePopup } from "@/components/marketing/subscribe-popup";
+import { MotionEnhancements } from "@/components/motion-enhancements";
 import { getCollections } from "@/lib/shopify/products";
+import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 /** Same list Footer fetches — cached, so this is a cache hit, not a second request. */
@@ -32,7 +35,7 @@ const bebas = Bebas_Neue({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://litwalls.in"),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Litwalls — Posters that make your walls talk",
     template: "%s | Litwalls",
@@ -43,6 +46,12 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "Litwalls",
     locale: "en_IN",
+  },
+  // The card itself comes from app/opengraph-image.tsx; this only says which
+  // shape X should render it in. Without it a share collapses to the small
+  // thumbnail layout and the poster becomes a 120px square.
+  twitter: {
+    card: "summary_large_image",
   },
   // Proves domain ownership to Meta Business Manager — required once for the
   // pixel's domain to be verified there, unrelated to the pixel script itself.
@@ -64,6 +73,15 @@ export default async function RootLayout({
       className={`${inter.variable} ${bebas.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col font-sans">
+        {/* Thirteen tab stops — announcement bar, logo, four nav items, the
+            collections submenu, three icon buttons — sit between the top of
+            the page and the first product. This skips all of them. */}
+        <a
+          href="#main"
+          className="sr-only rounded-card focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-70 focus:bg-ink-950 focus:px-4 focus:py-2.5 focus:text-sm focus:font-medium focus:text-white"
+        >
+          Skip to content
+        </a>
         {/* useSearchParams opts its subtree out of prerendering, so the
             boundary keeps that deopt from reaching the rest of the layout. */}
         <Suspense fallback={null}>
@@ -75,10 +93,14 @@ export default async function RootLayout({
           <CartLoader />
           <AnnouncementBar />
           <Header collections={collections} />
-          <main className="flex flex-1 flex-col">{children}</main>
+          <main id="main" className="flex flex-1 flex-col">
+            {children}
+          </main>
           <Footer />
           <CartDrawer />
           <SubscribePopup />
+          <FastrrScript />
+          <MotionEnhancements />
         </CartProvider>
       </body>
     </html>

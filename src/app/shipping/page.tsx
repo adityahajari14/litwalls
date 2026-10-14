@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { ProsePage } from "@/components/ui/prose-page";
 import {
+  DAMAGE_PROOF,
   DISPATCH_HOURS,
   FLAT_SHIPPING_FEE,
   REPLACEMENT_WINDOW_DAYS,
@@ -93,7 +94,7 @@ export default function ShippingPage() {
 
       <h2>If it arrives damaged</h2>
       <p>
-        Send us a photo within {REPLACEMENT_WINDOW_DAYS} days and we&apos;ll
+        Send us {DAMAGE_PROOF} within {REPLACEMENT_WINDOW_DAYS} days and we&apos;ll
         reprint and reship it free. Full details on the{" "}
         <a href="/returns">returns page</a>.
       </p>

@@ -134,6 +134,20 @@ export function customProductConfig(handle: string): CustomProductConfig | null 
 }
 
 /**
+ * Whether a custom product is a single poster — the one custom product that
+ * counts on the single-poster bundle ladder alongside the catalogue posters.
+ * Seven custom posters earn "buy 4, get 3 free" exactly as seven catalogue
+ * ones do, or any mix of the two. The split poster has its own ladder, and
+ * mini and retro prints are packs of small prints, not posters.
+ *
+ * `scripts/sync-discounts.mjs` reads the same `kind: "poster"` entries to
+ * scope the Shopify discounts, so the two cannot disagree.
+ */
+export function isCustomSinglePoster(handle: string): boolean {
+  return customProductConfig(handle)?.kind === "poster";
+}
+
+/**
  * The pixel floor for the customer's current selections, or null when this
  * product has neither a sizing axis nor a fixed one (never happens today,
  * but a config without either is a config with no resolution check).
@@ -167,6 +181,40 @@ export function resolutionRequirementFor(
   const panelLong = Math.max(base.minWidth, base.minHeight);
   const panelShort = Math.min(base.minWidth, base.minHeight);
   return { minWidth: panelLong, minHeight: panelShort * config.splitPanels };
+}
+
+/**
+ * The shape the print will actually be, in display orientation.
+ *
+ * `resolutionRequirementFor` above is deliberately orientation-agnostic — it
+ * only cares whether an image has enough pixels — but the upload preview has
+ * to show the customer the real frame, so this one is not.
+ *
+ * Posters are portrait. A split product is `splitPanels` portrait panels hung
+ * side by side, so the whole piece is that many times as wide as one panel and
+ * one panel tall — a landscape frame, which is precisely the thing a customer
+ * uploading a portrait photo needs to see before they pay.
+ *
+ * Returns null when the size is unknown, and the preview falls back to its
+ * default frame rather than inventing a crop.
+ */
+export function printAspectFor(
+  config: CustomProductConfig,
+  selections: Record<string, string>,
+): { width: number; height: number } | null {
+  const requirement = resolutionRequirementFor(config, selections);
+  if (!requirement) return null;
+
+  const long = Math.max(requirement.minWidth, requirement.minHeight);
+  const short = Math.min(requirement.minWidth, requirement.minHeight);
+
+  // A split requirement is already "one panel's long edge × the short edge
+  // times the panel count", so its longer number is the full width of the
+  // hung piece and its shorter one is the height — landscape. A single poster
+  // is the other way round: portrait, short edge across.
+  return config.splitPanels
+    ? { width: long, height: short }
+    : { width: short, height: long };
 }
 
 /** True once every axis has a selection. */

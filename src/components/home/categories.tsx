@@ -5,6 +5,7 @@ import { Container } from "@/components/ui/container";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { cn } from "@/lib/cn";
 import type { Collection } from "@/lib/shopify/types";
+import { IMAGE_PLACEHOLDER } from "@/lib/image-placeholder";
 
 /**
  * Column count is chosen from how many collections there actually are, rather
@@ -29,8 +30,20 @@ const COLUMNS: Record<number, string> = {
 
 const DEFAULT_COLUMNS = "sm:grid-cols-3 lg:grid-cols-6";
 
+/**
+ * Most collections the home page will show.
+ *
+ * This section previously rendered whatever it was handed, and the home page
+ * hands it 50 — so at twenty collections it became four rows of tiles sitting
+ * between the hero and the first product, and it grew silently every time a
+ * collection was added in Shopify. Six fills one row at the widest step; the
+ * "Browse all collections" link carries the rest.
+ */
+const MAX_TILES = 6;
+
 export function Categories({ collections }: { collections: Collection[] }) {
-  const columns = COLUMNS[collections.length] ?? DEFAULT_COLUMNS;
+  const shown = collections.slice(0, MAX_TILES);
+  const columns = COLUMNS[shown.length] ?? DEFAULT_COLUMNS;
 
   return (
     <section className="bg-paper py-16 lg:py-24">
@@ -42,8 +55,8 @@ export function Categories({ collections }: { collections: Collection[] }) {
           linkLabel="Browse all collections"
         />
 
-        <ul className={cn("mt-10 grid grid-cols-2 gap-4 lg:gap-6", columns)}>
-          {collections.map((collection) => (
+        <ul className={cn("reveal-stagger mt-10 grid grid-cols-2 gap-4 lg:gap-6", columns)}>
+          {shown.map((collection) => (
             <li key={collection.id}>
               <Link
                 href={`/collections/${collection.handle}`}
@@ -56,6 +69,7 @@ export function Categories({ collections }: { collections: Collection[] }) {
                       alt=""
                       fill
                       sizes="(min-width: 1024px) 20vw, (min-width: 640px) 33vw, 50vw"
+                      placeholder={IMAGE_PLACEHOLDER}
                       className="object-cover transition-transform duration-500 ease-out-soft group-hover:scale-105"
                     />
                   ) : (

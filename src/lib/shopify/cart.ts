@@ -12,6 +12,8 @@ import {
   UPDATE_CART_LINES,
 } from "@/lib/shopify/queries";
 import {
+  appliedBundle,
+  bundleQuantities,
   DEFAULT_GIFT_OPTION,
   earnedDiscountCodes,
   GIFT_ATTRIBUTE,
@@ -19,11 +21,17 @@ import {
   GIFT_OPTIONS,
   GIFT_THRESHOLD,
   MANAGED_DISCOUNT_CODES,
-  bundleBlocksGift,
 } from "@/lib/offers";
-import { getProduct, getSplitHandles } from "@/lib/shopify/products";
+import { CUSTOM_ART_ATTRIBUTE } from "@/lib/custom-poster";
+import { isCustomProduct } from "@/lib/product";
+import { getProduct } from "@/lib/shopify/products";
 import { defaultVariant } from "@/lib/shopify/types";
-import type { Attribute, Cart, CartMutationPayload } from "@/lib/shopify/types";
+import type {
+  Attribute,
+  Cart,
+  CartLine,
+  CartMutationPayload,
+} from "@/lib/shopify/types";
 
 /**
  * A line to add to the cart. `attributes` rides along as line-item properties
@@ -107,6 +115,14 @@ export async function getCart(): Promise<Cart | null> {
   const id = await getCartId();
   if (!id) return null;
 
+  return getCartById(id);
+}
+
+/**
+ * Reads a cart by id rather than from the visitor's cookie — for the Fastrr
+ * order webhook, which runs with no visitor and so no cookie.
+ */
+export async function getCartById(id: string): Promise<Cart | null> {
   const data = await storefront<{ cart: Cart | null }>(GET_CART, {
     variables: { id },
   });
@@ -180,45 +196,19 @@ export async function updateCartDiscounts(
  *
  * Two rules this must not break:
  *
- * 1. **Shopify decides.** This nominates a code; whether it is worth anything
- *    is Shopify's call, reported back on `discountCodes[].applicable`. If the
- *    code doesn't exist yet — as none of them do until they're created in
- *    admin — Shopify marks it inapplicable and the cart is unchanged. The UI
- *    reads that flag rather than assuming the discount landed.
+ * 1. **Shopify decides.** This nominates codes; whether one is worth anything
+ *    is Shopify's call, reported back on `discountCodes[].applicable`. A code
+ *    that doesn't exist, or whose collections don't cover what is in the cart,
+ *    comes back inapplicable and the cart is unchanged. The UI reads that flag
+ *    rather than assuming the discount landed.
  *
  * 2. **Never clobber a code the customer typed.** A manually entered code
  *    (LIT100, a campaign code) is preserved; only codes this system owns are
  *    added and removed. Otherwise adding a fourth poster would silently strip
  *    the first-order discount someone had already applied.
  */
-/**
- * The bundle codes this cart has earned, counting each ladder separately.
- *
- * Gift lines are excluded from the count: a gift the cart handed out must not
- * be what tips the customer onto the next bundle rung.
- */
-async function earnedBundleCodes(cart: Cart): Promise<string[]> {
-  const splitHandles = await getSplitHandles();
-
-  let singleQuantity = 0;
-  let splitQuantity = 0;
-
-  for (const line of cart.lines.nodes) {
-    if (line.attributes.some((attribute) => attribute.key === GIFT_ATTRIBUTE)) {
-      continue;
-    }
-    if (splitHandles.has(line.merchandise.product.handle)) {
-      splitQuantity += line.quantity;
-    } else {
-      singleQuantity += line.quantity;
-    }
-  }
-
-  return earnedDiscountCodes({ singleQuantity, splitQuantity });
-}
-
 export async function syncCartDiscounts(cart: Cart): Promise<Cart> {
-  const earned = await earnedBundleCodes(cart);
+  const earned = earnedDiscountCodes(bundleQuantities(cart));
 
   // Everything this system owns, so we know which existing codes are ours to
   // drop and which belong to the customer.
@@ -281,6 +271,47 @@ export async function removeDiscountCode(
 }
 
 
+/**
+ * Custom-print lines with no artwork attached.
+ *
+ * A custom print IS its artwork: without the file there is nothing to print,
+ * and the order is one that can only be resolved by emailing the customer.
+ * The upload form never produces such a line, but the cart is not the upload
+ * form — any "add to cart" button that is handed a custom variant makes one.
+ *
+ * The free gift is exempt. It is added by this system, marked as such, and
+ * happens to be one of the custom-print products.
+ */
+export function artlessCustomLines(cart: Cart): CartLine[] {
+  return cart.lines.nodes.filter((line) => {
+    if (!isCustomProduct(line.merchandise.product)) return false;
+
+    const has = (key: string) =>
+      line.attributes.some((attribute) => attribute.key === key && attribute.value);
+
+    return !has(CUSTOM_ART_ATTRIBUTE) && !has(GIFT_ATTRIBUTE);
+  });
+}
+
+/**
+ * Takes artless custom lines back out. Returns the lines removed so a caller
+ * can tell the customer why something they just added is not there.
+ */
+export async function withoutArtlessCustomLines(
+  cart: Cart,
+): Promise<{ cart: Cart; removed: CartLine[] }> {
+  const removed = artlessCustomLines(cart);
+  if (removed.length === 0) return { cart, removed };
+
+  return {
+    cart: await removeCartLines(
+      cart.id,
+      removed.map((line) => line.id),
+    ),
+    removed,
+  };
+}
+
 /** Lines this system put in the cart, rather than the customer. */
 function giftLines(cart: Cart) {
   return cart.lines.nodes.filter((line) =>
@@ -306,9 +337,16 @@ function customerSubtotal(cart: Cart): number {
  * "get" product isn't in the cart is inapplicable, full stop. So this adds the
  * line and the automatic gift discount in Shopify makes it cost nothing.
  *
- * If that discount doesn't exist in admin, or a bundle has already claimed the
- * order's one allowed buy-X-get-Y, the guard below takes the line straight
- * back out rather than billing someone for a gift.
+ * If that discount doesn't exist in admin, or doesn't cover this basket,
+ * `withoutChargedGift` takes the line straight back out rather than billing
+ * someone for a gift. That guard was described here for a long time without
+ * existing: the line stayed in the cart at full price while the drawer
+ * labelled it "Free".
+ *
+ * Expects a cart whose bundle codes are already settled (syncCartDiscounts
+ * runs first) — whether a bundle is being taken is read off Shopify's verdict,
+ * and Shopify applies only one buy-X-get-Y per order, so a cart taking a
+ * bundle gets no gift line at all.
  *
  * The threshold is measured on what the CUSTOMER chose. Counting the gift's
  * own value toward the threshold would let a ₹300 order qualify on the
@@ -322,13 +360,8 @@ function customerSubtotal(cart: Cart): number {
 export async function syncCartGift(cart: Cart): Promise<Cart> {
   const existing = giftLines(cart);
 
-  // Shopify applies only one buy-X-get-Y discount per order, and the bundle is
-  // worth far more than the gift. A cart taking a bundle therefore gets no
-  // gift line at all — adding one would put an item Shopify won't discount in
-  // front of the customer at full price. See bundleBlocksGift.
-  const earned = await earnedBundleCodes(cart);
   const qualifies =
-    !bundleBlocksGift(earned) && customerSubtotal(cart) >= GIFT_THRESHOLD;
+    appliedBundle(cart) === null && customerSubtotal(cart) >= GIFT_THRESHOLD;
 
   if (!qualifies) {
     if (existing.length === 0) return cart;
@@ -368,11 +401,33 @@ export async function syncCartGift(cart: Cart): Promise<Cart> {
   // — the order is still perfectly valid without it.
   if (!variant?.availableForSale) return cart;
 
-  return addCartLines(cart.id, [
+  const withGift = await addCartLines(cart.id, [
     {
       merchandiseId: variant.id,
       quantity: 1,
       attributes: [{ key: GIFT_ATTRIBUTE, value: "1" }],
     },
   ]);
+
+  return withoutChargedGift(withGift);
+}
+
+/**
+ * Removes any gift line Shopify is charging for.
+ *
+ * The storefront can add the line; only a Shopify discount can make it free.
+ * If the automatic gift discount is missing, paused, or scoped so that it
+ * doesn't cover this basket, the line comes back at full price — and a "free
+ * gift" that adds ₹99 to the total is far worse than no gift.
+ */
+async function withoutChargedGift(cart: Cart): Promise<Cart> {
+  const charged = giftLines(cart).filter(
+    (line) => Number(line.cost.totalAmount.amount) > 0,
+  );
+  if (charged.length === 0) return cart;
+
+  return removeCartLines(
+    cart.id,
+    charged.map((line) => line.id),
+  );
 }

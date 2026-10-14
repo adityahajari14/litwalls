@@ -69,6 +69,18 @@ export type Collection = {
 };
 
 /**
+ * A collection as the navigation and the /collections index see it: with a
+ * cover that is never missing just because nobody uploaded one in admin, a few
+ * posters to show off, and how many products it really holds.
+ */
+export type CollectionSummary = Collection & {
+  /** Up to four product covers, in the collection's own order. */
+  previews: Image[];
+  /** Products the storefront can see. Shopify caps one page at 250. */
+  productCount: number;
+};
+
+/**
  * A custom key/value pair carried on a cart line and through to the order.
  * This is how a custom poster's artwork reaches fulfilment: the line item
  * holds a URL to the uploaded file, since Shopify's cart can only store
@@ -97,6 +109,8 @@ export type CartLine = {
     product: {
       handle: string;
       title: string;
+      /** Carried so the cart can tell split-in-3 sets from single posters. */
+      tags: string[];
       featuredImage: Image | null;
     };
   };

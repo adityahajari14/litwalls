@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { ButtonLink } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
+import { DISPATCH_HOURS, SUPPORT_EMAIL, SUPPORT_RESPONSE } from "@/lib/company";
 import { formatMoney } from "@/lib/money";
 import { getCustomer } from "@/lib/customer-account/customer";
 import type { CustomerOrder } from "@/lib/customer-account/customer";
@@ -79,15 +80,64 @@ export default async function AccountPage() {
   const customer = await getCustomer();
 
   if (!customer) {
+    /**
+     * The footer, the contact page and the shipping page all send people
+     * chasing a package here. Most of them checked out as a guest, so they hit
+     * this screen — which used to be a headline, one sentence and a sign-in
+     * button, and answered none of the question they arrived with. An anxious
+     * customer with nowhere to go writes to support instead.
+     *
+     * Guest order lookup is not something the Storefront API can do, so rather
+     * than build a form that cannot work, this says plainly where the tracking
+     * link already is and gives one-tap routes to the two things that do.
+     */
     return (
-      <Container className="flex flex-1 flex-col items-center justify-center py-24 text-center">
-        <h1 className="font-display text-4xl text-ink-950">Your account</h1>
-        <p className="mt-3 max-w-sm text-ink-600 text-pretty">
-          Sign in to see your order history and manage your addresses.
-        </p>
-        <ButtonLink href="/account/login" size="lg" className="mt-8">
-          Sign in
-        </ButtonLink>
+      <Container className="py-12 lg:py-16">
+        <header className="max-w-2xl">
+          <h1 className="font-display text-5xl text-ink-950 sm:text-6xl">
+            Your account
+          </h1>
+          <p className="mt-4 text-lg text-ink-600 text-pretty">
+            Sign in to see your order history, track deliveries and manage your
+            addresses.
+          </p>
+          <ButtonLink href="/account/login" size="lg" className="mt-6">
+            Sign in
+          </ButtonLink>
+        </header>
+
+        <section className="mt-14 max-w-2xl rounded-card border border-ink-200 bg-white p-6">
+          <h2 className="font-display text-2xl text-ink-950">
+            Looking for an order?
+          </h2>
+          <p className="mt-3 text-ink-600 text-pretty">
+            You don&apos;t need an account. We email and SMS a tracking link the
+            moment your order ships — check the inbox you used at checkout,
+            including spam. The link works for the life of the delivery, and it
+            is the same page we would look at.
+          </p>
+          <p className="mt-3 text-ink-600 text-pretty">
+            Ordered within the last {DISPATCH_HOURS} hours? It probably
+            hasn&apos;t shipped yet, so there is no tracking to find. If
+            it&apos;s been longer than that, or you can&apos;t find the email,
+            send us your order number and we&apos;ll look it up.
+          </p>
+
+          <div className="mt-6 flex flex-wrap gap-3">
+            <ButtonLink
+              href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Where is my order?")}`}
+            >
+              Email us your order number
+            </ButtonLink>
+            <ButtonLink href="/shipping" variant="ghost">
+              Delivery times
+            </ButtonLink>
+          </div>
+
+          <p className="mt-4 text-sm text-ink-500">
+            A human replies {SUPPORT_RESPONSE}.
+          </p>
+        </section>
       </Container>
     );
   }

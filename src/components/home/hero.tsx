@@ -1,6 +1,7 @@
 import Image from "next/image";
+import Link from "next/link";
 
-import type { Review } from "@/components/home/reviews";
+import type { Review } from "@/lib/reviews";
 import { ButtonLink } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
 import { Rating } from "@/components/ui/rating";
@@ -19,11 +20,21 @@ const HERO_POSTERS = [
  * A fabricated score in the first screenful is the most consequential lie on
  * the site. See getReviews.
  */
-export function Hero({ reviews = [] }: { reviews?: Review[] }) {
-  const reviewCount = reviews.length;
-  const averageRating = reviewCount
-    ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviewCount
-    : 0;
+export function Hero({
+  reviews = [],
+  summary,
+}: {
+  reviews?: Review[];
+  /** Store-wide totals, so the hero quotes every review rather than the six
+   *  the page happens to render below. */
+  summary?: { count: number; average: number };
+}) {
+  const reviewCount = summary?.count ?? reviews.length;
+  const averageRating =
+    summary?.average ??
+    (reviews.length
+      ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
+      : 0);
 
   return (
     <section className="relative overflow-hidden bg-ink-100">
@@ -31,7 +42,7 @@ export function Hero({ reviews = [] }: { reviews?: Review[] }) {
         src="/brand/hero-room.jpg"
         alt=""
         fill
-        priority
+        preload
         sizes="100vw"
         className="object-cover object-center"
       />
@@ -62,8 +73,13 @@ export function Hero({ reviews = [] }: { reviews?: Review[] }) {
       </div>
 
       <Container className="relative">
-        <div className="flex min-h-128 items-center py-16 lg:min-h-152 lg:py-24">
-          <div className="max-w-xl">
+        <div className="flex min-h-112 items-center py-12 sm:min-h-128 sm:py-16 lg:min-h-152 lg:py-24">
+          {/* Each direct child steps in 70ms after the last — see .hero-enter.
+              The whole sequence is done in under half a second, which is the
+              point: this is the only unprompted animation on the site, and a
+              first screen that is still moving is a first screen you cannot
+              start reading. */}
+          <div className="hero-enter max-w-xl">
             <p className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1.5 text-xs font-semibold tracking-wide text-ink-700 ring-1 ring-ink-200">
               <span className="size-1.5 rounded-full bg-success" />
               Printed &amp; shipped from India
@@ -90,6 +106,36 @@ export function Hero({ reviews = [] }: { reviews?: Review[] }) {
                 Upload your own
               </ButtonLink>
             </div>
+
+            {/* The posters below the buttons exist only on small screens.
+                The decorative row on the right is `lg:flex`, so on a phone —
+                which is most of the traffic — the entire first screen was a
+                photograph of an empty room, a headline and two buttons, with
+                no poster anywhere on it. A poster store's first impression
+                has to contain a poster. */}
+            <ul
+              aria-label="A few of our posters"
+              className="mt-8 flex gap-3 lg:hidden"
+            >
+              {HERO_POSTERS.map((poster) => (
+                <li key={poster.src} className="min-w-0 flex-1">
+                  <Link
+                    href="/products"
+                    className="group block overflow-hidden rounded-xs bg-white shadow-card ring-1 ring-ink-900/10"
+                  >
+                    <div className="relative aspect-2/3 w-full">
+                      <Image
+                        src={poster.src}
+                        alt=""
+                        fill
+                        sizes="(min-width: 640px) 12rem, 30vw"
+                        className="object-cover transition-transform duration-500 ease-out-soft group-hover:scale-105"
+                      />
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
 
             {/* Under the button, not above it: proof is what converts the
                 hesitation the button just created. */}

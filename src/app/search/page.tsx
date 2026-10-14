@@ -3,27 +3,15 @@ import Form from "next/form";
 
 import { SearchViewTracker } from "@/components/analytics/search-view";
 import { SearchIcon } from "@/components/icons";
-import { ProductCard } from "@/components/product-card";
+import { ProductGrid } from "@/components/product-grid";
 import { ButtonLink } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
-import { getProducts } from "@/lib/shopify/products";
+import { searchProducts } from "@/lib/shopify/products";
 
 export const metadata: Metadata = {
   title: "Search",
   description: "Search every Litwalls poster.",
 };
-
-/**
- * Escapes a user's words for Shopify's search syntax.
- *
- * The query goes into a filter language where `:`, quotes and parentheses are
- * operators. Left raw, a search for `size:A3` or an unbalanced quote is either
- * silently reinterpreted as a field filter or rejected outright — so we quote
- * the whole thing and escape what's inside, making it a literal text search.
- */
-function escapeQuery(term: string) {
-  return `"${term.replace(/["\\]/g, "\\$&")}"`;
-}
 
 export default async function SearchPage({
   searchParams,
@@ -33,13 +21,7 @@ export default async function SearchPage({
   const { q } = await searchParams;
   const term = q?.trim() ?? "";
 
-  const products = term
-    ? await getProducts({
-        first: 48,
-        query: escapeQuery(term),
-        sortKey: "RELEVANCE",
-      })
-    : [];
+  const products = await searchProducts(term, 48);
 
   return (
     <Container className="py-12 lg:py-16">
@@ -58,9 +40,9 @@ export default async function SearchPage({
               name="q"
               defaultValue={term}
               autoFocus
-              placeholder="Try “Interstellar”, “anime”, “F1”…"
+              placeholder="Search posters…"
               aria-label="Search posters"
-              className="h-13 w-full rounded-full border border-ink-200 bg-white pl-12 pr-5 text-ink-900 placeholder:text-ink-400 focus:border-brand-400 focus:outline-none"
+              className="h-13 w-full rounded-full border border-ink-200 bg-white pl-12 pr-5 text-ink-900 transition-colors placeholder:text-ink-400 focus:border-brand-400 focus:outline-none"
             />
           </div>
         </Form>
@@ -93,13 +75,7 @@ export default async function SearchPage({
             <span className="font-medium text-ink-900">“{term}”</span>
           </p>
 
-          <ul className="mt-8 grid grid-cols-2 gap-x-4 gap-y-10 lg:grid-cols-4 lg:gap-x-6">
-            {products.map((product, index) => (
-              <li key={product.id}>
-                <ProductCard product={product} priority={index < 4} />
-              </li>
-            ))}
-          </ul>
+          <ProductGrid products={products} className="mt-8" />
         </>
       )}
     </Container>

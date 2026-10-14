@@ -1,6 +1,9 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+
+import { useCart } from "@/components/cart/cart-provider";
 
 import { CheckIcon, CloseIcon, TagIcon } from "@/components/icons";
 import { SubscribeForm } from "@/components/marketing/subscribe-form";
@@ -9,6 +12,7 @@ import {
   SUBSCRIBE_DISCOUNT_CODE,
   SUBSCRIBE_DISCOUNT_PERCENT,
 } from "@/lib/marketing";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 
 /**
  * localStorage, not sessionStorage: a dismissal is a decision about this
@@ -66,13 +70,45 @@ export function SubscribePopup() {
   const [subscribed, setSubscribed] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const dialogRef = useRef<HTMLDivElement>(null);
+  const { isOpen: cartOpen } = useCart();
+  const pathname = usePathname();
+
+  /**
+   * Where this must never interrupt.
+   *
+   * The popup sits at `z-70`, above the cart drawer at `z-60`, and fires on a
+   * 25-second timer regardless of what the shopper is doing — so someone
+   * reviewing their basket got a discount modal on top of the checkout button.
+   * The custom upload page is excluded for the same reason: an interruption
+   * mid-upload can cost the file they just picked.
+   */
+  const blocked = cartOpen || pathname.startsWith("/custom/");
+
+  /**
+   * What is actually on screen.
+   *
+   * Derived rather than held as a second piece of state: if the cart is opened
+   * from the header while this is already showing, the popup stands down and
+   * comes back when the cart closes. Nothing is recorded as a dismissal,
+   * because the shopper did not decline the offer — they went to their basket.
+   */
+  const visible = isOpen && !blocked;
+
+  const dialogRef = useFocusTrap<HTMLDivElement>(visible);
   /** Guards against a second trigger racing the first — and against re-opening
       after a dismissal within the same page view, when storage is unavailable. */
   const settled = useRef(false);
 
+  // Read through a ref so the trigger effects below don't need `blocked` in
+  // their dependency list — re-subscribing the scroll and exit-intent
+  // listeners every time the cart opens would reset the fallback timer with it.
+  const blockedRef = useRef(blocked);
+  useEffect(() => {
+    blockedRef.current = blocked;
+  }, [blocked]);
+
   const openOnce = useCallback(() => {
-    if (settled.current || isSuppressed()) return;
+    if (settled.current || blockedRef.current || isSuppressed()) return;
     settled.current = true;
     setIsOpen(true);
   }, []);
@@ -118,7 +154,7 @@ export function SubscribePopup() {
   }, []);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!visible) return;
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") dismiss();
@@ -128,14 +164,11 @@ export function SubscribePopup() {
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", onKeyDown);
 
-    // The offer is worthless if claiming it costs a click to focus the field.
-    dialogRef.current?.querySelector("input")?.focus();
-
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [isOpen, dismiss]);
+  }, [visible, dismiss]);
 
   function handleSubscribed() {
     setSubscribed(true);
@@ -155,7 +188,7 @@ export function SubscribePopup() {
     }
   }
 
-  if (!isOpen) return null;
+  if (!visible) return null;
 
   return (
     <div className="fixed inset-0 z-70 grid place-items-center p-4">
@@ -163,15 +196,18 @@ export function SubscribePopup() {
         type="button"
         aria-label="Close"
         onClick={dismiss}
-        className="absolute inset-0 bg-ink-950/50 backdrop-blur-sm"
+        className="absolute inset-0 animate-fade-in bg-ink-950/50 backdrop-blur-sm"
       />
 
+      {/* Scales up from just under full size rather than sliding: this is the
+          one overlay the shopper didn't ask for, so it should arrive politely
+          instead of sweeping across what they were reading. */}
       <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="subscribe-popup-title"
-        className="relative w-full max-w-sm rounded-card bg-paper p-8 text-center shadow-lift"
+        className="relative w-full max-w-sm animate-pop-in rounded-card bg-paper p-8 text-center shadow-lift"
       >
         <button
           type="button"
@@ -240,6 +276,7 @@ export function SubscribePopup() {
             <SubscribeForm
               id="subscribe-popup-email"
               className="mt-5"
+              source="popup"
               onSubscribed={handleSubscribed}
             />
 

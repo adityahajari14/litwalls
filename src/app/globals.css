@@ -32,11 +32,28 @@
   --font-display: var(--font-bebas), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
-  /* One shared page width. `max-w-7xl` (80rem) left a third of a 1920 screen
-     empty; 90rem fills large desktops while still capping line length on
-     ultrawide. Every full-bleed surface — Container, header, announcement
-     bar — uses this so their edges line up. */
-  --container-8xl: 90rem;
+  /* Shared page widths. Every full-bleed surface — Container, header,
+     announcement bar — uses these so their edges line up.
+       - 8xl (88rem / 1408px) is the everyday cap. A previous pass pushed this
+         to 100rem to stop max-w-7xl leaving a third of a 1920 screen empty,
+         but 100rem overcorrected: the old --breakpoint-3xl of 112rem sat right
+         at a standard 1920px monitor's viewport width, so most desktop
+         visitors were already in the "ultrawide" tier, seeing a 1792px
+         container with only ~64px of margin on each side — full-bleed rather
+         than a composed layout. 1408px leaves a 1920px screen ~256px of
+         margin per side, which is what reads as a designed page rather than a
+         fluid one stretched to fit.
+       - 9xl (96rem / 1536px) only comes in at the `3xl` breakpoint, so it is
+         reserved for monitors genuinely wider than the 1920px baseline —
+         1440p, ultrawide, 4K — rather than the common case. */
+  --container-8xl: 88rem;
+  --container-9xl: 96rem;
+
+  /* Raised from 112rem (1792px): that sat inside a standard 1920px viewport,
+     so the "ultrawide" tier below was firing on ordinary monitors instead of
+     the actually-wide ones it was meant for. 125rem (2000px) is comfortably
+     past 1920, so the wider container only shows up on 1440p and above. */
+  --breakpoint-3xl: 125rem;
 
   /* The one corner radius for every panel, card, media frame and input on the
      site — `rounded-card` everywhere a rounded rectangle isn't a full pill
@@ -52,6 +69,69 @@
     0 2px 4px rgb(17 16 16 / 0.05), 0 16px 40px -16px rgb(17 16 16 / 0.22);
 
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  /* A little overshoot, for the two places something should feel like it
+     *landed*: the cart badge when an item is added, and the tick that
+     confirms it. Never used for anything that moves a large surface. */
+  --ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes badge-pop {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.32);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes tick-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Both of these name only where they start. The end is whatever the element
+   already is, so nothing is left behind once they finish — in particular no
+   lingering `transform`, which would quietly make the element the containing
+   block for any `position: fixed` descendant (the sticky buy bar, the image
+   lightbox). That is the exact bug that broke the mobile menu. */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    translate: 0 10px;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    scale: 0.95;
+  }
 }
 
 @layer base {
@@ -81,6 +161,174 @@
   }
 }
 
+/**
+ * Sections fade and rise as they come into view.
+ *
+ * Scroll-driven CSS rather than an IntersectionObserver, deliberately. An
+ * observer needs the element to start at `opacity: 0`, which means a shopper
+ * whose JavaScript hasn't run — or has failed — is looking at an invisible
+ * catalogue. Here the hidden state only ever exists *inside* an animation the
+ * browser is driving, so anything that doesn't support it simply renders the
+ * page normally. There is no state in which content can go missing.
+ *
+ * `entry 0% cover 24%` finishes the reveal well before the element reaches the
+ * middle of the screen, so nothing is still animating by the time it is being
+ * read. Elements already on screen at load start past the range and render at
+ * full opacity — no flash on first paint.
+ */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal {
+      animation: reveal-up 1s var(--ease-out-soft) both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 24%;
+    }
+
+    /**
+     * Cards in a grid arrive a beat after each other across a row.
+     *
+     * The stagger comes from `animation-range`, not `animation-delay`: on a
+     * scroll-driven timeline the animation's progress is the scroll position,
+     * not elapsed time, so a time delay is ignored outright. Shifting each
+     * column's range a few percent later is the equivalent that actually works.
+     *
+     * Keyed on `4n` so it repeats per row rather than counting up across the
+     * whole grid — the 40th card should not wait ten times as long as the 4th,
+     * and rows below the fold get their own reveal as they scroll in anyway.
+     * Grids that show 2 or 3 columns just use the first 2 or 3 offsets.
+     *
+     * `animation-duration` is likewise inert here; it is left at 1s only
+     * because a duration must be present for the animation to be valid.
+     */
+    .reveal-stagger > * {
+      animation: reveal-up 1s var(--ease-out-soft) both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 18%;
+    }
+    .reveal-stagger > *:nth-child(4n + 2) {
+      animation-range: entry 4% cover 22%;
+    }
+    .reveal-stagger > *:nth-child(4n + 3) {
+      animation-range: entry 8% cover 26%;
+    }
+    .reveal-stagger > *:nth-child(4n + 4) {
+      animation-range: entry 12% cover 30%;
+    }
+  }
+}
+
+/**
+ * Scroll reveals for browsers without scroll-driven animations.
+ *
+ * The block above only runs where `animation-timeline: view()` exists, which
+ * left Firefox and every Safari before 26 — most iPhones in use — with a site
+ * that never moved at all. This is the same reveal driven by an
+ * IntersectionObserver instead (see MotionEnhancements).
+ *
+ * The objection to an observer still holds, so this is built around it:
+ * nothing is hidden by default. The hidden state exists only under
+ * `html.reveal-js`, a class the script adds itself — after it has marked
+ * everything already on screen as revealed. If the script never runs, the
+ * class is never there and the page is simply static. There is still no state
+ * in which content can go missing.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  html.reveal-js :is(.reveal, .reveal-stagger > *) {
+    transition:
+      opacity 0.7s var(--ease-out-soft),
+      translate 0.7s var(--ease-out-soft);
+  }
+  html.reveal-js :is(.reveal, .reveal-stagger > *):not([data-revealed]) {
+    opacity: 0;
+    translate: 0 14px;
+  }
+  html.reveal-js .reveal-stagger > *:nth-child(4n + 2) {
+    transition-delay: 60ms;
+  }
+  html.reveal-js .reveal-stagger > *:nth-child(4n + 3) {
+    transition-delay: 120ms;
+  }
+  html.reveal-js .reveal-stagger > *:nth-child(4n + 4) {
+    transition-delay: 180ms;
+  }
+}
+
+/**
+ * Small entrances for things that appear because the shopper asked for them.
+ *
+ * `.stagger-in` — rows of a list that has just been put on screen (the mobile
+ * menu, search results) arrive a beat apart. Each child sets `--i` to its
+ * index; the delay is capped by the list being short, not by a clamp.
+ *
+ * `.page-enter` — a short fade for a page arriving on a client-side
+ * navigation. Opacity only, deliberately: see the note on the keyframes.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .stagger-in > * {
+    animation: rise-in 0.42s var(--ease-out-soft) backwards;
+    animation-delay: calc(var(--i, 0) * 40ms + 50ms);
+  }
+
+  .page-enter {
+    animation: fade-in 0.35s ease-out backwards;
+  }
+}
+
+/**
+ * The one-time entrance on the hero, which is the only thing on the site that
+ * animates without being asked. It runs once, on the first screen, and is
+ * finished in under half a second — a page that keeps moving after you have
+ * arrived is a page you cannot start reading.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-enter > * {
+    animation: reveal-up 0.55s var(--ease-out-soft) both;
+  }
+  .hero-enter > *:nth-child(2) { animation-delay: 70ms; }
+  .hero-enter > *:nth-child(3) { animation-delay: 140ms; }
+  .hero-enter > *:nth-child(4) { animation-delay: 210ms; }
+  .hero-enter > *:nth-child(5) { animation-delay: 280ms; }
+  .hero-enter > *:nth-child(6) { animation-delay: 350ms; }
+}
+
+/**
+ * Expanding accordions and size guides animate their height.
+ *
+ * `interpolate-size` is what makes `height: auto` animatable at all; without
+ * it there is no way to transition to a height the browser has to measure.
+ * Browsers that don't support it snap open exactly as before.
+ */
+@supports (interpolate-size: allow-keywords) {
+  @media (prefers-reduced-motion: no-preference) {
+    :root {
+      interpolate-size: allow-keywords;
+    }
+
+    details::details-content {
+      height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition:
+        height 0.28s var(--ease-out-soft),
+        content-visibility 0.28s allow-discrete,
+        opacity 0.2s ease;
+    }
+
+    details[open]::details-content {
+      height: auto;
+      opacity: 1;
+    }
+  }
+}
+
+/* Where `interpolate-size` isn't supported the same open/close is animated
+   from script (see MotionEnhancements), which keeps `open` set until the
+   closing animation has finished. This turns the +/chevron back straight away
+   rather than leaving it to follow a beat behind. */
+details[data-closing] > summary svg {
+  rotate: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -91,6 +339,7 @@
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
     transition-duration: 0.01ms !important;
   }
 }
@@ -100,4 +349,32 @@
   &::-webkit-scrollbar {
     display: none;
   }
+}
+
+/** The cart count, when it changes. See CartBadge. */
+@utility animate-badge-pop {
+  animation: badge-pop 0.42s var(--ease-pop);
+}
+
+/** The tick that confirms an add-to-cart. */
+@utility animate-tick-in {
+  animation: tick-in 0.25s var(--ease-pop) both;
+}
+
+/**
+ * Entrances for things that mount already open — a popup, a lightbox, a row
+ * added to a list. Keyframes rather than `@starting-style`, which these used
+ * before: that only exists in recent browsers, so everywhere else the element
+ * just appeared.
+ */
+@utility animate-fade-in {
+  animation: fade-in 0.3s ease-out backwards;
+}
+
+@utility animate-pop-in {
+  animation: pop-in 0.3s var(--ease-out-soft) backwards;
+}
+
+@utility animate-rise-in {
+  animation: rise-in 0.4s var(--ease-out-soft) backwards;
 }

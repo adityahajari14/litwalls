@@ -57,7 +57,7 @@ export async function Footer() {
               >
                 Get {SUBSCRIBE_DISCOUNT_PERCENT}% off your first order
               </label>
-              <SubscribeForm id="newsletter" className="mt-2" />
+              <SubscribeForm id="newsletter" className="mt-2" source="footer" />
             </div>
 
             <div className="mt-6 flex gap-2">
@@ -101,20 +101,26 @@ export async function Footer() {
           </div>
         </div>
 
-        {/* Fan-art disclaimer. It sits above the copyright line and is
-            deliberately the loudest thing in the footer: for a store selling
-            prints of copyrighted and trademarked material, saying plainly
-            that these are not official merchandise is both the honest
-            position and the one that keeps a takedown notice from being the
-            first time the question gets asked. */}
-        <div className="mt-12 rounded-card bg-brand-500 px-6 py-5 text-center">
-          <p className="text-sm/6 font-medium text-white text-pretty">
+        {/* Fan-art disclaimer. It keeps its place above the copyright line —
+            for a store selling prints of copyrighted and trademarked material,
+            saying plainly that these are not official merchandise is both the
+            honest position and the one that keeps a takedown notice from being
+            the first time the question gets asked.
+
+            What changed is the volume, not the words. As a solid orange panel
+            it was the highest-contrast element on every page — louder than any
+            button on the site — so the last thing a shopper saw before leaving
+            for checkout was a note about copyright complaints. A brand rule
+            down the left edge keeps it unmissable to anyone looking for it
+            without shouting at everyone who isn't. */}
+        <div className="mt-12 rounded-card border border-ink-200 border-l-2 border-l-brand-500 bg-ink-50 px-6 py-5">
+          <p className="text-sm/6 text-ink-700 text-pretty">
             All artwork on this site is fan art and is not presented as official
             merchandise unless stated otherwise. If you have any concern about
             artwork published here, write to us at{" "}
             <a
               href={`mailto:${SUPPORT_EMAIL}`}
-              className="font-semibold underline underline-offset-2"
+              className="font-medium text-brand-600 underline underline-offset-2"
             >
               {SUPPORT_EMAIL}
             </a>{" "}

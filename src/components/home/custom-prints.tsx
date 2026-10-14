@@ -33,7 +33,7 @@ export function CustomPrints({ products }: { products: Product[] }) {
 
         {/* 2 columns, then straight to 4 — see the matching comment in
             ProductGridSection for why 3 and 5 both leave a dead gap here. */}
-        <ul className="mt-8 grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-4 sm:gap-6">
+        <ul className="reveal-stagger mt-8 grid grid-cols-2 gap-x-4 gap-y-6 md:grid-cols-4 md:gap-6">
           {products.map((product) => (
             <li key={product.id} className="h-full">
               <ProductCard product={product} />

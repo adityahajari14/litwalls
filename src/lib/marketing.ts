@@ -88,12 +88,23 @@ function addBusinessDays(from: Date, days: number) {
  * on the boundary of a revalidation — acceptable for an estimate we label as
  * an estimate.
  */
-export function deliveryEstimate(now = new Date()) {
+export function deliveryEstimate(
+  now = new Date(),
+  /**
+   * Overrides the national window with a real transit time — the PIN-code
+   * check passes Shiprocket's figure for the chosen courier here, so the
+   * weekend and dispatch-cutoff arithmetic is not duplicated in two places.
+   */
+  window?: { min: number; max: number },
+) {
+  const min = window?.min ?? DELIVERY_MIN_DAYS;
+  const max = window?.max ?? DELIVERY_MAX_DAYS;
+
   // Orders after the cutoff miss today's dispatch, so the clock starts tomorrow.
   const dispatchOffset = now.getHours() >= SAME_DAY_DISPATCH_CUTOFF_HOUR ? 1 : 0;
 
-  const earliest = addBusinessDays(now, DELIVERY_MIN_DAYS + dispatchOffset);
-  const latest = addBusinessDays(now, DELIVERY_MAX_DAYS + dispatchOffset);
+  const earliest = addBusinessDays(now, min + dispatchOffset);
+  const latest = addBusinessDays(now, max + dispatchOffset);
 
   const day = new Intl.DateTimeFormat("en-IN", { day: "numeric" });
   const dayMonth = new Intl.DateTimeFormat("en-IN", {

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { ProsePage } from "@/components/ui/prose-page";
 import {
@@ -38,7 +39,7 @@ export default function TermsPage() {
       <p>
         Prices are in Indian rupees and include GST. Shipping is shown at
         checkout, and{" "}
-        <a href="/shipping">our shipping page</a> tells you what it will be
+        <Link href="/shipping">our shipping page</Link> tells you what it will be
         before you get there.
       </p>
       <p>
@@ -49,7 +50,7 @@ export default function TermsPage() {
 
       <h2>Custom artwork: the important bit</h2>
       <p>
-        When you upload an image to our <a href="/custom">custom poster page</a>,
+        When you upload an image to our <Link href="/custom">custom poster page</Link>,
         you are telling us that <strong>you have the right to print it</strong>{" "}
         — that you own it, or you have permission from whoever does.
       </p>
@@ -85,7 +86,7 @@ export default function TermsPage() {
       <p>
         A print that is obviously wrong — banded, streaked, cropped incorrectly,
         the wrong image — is a defect, and we&apos;ll reprint it free. See{" "}
-        <a href="/returns">returns</a>.
+        <Link href="/returns">returns</Link>.
       </p>
 
       <h2>Returns</h2>
@@ -93,7 +94,7 @@ export default function TermsPage() {
         Damaged or misprinted posters are replaced free within{" "}
         {REPLACEMENT_WINDOW_DAYS} days. Because every poster is printed to order,
         we can&apos;t take change-of-mind returns once printing has started. The
-        full policy is on the <a href="/returns">returns page</a> and forms part
+        full policy is on the <Link href="/returns">returns page</Link> and forms part
         of these terms.
       </p>
 

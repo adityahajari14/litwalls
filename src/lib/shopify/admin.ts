@@ -4,18 +4,19 @@ import { ShopifyError } from "@/lib/shopify/client";
 import { adminConfig } from "@/lib/shopify/env";
 
 /**
- * Minimal Admin API client. The only thing the storefront needs the Admin API
- * for is minting staged upload targets so a customer can put their own artwork
- * into the store — see stagedUpload below.
+ * Minimal Admin API client. The storefront needs the Admin API for two things
+ * the Storefront API cannot do: minting staged upload targets so a customer
+ * can put their own artwork into the store (stagedUpload below), and creating
+ * the order for a checkout that completed on Fastrr (shopify/orders.ts).
  *
- * Never cached: every response here is a single-use, expiring credential.
+ * Never cached: nothing read or written here is safe to replay.
  */
 type GraphQLResponse<T> = {
   data?: T;
   errors?: { message: string }[];
 };
 
-async function admin<T>(
+export async function admin<T>(
   query: string,
   variables?: Record<string, unknown>,
 ): Promise<T> {
@@ -137,4 +138,111 @@ export async function createStagedUpload({
   }
 
   return target;
+}
+
+const FILE_CREATE = /* GraphQL */ `
+  mutation FileCreate($files: [FileCreateInput!]!) {
+    fileCreate(files: $files) {
+      files {
+        id
+      }
+      userErrors {
+        field
+        message
+      }
+    }
+  }
+`;
+
+type FileCreateResponse = {
+  fileCreate: {
+    files: { id: string }[] | null;
+    userErrors: { field: string[] | null; message: string }[];
+  };
+};
+
+/**
+ * Turns a finished staged upload into a permanent file in the store.
+ *
+ * A staged upload on its own is a temporary object in a holding bucket: fine
+ * for a few hours, gone after that. An order placed today is printed tomorrow
+ * and may be reprinted next month, so the artwork has to become a real Shopify
+ * file — which is also what gives it a stable cdn.shopify.com address, and puts
+ * the original under Content → Files in admin for whoever does the printing.
+ *
+ * Shopify processes the file in the background; see getArtworkFile.
+ */
+export async function createArtworkFile(resourceUrl: string): Promise<string> {
+  const data = await admin<FileCreateResponse>(FILE_CREATE, {
+    files: [
+      {
+        originalSource: resourceUrl,
+        contentType: "IMAGE",
+        alt: "Customer artwork",
+      },
+    ],
+  });
+
+  const { files, userErrors } = data.fileCreate;
+
+  if (userErrors.length) {
+    throw new ShopifyError(
+      userErrors.map((error) => error.message).join("; "),
+      userErrors,
+    );
+  }
+
+  const id = files?.[0]?.id;
+  if (!id) throw new ShopifyError("Shopify returned no file");
+
+  return id;
+}
+
+const GET_FILE = /* GraphQL */ `
+  query GetFile($id: ID!) {
+    node(id: $id) {
+      ... on MediaImage {
+        fileStatus
+        fileErrors {
+          message
+        }
+        image {
+          url
+        }
+      }
+    }
+  }
+`;
+
+export type ArtworkFile =
+  | { status: "ready"; url: string }
+  | { status: "processing" }
+  | { status: "failed"; message: string };
+
+/** Where a file created by createArtworkFile has got to. */
+export async function getArtworkFile(id: string): Promise<ArtworkFile> {
+  const data = await admin<{
+    node: {
+      fileStatus?: string;
+      fileErrors?: { message: string }[];
+      image?: { url: string } | null;
+    } | null;
+  }>(GET_FILE, { id });
+
+  const file = data.node;
+
+  if (!file?.fileStatus) {
+    return { status: "failed", message: "That artwork could not be found." };
+  }
+
+  if (file.fileStatus === "FAILED") {
+    return {
+      status: "failed",
+      message: file.fileErrors?.[0]?.message ?? "Shopify could not process that image.",
+    };
+  }
+
+  return file.fileStatus === "READY" && file.image?.url
+    ? { status: "ready", url: file.image.url }
+    : { status: "processing" };
 }

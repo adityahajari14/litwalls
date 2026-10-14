@@ -30,7 +30,7 @@ export function ClosingCta() {
   return (
     <section className="border-t border-ink-100 bg-white py-16 lg:py-24">
       <Container>
-        <div className="mx-auto max-w-2xl text-center">
+        <div className="reveal mx-auto max-w-2xl text-center">
           <h2 className="font-display text-5xl text-ink-950 sm:text-6xl text-balance">
             Give your walls something to say
           </h2>

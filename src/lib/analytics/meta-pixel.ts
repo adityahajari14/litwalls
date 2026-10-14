@@ -1,6 +1,7 @@
 "use client";
 
 import { isMetaPixelConfigured } from "@/lib/analytics/meta-config";
+import type { PurchaseSummary } from "@/lib/analytics/purchase";
 import type { Cart, Collection, Product, ProductVariant } from "@/lib/shopify/types";
 
 declare global {
@@ -120,4 +121,33 @@ export function trackMetaInitiateCheckout(cart: Cart) {
     currency: cart.cost.totalAmount.currencyCode,
     value: Number(cart.cost.totalAmount.amount),
   });
+}
+
+/**
+ * Purchase — for an order placed through the Fastrr overlay, fired from the
+ * confirmation page on this domain.
+ *
+ * Orders that go through Shopify's hosted checkout are reported by the Shopify
+ * custom pixel instead (shopify/custom-pixel.js). The two never overlap: a
+ * Fastrr order is written into Shopify through the Admin API, which does not
+ * run a checkout and so never fires that pixel. `eventID` lets Meta discard a
+ * repeat if this page is ever reloaded past the client-side guard.
+ */
+export function trackMetaPurchase(order: PurchaseSummary) {
+  fbq(
+    "track",
+    "Purchase",
+    {
+      content_ids: order.items.map((item) => item.variantGid),
+      content_type: "product",
+      contents: order.items.map((item) => ({
+        id: item.variantGid,
+        quantity: item.quantity,
+      })),
+      num_items: order.items.reduce((sum, item) => sum + item.quantity, 0),
+      currency: order.currency,
+      value: order.value,
+    },
+    { eventID: order.orderId },
+  );
 }

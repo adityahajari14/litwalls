@@ -2,28 +2,37 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 
 import {
+  BagIcon,
   CheckIcon,
   CloseIcon,
   GiftIcon,
   LockIcon,
   ReturnIcon,
   TagIcon,
+  TruckIcon,
 } from "@/components/icons";
 import { useCart } from "@/components/cart/cart-provider";
 import { FreeShippingBar } from "@/components/cart/free-shipping-bar";
 import { GiftMilestoneBar } from "@/components/cart/gift-milestone-bar";
 import { ButtonLink } from "@/components/ui/button";
-import { withGaLinker } from "@/lib/analytics/ga-linker";
-import { trackGaBeginCheckout } from "@/lib/analytics/google-analytics";
-import { trackMetaInitiateCheckout } from "@/lib/analytics/meta-pixel";
-import { withClaimedDiscount } from "@/lib/checkout-url";
+import { Overlay } from "@/components/ui/overlay";
+import {
+  checkoutDecision,
+  startCheckout,
+} from "@/lib/checkout/start-checkout";
+import { cn } from "@/lib/cn";
+import { REPLACEMENT_WINDOW_DAYS } from "@/lib/company";
+import { deliveryEstimate } from "@/lib/marketing";
 import { CUSTOM_ART_ATTRIBUTE } from "@/lib/custom-poster";
 import { formatMoney } from "@/lib/money";
 import {
+  appliedBundle,
+  bundleForQuantity,
   bundleFreeCount,
+  bundleQuantities,
   FIRST_ORDER_CODE,
   FIRST_ORDER_DISCOUNT,
   FIRST_ORDER_MINIMUM,
@@ -32,6 +41,8 @@ import {
   MANAGED_DISCOUNT_CODES,
   nextBundle,
   SINGLE_BUNDLES,
+  SPLIT_BUNDLES,
+  type Bundle,
 } from "@/lib/offers";
 import {
   applyDiscount,
@@ -47,29 +58,95 @@ import {
   type CartLine,
 } from "@/lib/shopify/types";
 
+/** "Buy 4, get 3 free" — the same words the offer is advertised with. */
+function bundleLabel(bundle: Bundle) {
+  return `Buy ${bundle.pay}, get ${bundleFreeCount(bundle)} free`;
+}
+
 /**
- * "Add 1 more and 3 come free."
+ * "Add 3 more posters and get 3 free."
  *
  * Shown only while there is a rung left to reach. This is the one piece of
  * nudging in the cart that earns its place: it names an exact, small action
  * and what it is worth, rather than a generic "spend more to save".
  *
- * Counts every line, which slightly over-promises on a cart mixing split sets
- * with posters — the two ladders are counted separately server-side. Worth it
- * for a hint; the applied discount itself is always Shopify's number, never
- * this one.
+ * The distance is measured to the rung's full set, free posters included.
+ * Shopify only applies a buy-X-get-Y once every one of those is in the cart —
+ * it never adds the free ones itself — so "buy 4, get 3 free" needs seven
+ * posters in the basket. The earlier version counted to the paid four and
+ * promised "3 come free" at a point where nothing happened; a customer who
+ * followed it saw no discount and reasonably concluded the offer was broken.
+ * When reaching the rung would not raise what the customer pays — four
+ * posters in the cart, three more to add, still paying for four — the copy
+ * says the rest are on us, because they are.
+ *
+ * Says nothing for a ladder whose rung the cart has already reached but which
+ * Shopify did not apply (a poster outside the discount's collections, say).
+ * Whatever went wrong there, promising the next rung on top of it would only
+ * compound it.
+ *
+ * Counted by `bundleQuantities`, the same function the server uses to choose
+ * the codes, so what is promised here is what gets applied.
+ *
+ * Whichever ladder is closer to its next rung is the one worth naming; showing
+ * both at once turns a single clear action into a decision.
  */
 function BundleNudge({ cart }: { cart: Cart }) {
-  const target = nextBundle(SINGLE_BUNDLES, cart.totalQuantity);
+  const { singleQuantity, splitQuantity } = bundleQuantities(cart);
+
+  const applied = appliedBundle(cart);
+
+  const candidates = [
+    { ladder: SINGLE_BUNDLES, have: singleQuantity, unit: "poster" },
+    { ladder: SPLIT_BUNDLES, have: splitQuantity, unit: "split set" },
+  ]
+    .map((entry) => ({
+      ...entry,
+      bundle: nextBundle(entry.ladder, entry.have),
+      // The rung this quantity should already be on, by our own count.
+      reached: bundleForQuantity(entry.ladder, entry.have),
+    }))
+    // Only ladders the cart has actually started: telling someone with four
+    // posters that one split set earns two free is an upsell, not a nudge.
+    .filter((entry) => entry.bundle !== null && entry.have > 0)
+    // And only where Shopify agrees with that count so far.
+    .filter((entry) => entry.reached === null || applied !== null)
+    .map((entry) => ({ ...entry, needed: entry.bundle!.total - entry.have }))
+    .sort((a, b) => a.needed - b.needed);
+
+  const target = candidates[0];
   if (!target) return null;
 
-  const needed = target.pay - cart.totalQuantity;
+  const bundle = target.bundle!;
+  const free = bundleFreeCount(bundle);
+  const units = `${target.unit}${target.needed === 1 ? "" : "s"}`;
+  // What is being paid for now, against what the next rung charges for. If
+  // the next rung charges for no more, everything still to add is free.
+  const paidNow =
+    target.have - (target.reached ? bundleFreeCount(target.reached) : 0);
+  const restAreFree = bundle.pay <= paidNow;
 
   return (
-    <p className="mt-3 flex items-start gap-2 rounded-card bg-brand-50 px-3 py-2.5 text-xs text-brand-800">
+    <p className="flex items-start gap-2 rounded-card bg-brand-50 px-3 py-2.5 text-xs text-brand-800 text-pretty">
       <TagIcon className="mt-px size-3.5 shrink-0" />
       <span>
-        Add {needed} more and {bundleFreeCount(target)} come free.
+        {restAreFree ? (
+          <>
+            <span className="font-semibold">
+              Add {target.needed} more {units} — on us.
+            </span>{" "}
+            {bundleLabel(bundle)} applies once all {bundle.total} are in your
+            cart.
+          </>
+        ) : (
+          <>
+            <span className="font-semibold">
+              Add {target.needed} more {units} and get {free} free.
+            </span>{" "}
+            {bundleLabel(bundle)}: put {bundle.total} in your cart, pay for{" "}
+            {bundle.pay}.
+          </>
+        )}
       </span>
     </p>
   );
@@ -105,7 +182,7 @@ function DiscountSuggestion({ cart }: { cart: Cart }) {
   if (alreadyApplied || !qualifies || dismissed) return null;
 
   return (
-    <div className="mt-3 flex items-start gap-2 rounded-card bg-success/10 px-3 py-2.5 text-xs text-success">
+    <div className="flex items-start gap-2 rounded-card bg-success/10 px-3 py-2.5 text-xs text-success">
       <TagIcon className="mt-px size-3.5 shrink-0" />
       <span className="flex-1">
         You qualify for ₹{FIRST_ORDER_DISCOUNT} off with{" "}
@@ -132,7 +209,7 @@ function DiscountSuggestion({ cart }: { cart: Cart }) {
   );
 }
 
-function LineItem({ line }: { line: CartLine }) {
+function LineItem({ line, index }: { line: CartLine; index: number }) {
   const { refresh } = useCart();
   const [pending, startTransition] = useTransition();
 
@@ -151,6 +228,15 @@ function LineItem({ line }: { line: CartLine }) {
     (attribute) => attribute.key === GIFT_ATTRIBUTE,
   );
 
+  // Shopify applies a buy-X-get-Y by splitting a line in two — the paid
+  // posters and the free ones — so the free half arrives as its own line with
+  // a full-price subtotal and a zero total. Unlabelled, that reads as a
+  // duplicate row with a missing price.
+  const isBundleFree =
+    !isGift &&
+    Number(line.cost.totalAmount.amount) === 0 &&
+    Number(line.cost.subtotalAmount.amount) > 0;
+
   // A custom poster's thumbnail should be the customer's own artwork, not the
   // generic product photo — otherwise three custom lines look identical.
   const artwork = line.attributes.find(
@@ -158,19 +244,22 @@ function LineItem({ line }: { line: CartLine }) {
   )?.value;
 
   return (
-    <li className={pending ? "opacity-60 transition-opacity" : undefined}>
+    <li
+      style={{ "--i": Math.min(index, 6) } as React.CSSProperties}
+      className={cn("transition-opacity duration-200", pending && "opacity-60")}
+    >
       <div className="flex gap-4">
         <Link
           href={`/products/${product.handle}`}
           className="relative size-20 shrink-0 overflow-hidden rounded-card bg-ink-100"
         >
           {artwork ? (
-            // Custom artwork sits on Shopify's staged-upload bucket, not the
-            // product CDN, so next/image would reject the host — and there is
-            // nothing to gain from optimising an image one person will see.
+            // A plain <img>: this is one customer's own upload, shown to
+            // them alone, so there is nothing for next/image to cache. But
+            // the file is print resolution — see artworkThumbnail.
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={artwork}
+              src={artworkThumbnail(artwork)}
               alt="Your artwork"
               className="size-full object-cover"
             />
@@ -254,6 +343,14 @@ function LineItem({ line }: { line: CartLine }) {
                 })}
               </div>
             </>
+          ) : isBundleFree ? (
+            <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-success">
+              <TagIcon className="size-3.5" />
+              Free with your bundle
+              <span className="font-normal text-ink-400 line-through">
+                {formatMoney(line.merchandise.price)}
+              </span>
+            </p>
           ) : (
             <p className="mt-1 text-sm text-ink-600">
               {formatMoney(line.merchandise.price)}
@@ -313,8 +410,15 @@ function LineItem({ line }: { line: CartLine }) {
               </div>
             )}
 
-            <p className="text-sm font-semibold text-ink-950">
-              {isGift ? "Free" : formatMoney(line.cost.totalAmount)}
+            <p
+              className={cn(
+                "text-sm font-semibold",
+                isGift || isBundleFree ? "text-success" : "text-ink-950",
+              )}
+            >
+              {isGift || isBundleFree
+                ? "Free"
+                : formatMoney(line.cost.totalAmount)}
             </p>
           </div>
         </div>
@@ -357,6 +461,28 @@ function DiscountForm({ cart }: { cart: Cart }) {
     });
   }
 
+  // Collapsed by default. A visible empty coupon box is a well-documented
+  // conversion leak: it announces that a better price exists somewhere and
+  // sends people off-site to hunt for it, and many do not come back. It is
+  // also close to redundant here — the cart already applies every bundle code
+  // itself and offers LIT100 with one tap. Someone holding a code will open
+  // this; someone without one is never told to go looking.
+  const [open, setOpen] = useState(applied.length > 0);
+
+  if (!open) {
+    return (
+      <div className="mt-4 border-t border-ink-100 pt-4">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="text-xs font-medium text-ink-500 underline decoration-ink-300 underline-offset-4 transition-colors hover:text-ink-900"
+        >
+          Have a discount code?
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="mt-4 border-t border-ink-100 pt-4">
       <form onSubmit={submit} className="flex gap-2">
@@ -370,7 +496,9 @@ function DiscountForm({ cart }: { cart: Cart }) {
           aria-label="Discount code"
           autoComplete="off"
           autoCapitalize="characters"
-          className="h-10 min-w-0 flex-1 rounded-card border border-ink-200 bg-white px-3 text-sm uppercase placeholder:normal-case placeholder:text-ink-400 focus:border-ink-400 focus:outline-none"
+          // 16px below `sm`: iOS Safari zooms the whole page into any field
+          // set smaller than that, and doesn't zoom back out afterwards.
+          className="h-10 min-w-0 flex-1 rounded-card border border-ink-200 bg-white px-3 text-base uppercase placeholder:normal-case placeholder:text-ink-400 focus:border-ink-400 focus:outline-none sm:text-sm"
         />
         <button
           type="submit"
@@ -421,199 +549,296 @@ function DiscountForm({ cart }: { cart: Cart }) {
   );
 }
 
+/**
+ * A cart-sized version of a customer's artwork.
+ *
+ * The line attribute points at the print file itself — up to 20MB — and the
+ * drawer shows it 80 pixels wide. Shopify's CDN resizes on request, so asking
+ * for a small one turns a multi-megabyte download per custom line into a few
+ * kilobytes. Anything not on that CDN is left alone.
+ */
+function artworkThumbnail(url: string): string {
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname !== "cdn.shopify.com") return url;
+    parsed.searchParams.set("width", "240");
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
+/**
+ * A development-only readout of the Fastrr routing decision.
+ *
+ * "Checkout still goes to Shopify" is indistinguishable from the outside
+ * whether the integration is misconfigured or working exactly as designed —
+ * several carts are supposed to go to Shopify. This says which case it is.
+ */
+function FastrrDebug({ cart }: { cart: Cart }) {
+  const decision = checkoutDecision(cart);
+  const ok = decision.via === "fastrr";
+
+  return (
+    <p
+      className={cn(
+        "mt-3 rounded-card px-3 py-2 font-mono text-[11px] leading-relaxed",
+        ok ? "bg-success/10 text-success" : "bg-ink-100 text-ink-600",
+      )}
+    >
+      dev · checkout → {ok ? "Fastrr overlay" : `Shopify (${decision.reason})`}
+    </p>
+  );
+}
+
+/**
+ * The cart, as a drawer.
+ *
+ * The shell — portal, backdrop, slide in and out, scroll lock, Escape, focus
+ * trap — is <Overlay>, shared with the mobile menu and search so all three
+ * arrive and leave the same way. The contents are their own component so they
+ * only exist while the drawer is on screen, and so the "Redirecting…" state on
+ * the checkout button resets every time it is reopened.
+ */
 export function CartDrawer() {
-  const { cart, isOpen, close } = useCart();
+  const { isOpen, close } = useCart();
+
+  return (
+    <Overlay
+      open={isOpen}
+      onClose={close}
+      label="Shopping cart"
+      side="right"
+      className="z-60"
+      panelClassName="w-[min(28rem,92vw)] bg-paper shadow-lift"
+    >
+      <CartContents />
+    </Overlay>
+  );
+}
+
+function CartContents() {
+  const { cart, close } = useCart();
   const [checkingOut, setCheckingOut] = useState(false);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = previous;
-    };
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") close();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [isOpen, close]);
-
-  if (!isOpen) return null;
 
   const lines = cart?.lines.nodes ?? [];
   // Shopify's numbers, not a recomputation of them. cart.cost.subtotalAmount
   // is already net of a bundle discount, so the "Subtotal" line uses the
   // full-price sum instead — otherwise subtotal minus discount would not
   // equal the total actually charged.
-  const discount = cart ? cartDiscountTotal(cart) : 0;
+  //
+  // The free gift is left out of both figures. Shopify reports it as a ₹99
+  // line with ₹99 off, which is accurate but reads as "Subtotal ₹993,
+  // Discount −₹99" on a basket the customer chose ₹894 of — a discount they
+  // never asked for on a subtotal they never built. The line itself already
+  // says "Free".
+  const giftValue = lines
+    .filter(
+      (line) =>
+        line.attributes.some((attribute) => attribute.key === GIFT_ATTRIBUTE) &&
+        Number(line.cost.totalAmount.amount) === 0,
+    )
+    .reduce((sum, line) => sum + Number(line.cost.subtotalAmount.amount), 0);
+  const discount = cart ? Math.max(0, cartDiscountTotal(cart) - giftValue) : 0;
   const currency = cart?.cost.totalAmount.currencyCode ?? "INR";
-  const undiscounted = cart ? cartUndiscountedTotal(cart) : 0;
+  const undiscounted = cart ? cartUndiscountedTotal(cart) - giftValue : 0;
   const isEmpty = lines.length === 0;
   const hasGift = lines.some((line) =>
     line.attributes.some((attribute) => attribute.key === GIFT_ATTRIBUTE),
   );
+  // What Shopify has actually applied, not what the basket size suggests.
+  const bundle = cart ? appliedBundle(cart) : null;
 
   return (
-    <div className="fixed inset-0 z-60">
-      <button
-        type="button"
-        aria-label="Close cart"
-        onClick={close}
-        className="absolute inset-0 bg-ink-950/40 backdrop-blur-sm"
-      />
+    <>
+      <header className="flex items-center justify-between border-b border-ink-100 px-5 py-4">
+        <h2 className="font-display text-2xl text-ink-950">
+          Your cart
+          {cart && cart.totalQuantity > 0 ? (
+            <span className="ml-2 text-base text-ink-500">
+              ({cart.totalQuantity})
+            </span>
+          ) : null}
+        </h2>
+        <button
+          type="button"
+          onClick={close}
+          aria-label="Close cart"
+          className="grid size-10 place-items-center rounded-full text-ink-700 transition-colors hover:bg-ink-100"
+        >
+          <CloseIcon className="size-5" />
+        </button>
+      </header>
 
-      <aside
-        role="dialog"
-        aria-label="Shopping cart"
-        className="absolute inset-y-0 right-0 flex w-[min(28rem,92vw)] flex-col bg-paper shadow-lift"
-      >
-        <header className="flex items-center justify-between border-b border-ink-100 px-5 py-4">
-          <h2 className="font-display text-2xl text-ink-950">
-            Your cart
-            {cart && cart.totalQuantity > 0 ? (
-              <span className="ml-2 text-base text-ink-500">
-                ({cart.totalQuantity})
-              </span>
-            ) : null}
-          </h2>
-          <button
-            type="button"
-            onClick={close}
-            aria-label="Close cart"
-            className="grid size-10 place-items-center rounded-full text-ink-700 transition-colors hover:bg-ink-100"
-          >
-            <CloseIcon className="size-5" />
-          </button>
-        </header>
-
-        {isEmpty ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
-            <p className="text-ink-600">Your cart is empty.</p>
-            <ButtonLink href="/products" onClick={close}>
-              Browse posters
-            </ButtonLink>
-          </div>
-        ) : (
-          <>
+      {isEmpty ? (
+        <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
+          <span className="grid size-16 place-items-center rounded-full bg-ink-100 text-ink-400">
+            <BagIcon className="size-7" />
+          </span>
+          <p className="text-ink-600">Your cart is empty.</p>
+          <ButtonLink href="/products" onClick={close}>
+            Browse posters
+          </ButtonLink>
+        </div>
+      ) : (
+        <>
+          {/* One scrolling region for everything that isn't the total and the
+              button. The progress bars, the offers and the coupon field used
+              to be fixed above and below the list, which on a phone left the
+              items themselves a strip about one line high to scroll in. */}
+          <div className="flex-1 overflow-y-auto overscroll-contain">
             {/* Above the items, not below: the customer decides whether to add
                 another poster while they're still looking at the list. */}
             {cart ? (
               <div className="space-y-4 border-b border-ink-100 px-5 py-4">
                 <FreeShippingBar subtotal={cart.cost.subtotalAmount} />
-                {/* Hidden once the gift line itself is in the cart — see
-                    GiftMilestoneBar's own note on why this decision belongs
-                    here rather than inside the bar. A bundle blocks the gift
-                    (Shopify allows only one buy-X-get-Y per order), and the
-                    absence of a gift line is what actually reflects that. */}
-                {hasGift ? null : (
+                {/* Hidden once the gift line itself is in the cart, and
+                    hidden while a bundle is applied: Shopify allows only one
+                    buy-X-get-Y per order, so a cart taking a bundle cannot
+                    also take the gift, and counting down to one it will not
+                    receive is a promise the checkout breaks. */}
+                {hasGift || bundle ? null : (
                   <GiftMilestoneBar subtotal={cart.cost.subtotalAmount} />
                 )}
+                <BundleNudge cart={cart} />
               </div>
             ) : null}
 
-            <ul className="flex-1 space-y-6 overflow-y-auto px-5 py-6">
-              {lines.map((line) => (
-                <LineItem key={line.id} line={line} />
+            {/* Rows are keyed by line, so the stagger plays when the drawer
+                opens and for a line that has just been added — not again on
+                every quantity change. */}
+            <ul className="stagger-in space-y-6 px-5 py-6">
+              {lines.map((line, index) => (
+                <LineItem key={line.id} line={line} index={index} />
               ))}
             </ul>
 
-            <footer className="border-t border-ink-100 px-5 py-5">
-              <div className="flex items-baseline justify-between text-sm">
-                <span className="text-ink-600">Subtotal</span>
-                <span className="text-ink-900">
-                  {cart
-                    ? formatMoney({
-                        amount: String(undiscounted),
-                        currencyCode: currency,
-                      })
-                    : "—"}
-                </span>
-              </div>
+            {cart ? (
+              <div className="px-5 pb-6">
+                <DiscountSuggestion cart={cart} />
+                <DiscountForm cart={cart} />
 
-              {/* Only rendered from what Shopify actually took off. A cart that
-                  earned nothing shows no line, and a code that Shopify marked
-                  inapplicable contributes zero — so this can never claim a
-                  saving the checkout won't honour. */}
-              {discount > 0 ? (
-                <div className="mt-1.5 flex items-baseline justify-between text-sm">
-                  <span className="flex items-center gap-1.5 font-medium text-success">
-                    <TagIcon className="size-3.5" />
-                    Discount
-                  </span>
-                  <span className="font-medium text-success">
-                    −
-                    {formatMoney({
-                      amount: String(discount),
+                {/* Development only: which checkout this cart will get, and
+                    why. Visible without clicking, because the moment you click
+                    is the moment the page navigates and takes the console with
+                    it. Stripped from production builds by the NODE_ENV check. */}
+                {process.env.NODE_ENV === "development" ? (
+                  <FastrrDebug cart={cart} />
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+
+          <footer className="border-t border-ink-100 px-5 pt-4 pb-5 shadow-[0_-8px_24px_-16px_rgb(17_16_16/0.18)]">
+            <div className="flex items-baseline justify-between text-sm">
+              <span className="text-ink-600">Subtotal</span>
+              <span className="text-ink-900">
+                {cart
+                  ? formatMoney({
+                      amount: String(undiscounted),
                       currencyCode: currency,
-                    })}
-                  </span>
-                </div>
-              ) : null}
+                    })
+                  : "—"}
+              </span>
+            </div>
 
-              <div className="mt-3 flex items-baseline justify-between border-t border-ink-100 pt-3">
-                <span className="text-ink-600">Total</span>
-                <span className="text-lg font-semibold text-ink-950">
-                  {cart ? formatMoney(cart.cost.totalAmount) : "—"}
+            {/* Only rendered from what Shopify actually took off. A cart that
+                earned nothing shows no line, and a code that Shopify marked
+                inapplicable contributes zero — so this can never claim a
+                saving the checkout won't honour. */}
+            {discount > 0 ? (
+              <div className="mt-1.5 flex items-baseline justify-between text-sm">
+                <span className="flex items-center gap-1.5 font-medium text-success">
+                  <TagIcon className="size-3.5" />
+                  {/* Named when it is the bundle, so the saving is tied to
+                      the offer the customer was working toward. */}
+                  {bundle ? bundleLabel(bundle) : "Discount"}
+                </span>
+                <span className="font-medium text-success">
+                  −
+                  {formatMoney({
+                    amount: String(discount),
+                    currencyCode: currency,
+                  })}
                 </span>
               </div>
-              <p className="mt-1 text-xs text-ink-500">
-                Shipping and taxes calculated at checkout.
-              </p>
+            ) : null}
 
-              {cart ? <BundleNudge cart={cart} /> : null}
-              {cart ? <DiscountSuggestion cart={cart} /> : null}
-              {cart ? <DiscountForm cart={cart} /> : null}
+            <div className="mt-3 flex items-baseline justify-between border-t border-ink-100 pt-3">
+              <span className="text-ink-600">Total</span>
+              <span className="text-lg font-semibold text-ink-950">
+                {cart ? formatMoney(cart.cost.totalAmount) : "—"}
+              </span>
+            </div>
 
-              <a
-                href={cart?.checkoutUrl ?? "#"}
-                onClick={(event) => {
-                  if (!cart?.checkoutUrl) return;
-                  // Rewritten on click, not in render: withClaimedDiscount
-                  // reads localStorage, which doesn't exist on the server.
-                  event.preventDefault();
-                  setCheckingOut(true);
-                  trackMetaInitiateCheckout(cart);
-                  trackGaBeginCheckout(cart);
-                  window.location.href = withGaLinker(
-                    withClaimedDiscount(cart.checkoutUrl),
-                  );
-                }}
-                aria-disabled={!cart?.checkoutUrl}
-                className="mt-4 flex h-13 w-full items-center justify-center rounded-full bg-brand-500 px-8 font-medium text-white transition-colors hover:bg-brand-600"
-              >
-                {checkingOut ? "Redirecting…" : "Checkout"}
-              </a>
+            {/* The arrival date was on the product page and nowhere else, so
+                it disappeared at the exact moment the decision is made. */}
+            <p className="mt-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs text-ink-500">
+              {/* Prices in Shopify include tax, so the total above is what
+                  the customer pays for the goods; only shipping can still
+                  change it. */}
+              <span>Taxes included. Shipping calculated at checkout.</span>
+              <span className="flex items-center gap-1.5 text-ink-600">
+                <TruckIcon className="size-4 shrink-0 text-brand-500" />
+                Arrives{" "}
+                <span className="font-semibold text-ink-950">
+                  {deliveryEstimate().range}
+                </span>
+              </span>
+            </p>
 
-              {/* The last thing seen before leaving for Shopify's domain.
-                  Naming the risks the customer is already weighing — is this
-                  safe, what if it's wrong — is what stops the tab from closing. */}
-              <ul className="mt-4 flex items-center justify-center gap-5 text-xs text-ink-500">
-                <li className="flex items-center gap-1.5">
-                  <LockIcon className="size-4 text-ink-400" />
-                  Secure checkout
-                </li>
-                <li className="flex items-center gap-1.5">
-                  <ReturnIcon className="size-4 text-ink-400" />
-                  7-day replacement
-                </li>
-              </ul>
+            <a
+              href={cart?.checkoutUrl ?? "#"}
+              onClick={async (event) => {
+                if (!cart?.checkoutUrl) return;
+                // Handled in JS, not by the href: which checkout a shopper
+                // gets depends on what is in their cart, and on whether
+                // Fastrr's script actually loaded. The href stays as the
+                // Shopify URL so a middle-click or "open in new tab" still
+                // does something sensible.
+                event.preventDefault();
+                // The Fastrr token takes a round trip, and a second tap in
+                // that window would open a second checkout.
+                if (checkingOut) return;
+                setCheckingOut(true);
 
-              <button
-                type="button"
-                onClick={close}
-                className="mt-3 w-full text-center text-xs font-medium text-ink-400 transition-colors hover:text-ink-700"
-              >
-                Continue shopping
-              </button>
-            </footer>
-          </>
-        )}
-      </aside>
-    </div>
+                const outcome = await startCheckout(cart);
+
+                // Fastrr opens an overlay rather than navigating, so the
+                // button has to come back out of its loading state — closing
+                // the overlay must not leave a dead "Redirecting…" button.
+                if (outcome.via === "fastrr") setCheckingOut(false);
+              }}
+              aria-disabled={!cart?.checkoutUrl}
+              className="mt-4 flex h-13 w-full items-center justify-center rounded-full bg-brand-500 px-8 font-medium text-white transition duration-200 hover:bg-brand-600 active:scale-[0.98]"
+            >
+              {checkingOut ? "Redirecting…" : "Checkout"}
+            </a>
+
+            {/* The last thing seen before leaving for Shopify's domain.
+                Naming the risks the customer is already weighing — is this
+                safe, what if it's wrong — is what stops the tab from closing. */}
+            <ul className="mt-3.5 flex items-center justify-center gap-5 text-xs text-ink-500">
+              <li className="flex items-center gap-1.5">
+                <LockIcon className="size-4 text-ink-400" />
+                Secure checkout
+              </li>
+              <li className="flex items-center gap-1.5">
+                <ReturnIcon className="size-4 text-ink-400" />
+                {REPLACEMENT_WINDOW_DAYS}-day replacement
+              </li>
+            </ul>
+
+            <button
+              type="button"
+              onClick={close}
+              className="mt-3 w-full text-center text-xs font-medium text-ink-400 transition-colors hover:text-ink-700"
+            >
+              Continue shopping
+            </button>
+          </footer>
+        </>
+      )}
+    </>
   );
 }

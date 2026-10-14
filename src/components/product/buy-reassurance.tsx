@@ -1,5 +1,6 @@
 import { RulerIcon } from "@/components/icons";
 import { DeliveryEstimate } from "@/components/product/delivery-estimate";
+import { PincodeCheck } from "@/components/product/pincode-check";
 import { PaymentMarks } from "@/components/product/payment-marks";
 import { SizeGuide } from "@/components/product/size-guide";
 
@@ -13,6 +14,7 @@ export function BuyReassurance() {
   return (
     <div className="mt-6 space-y-4">
       <DeliveryEstimate />
+      <PincodeCheck />
 
       <details className="group rounded-card border border-ink-200">
         <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-4 text-sm font-medium text-ink-900 transition-colors hover:text-brand-600 [&::-webkit-details-marker]:hidden">

@@ -20,6 +20,24 @@ export const SUPPORT_RESPONSE = "within one working day";
 export const REPLACEMENT_WINDOW_DAYS = 7;
 
 /**
+ * What we ask a customer to send when a print arrives damaged.
+ *
+ * A video, not a photo: it shows the damage and the print in one continuous
+ * take, which is what lets us approve a replacement on the spot instead of
+ * going back and forth asking for another angle.
+ *
+ * This exists as a constant because the site previously said both. The home
+ * page, the FAQ and the product page asked for a video; the returns policy,
+ * the shipping page, About and Contact asked for a photo — so the one claim a
+ * hesitant buyer goes looking for had two different answers, and the binding
+ * policy page disagreed with the marketing. Every surface now reads from here.
+ */
+export const DAMAGE_PROOF = "a short video";
+
+/** Sentence-initial form of DAMAGE_PROOF, for copy that starts with it. */
+export const DAMAGE_PROOF_SENTENCE = "Send us a short video";
+
+/**
  * Flat shipping below the free-shipping threshold. Defined in offers.ts
  * alongside the threshold it pairs with, and forwarded here so the policy
  * pages that already import it keep working.

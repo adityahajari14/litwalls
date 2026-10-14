@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 import { CloseIcon, SearchIcon } from "@/components/icons";
 import { cn } from "@/lib/cn";
 import type { Image as ShopifyImage } from "@/lib/shopify/types";
+import { IMAGE_PLACEHOLDER } from "@/lib/image-placeholder";
 
 function Chevron({ dir }: { dir: "left" | "right" }) {
   return (
@@ -103,8 +104,9 @@ export function Gallery({
             src={current.url}
             alt={current.altText ?? title}
             fill
-            priority
+            preload
             sizes="(min-width: 1024px) 46rem, 100vw"
+            placeholder={IMAGE_PLACEHOLDER}
             className="object-cover transition-transform duration-500 ease-out-soft group-hover:scale-[1.02]"
           />
         </button>
@@ -175,6 +177,7 @@ export function Gallery({
                   alt=""
                   fill
                   sizes="6rem"
+                  placeholder={IMAGE_PLACEHOLDER}
                   className="object-cover"
                 />
               </button>
@@ -185,7 +188,7 @@ export function Gallery({
 
       {mounted && zoomed
         ? createPortal(
-            <div className="fixed inset-0 z-70 grid place-items-center bg-ink-950/90 p-4 backdrop-blur-sm sm:p-8">
+            <div className="fixed inset-0 z-70 grid animate-fade-in place-items-center bg-ink-950/90 p-4 backdrop-blur-sm sm:p-8">
           <button
             type="button"
             onClick={() => setZoomed(false)}

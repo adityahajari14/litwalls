@@ -1,6 +1,7 @@
 "use client";
 
 import { isGoogleAnalyticsConfigured } from "@/lib/analytics/google-config";
+import type { PurchaseSummary } from "@/lib/analytics/purchase";
 import type { Cart, Product, ProductVariant } from "@/lib/shopify/types";
 
 declare global {
@@ -138,4 +139,26 @@ export function trackGaBeginCheckout(cart: Cart) {
 /** GA4 `search` — the storefront counterpart of Shopify's SEARCH_VIEW. */
 export function trackGaSearch(term: string) {
   gtag("event", "search", { search_term: term });
+}
+
+/**
+ * GA4 `purchase` — for an order placed through the Fastrr overlay. See
+ * trackMetaPurchase for why this cannot double-count with the Shopify custom
+ * pixel. GA dedupes on `transaction_id` on its own.
+ */
+export function trackGaPurchase(order: PurchaseSummary) {
+  gtag("event", "purchase", {
+    transaction_id: order.orderId,
+    currency: order.currency,
+    value: order.value,
+    shipping: order.shipping,
+    ...(order.coupon ? { coupon: order.coupon } : {}),
+    items: order.items.map((item) => ({
+      item_id: numericId(item.variantGid),
+      item_name: item.name,
+      item_variant: item.variant,
+      price: item.price,
+      quantity: item.quantity,
+    })),
+  });
 }

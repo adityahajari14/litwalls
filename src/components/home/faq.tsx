@@ -1,4 +1,8 @@
 import { Accordion } from "@/components/ui/accordion";
+import {
+  DAMAGE_PROOF_SENTENCE,
+  REPLACEMENT_WINDOW_DAYS,
+} from "@/lib/company";
 import { Container } from "@/components/ui/container";
 import { SectionHeading } from "@/components/ui/section-heading";
 import {
@@ -38,12 +42,12 @@ const FAQS = [
   {
     question: "What offers can I use?",
     answer:
-      `On single posters, buy ${SINGLE_BUNDLES.map((b) => `${b.pay} and get ${bundleFreeCount(b)} free`).join(", buy ")} — mix and match any design. On split-in-3 sets, buy ${SPLIT_BUNDLES.map((b) => `${b.pay} and get ${bundleFreeCount(b)} free`).join(", or buy ")}. Orders over ₹${FIRST_ORDER_MINIMUM} qualify for ₹${FIRST_ORDER_DISCOUNT} off with code ${FIRST_ORDER_CODE}; we'll suggest it in your cart once your order reaches that amount. Orders over ₹${GIFT_THRESHOLD} that aren't already using a bundle discount receive ${GIFT_DESCRIPTION}, free — pick which one in your cart. Only one of the bundle discount or the free gift applies per order — whichever is worth more.`,
+      `On single posters, including custom ones, buy ${SINGLE_BUNDLES.map((b) => `${b.pay} and get ${bundleFreeCount(b)} free`).join(", buy ")} — mix and match any design. On split-in-3 sets, buy ${SPLIT_BUNDLES.map((b) => `${b.pay} and get ${bundleFreeCount(b)} free`).join(", or buy ")}. Orders over ₹${FIRST_ORDER_MINIMUM} qualify for ₹${FIRST_ORDER_DISCOUNT} off with code ${FIRST_ORDER_CODE}; we'll suggest it in your cart once your order reaches that amount. Orders over ₹${GIFT_THRESHOLD} that aren't already using a bundle discount receive ${GIFT_DESCRIPTION}, free — pick which one in your cart. Only one of the bundle discount or the free gift applies per order — whichever is worth more.`,
   },
   {
     question: "What if my poster arrives damaged or blurred?",
     answer:
-      "Send us a short video of the print within 7 days and we'll ship a replacement, free — you keep the original, and there's no return shipping required. We ask for a video rather than a photo because it lets us approve the replacement immediately, without back and forth. Posters are shipped rolled in a rigid tube, so damage is rare, but it can still happen in transit.",
+      `${DAMAGE_PROOF_SENTENCE} of the print within ${REPLACEMENT_WINDOW_DAYS} days and we'll ship a replacement, free — you keep the original, and there's no return shipping required. We ask for a video rather than a photo because it lets us approve the replacement immediately, without back and forth. Posters are shipped rolled in a rigid tube, so damage is rare, but it can still happen in transit.`,
   },
   {
     question: "Can I print my own photo or design?",
@@ -61,7 +65,7 @@ export function Faq() {
   return (
     <section id="faq" className="bg-paper py-16 lg:py-24">
       <Container>
-        <div className="grid gap-10 lg:grid-cols-[1fr_1.6fr] lg:gap-16">
+        <div className="reveal grid gap-10 lg:grid-cols-[1fr_1.6fr] lg:gap-16">
           <div>
             <SectionHeading title="FAQ" />
             <p className="mt-3 text-ink-600 text-pretty">

@@ -11,7 +11,10 @@
  * one unit — "buy 2, get 8" means 8 sets (24 panels total), not 8 panels.
  */
 
+import { isCustomSinglePoster } from "@/lib/custom-products";
 import { ENTRY_PRICE } from "@/lib/pricing";
+import { isCustomProduct, isSplitProduct } from "@/lib/product";
+import type { Cart } from "@/lib/shopify/types";
 
 /** Must match the "Free shipping" rate's minimum in Settings → Shipping. */
 export const FREE_SHIPPING_THRESHOLD = 349;
@@ -31,7 +34,7 @@ export type Bundle = {
 };
 
 /**
- * Buy-X-get-Y on single posters only.
+ * Buy-X-get-Y on single posters — catalogue and custom alike.
  *
  * Codes are named BUY{pay}GET{free}FREE — not BUY{pay}FOR{total}, which was
  * the original naming and reads backwards. "LIT4FOR7" sounds like paying for
@@ -117,12 +120,21 @@ export const GIFT_DESCRIPTION = "5 mini pocket prints or retro prints";
  * site rather than implying the two stack.
  */
 /**
- * True when a cart is already taking a bundle, and therefore cannot also take
- * the gift. Used to keep the storefront from adding a gift line that Shopify
- * would then charge for.
+ * The bundle Shopify has actually applied to this cart, if any.
+ *
+ * Read off `discountCodes[].applicable` — Shopify's verdict — not off how many
+ * posters are in the basket. The gift used to be withheld whenever a cart had
+ * merely *reached a rung's "buy" count*, so six posters (no bundle yet, that
+ * needs seven) lost the gift for a discount they were not getting. Only a
+ * bundle that is really being taken blocks the gift.
  */
-export function bundleBlocksGift(earnedCodes: string[]): boolean {
-  return earnedCodes.length > 0;
+export function appliedBundle(cart: Cart): Bundle | null {
+  for (const discount of cart.discountCodes) {
+    if (!discount.applicable) continue;
+    const bundle = ALL_BUNDLES.find((entry) => entry.code === discount.code);
+    if (bundle) return bundle;
+  }
+  return null;
 }
 
 export type GiftOption = {
@@ -169,29 +181,79 @@ export { ENTRY_PRICE };
  * else on the cart alone — a code the customer typed themselves is theirs, not
  * ours to drop when their basket size changes.
  */
-export const MANAGED_DISCOUNT_CODES: string[] = [
-  ...SINGLE_BUNDLES.map((bundle) => bundle.code),
-  ...SPLIT_BUNDLES.map((bundle) => bundle.code),
-];
+const ALL_BUNDLES: Bundle[] = [...SINGLE_BUNDLES, ...SPLIT_BUNDLES];
+
+export const MANAGED_DISCOUNT_CODES: string[] = ALL_BUNDLES.map(
+  (bundle) => bundle.code,
+);
 
 /**
- * Which rung of a ladder a given quantity has reached.
+ * How many units a cart holds on each ladder.
  *
- * The best rung whose `pay` threshold the quantity meets — so 7 posters earns
- * the buy-4 rung, and 12 earns buy-10. Returns null below the first rung.
+ * One function for both sides of the wire: the server uses it to decide which
+ * codes to put on the cart, the drawer uses it to word the nudge. They used to
+ * count separately — the server by asking Shopify which handles were tagged
+ * `split`, the drawer by reading tags off the line — and disagreed about the
+ * same basket.
  *
- * Ladders are searched from the top so the customer always gets the most
- * generous rung they qualify for, regardless of array order.
+ * A custom poster is a single poster like any other and counts on the single
+ * ladder; the custom split poster counts on the split one.
+ *
+ * Not counted on either ladder:
+ *   - the gift line, so a gift the cart handed out can never be what tips
+ *     someone onto a rung;
+ *   - mini and retro prints, which are packs of small prints rather than
+ *     posters and are not covered by the bundle discounts in Shopify.
  */
+export function bundleQuantities(cart: Cart): {
+  singleQuantity: number;
+  splitQuantity: number;
+} {
+  let singleQuantity = 0;
+  let splitQuantity = 0;
+
+  for (const line of cart.lines.nodes) {
+    if (line.attributes.some((attribute) => attribute.key === GIFT_ATTRIBUTE)) {
+      continue;
+    }
+
+    const { product } = line.merchandise;
+    if (isSplitProduct(product)) {
+      splitQuantity += line.quantity;
+    } else if (!isCustomProduct(product) || isCustomSinglePoster(product.handle)) {
+      singleQuantity += line.quantity;
+    }
+  }
+
+  return { singleQuantity, splitQuantity };
+}
+
+/**
+ * The rungs a quantity can actually claim, most generous first.
+ *
+ * A rung is claimable once the cart holds its full `total` — the paid posters
+ * AND the free ones. That is how Shopify evaluates a buy-X-get-Y, verified on
+ * the live store: seven posters with BUY4GET3FREE gives three free, but five
+ * or six with the same code gives nothing, and seven with BUY6GET12FREE gives
+ * nothing either (it wants eighteen).
+ *
+ * The earlier version compared against `pay`, so seven posters were handed
+ * the buy-6 code — which Shopify rejected, leaving the cart at full price.
+ * Since every rung's `pay` is below the next rung's `total`, that mistake
+ * meant no bundle ever applied below 36 posters.
+ */
+export function claimableBundles(bundles: Bundle[], quantity: number): Bundle[] {
+  return bundles
+    .filter((bundle) => quantity >= bundle.total)
+    .sort((a, b) => bundleFreeCount(b) - bundleFreeCount(a));
+}
+
+/** The best rung a quantity can claim, or null below the first one. */
 export function bundleForQuantity(
   bundles: Bundle[],
   quantity: number,
 ): Bundle | null {
-  return (
-    [...bundles]
-      .sort((a, b) => b.pay - a.pay)
-      .find((bundle) => quantity >= bundle.pay) ?? null
-  );
+  return claimableBundles(bundles, quantity)[0] ?? null;
 }
 
 /**
@@ -200,6 +262,11 @@ export function bundleForQuantity(
  * Deliberately returns codes rather than amounts: Shopify decides what a code
  * is worth and whether it applies at all. This only nominates candidates — see
  * syncCartDiscounts, which applies them and then trusts Shopify's verdict.
+ *
+ * All claimable rungs are nominated, not just the top one. Shopify applies a
+ * single buy-X-get-Y per order and picks the best that fits, so a cart of ten
+ * where two posters fall outside the discount's collections still lands on
+ * buy-4 instead of being offered buy-5 alone and getting nothing.
  */
 export function earnedDiscountCodes({
   singleQuantity,
@@ -208,23 +275,20 @@ export function earnedDiscountCodes({
   singleQuantity: number;
   splitQuantity: number;
 }): string[] {
-  const codes: string[] = [];
-
-  const single = bundleForQuantity(SINGLE_BUNDLES, singleQuantity);
-  if (single) codes.push(single.code);
-
-  const split = bundleForQuantity(SPLIT_BUNDLES, splitQuantity);
-  if (split) codes.push(split.code);
-
-  return codes;
+  return [
+    ...claimableBundles(SINGLE_BUNDLES, singleQuantity),
+    ...claimableBundles(SPLIT_BUNDLES, splitQuantity),
+  ].map((bundle) => bundle.code);
 }
 
 /**
  * The next rung up from where a quantity currently sits, if there is one.
  *
- * Powers the "add 1 more and get 3 free" nudge. Returns null when the customer
- * is already on the top rung, so the cart stops pushing once there is nothing
- * left to earn.
+ * Powers the "add 3 more and get 3 free" nudge. Measured against `total` for
+ * the same reason as claimableBundles: the customer has to put the free
+ * posters in the cart themselves, so the distance that matters is to the full
+ * set. Returns null on the top rung, so the cart stops pushing once there is
+ * nothing left to earn.
  */
 export function nextBundle(
   bundles: Bundle[],
@@ -232,7 +296,7 @@ export function nextBundle(
 ): Bundle | null {
   return (
     [...bundles]
-      .sort((a, b) => a.pay - b.pay)
-      .find((bundle) => quantity < bundle.pay) ?? null
+      .sort((a, b) => a.total - b.total)
+      .find((bundle) => quantity < bundle.total) ?? null
   );
 }

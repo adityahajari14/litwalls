@@ -67,6 +67,15 @@ NEXT_PUBLIC_SHOPIFY_ANALYTICS_HAS_USER_CONSENT=true
 NEXT_PUBLIC_META_PIXEL_ID=your_meta_pixel_id        # Meta Events Manager → Data sources
 META_DOMAIN_VERIFICATION=your_meta_domain_token     # Meta Business → Brand safety → Domains
 NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX          # GA4 Admin → Data streams → web stream
+
+# Shiprocket Checkout (Fastrr) — see "Fastrr checkout" below. Leave
+# NEXT_PUBLIC_FASTRR_SELLER_DOMAIN blank and every button uses Shopify checkout.
+NEXT_PUBLIC_FASTRR_SELLER_DOMAIN=litwalls.in        # the domain Shiprocket onboarded
+FASTRR_API_KEY=your_fastrr_api_key                  # SECRET — server only
+FASTRR_SECRET_KEY=your_fastrr_secret_key            # SECRET — server only
+SHOPIFY_ADMIN_ACCESS_TOKEN=shpat_...                # SECRET — creates the Shopify order
+SHOPIFY_WEBHOOK_SECRET=your_webhook_signing_secret  # optional: live catalogue pushes
+CRON_SECRET=any_long_random_string                  # optional: the reconcile job
 ```
 
 ### 5. Run it
@@ -294,12 +303,17 @@ scope.
 
 ## Discounts
 
-None of these exist in the store yet. Until they are created the storefront
-degrades quietly — it applies a code, Shopify reports `applicable: false`, and
-the cart is unchanged. Nothing breaks and nothing is falsely promised.
+The codes and thresholds live in `src/lib/offers.ts`; what exists in admin
+must match it exactly. Where it doesn't, the storefront degrades quietly — it
+applies a code, Shopify reports `applicable: false`, and the cart is
+unchanged. Nothing breaks, but the offer silently does nothing.
 
-The codes and thresholds live in `src/lib/offers.ts`; what is created in admin
-must match it exactly.
+**Run `node scripts/sync-discounts.mjs` to see whether Shopify matches**, and
+again with `--apply` to fix it. Run it whenever a collection is added: a
+buy-X-get-Y cannot target "all products", so each bundle carries a list of
+collections, and a new collection is not on it until this is re-run. That is
+exactly how the bundles stopped working — they were created against Marvel,
+Movies, Music and DC, and the catalogue then moved to Cars and F1.
 
 ### The one rule that shapes everything
 
@@ -319,6 +333,20 @@ Bundle codes are named `BUY{pay}GET{free}FREE` rather than
 paying for 7 to get 4. A discount code should say what it does on its own,
 before anyone reads the fine print.
 
+### How a buy-X-get-Y actually applies
+
+Two behaviours, both verified on the live store, that the cart logic is built
+around:
+
+- **The free posters have to be in the cart.** Shopify never adds them. "Buy
+  4, get 3 free" does nothing at four, five or six posters; it applies at
+  seven, as four paid and three free. So a rung is claimable at its `total`,
+  not its `pay` count — `claimableBundles` in `offers.ts` — and the cart
+  nudge counts down to the full set.
+- **It is all or nothing.** Seven posters with `BUY6GET12FREE` is not "one
+  free"; it is inapplicable until there are eighteen. Every claimable rung is
+  put on the cart and Shopify applies the best one that fits.
+
 ### What to create
 
 | Code | Type | Setup | Status |
@@ -330,28 +358,33 @@ before anyone reads the fine print.
 | `SPLITBUY1GET2FREE` | Buy X get Y | Buy 1 split set → get 2 free | ✅ live |
 | `SPLITBUY2GET6FREE` | Buy X get Y | Buy 2 split sets → get 6 free | ✅ live |
 | `LIT100` | Amount off order | ₹100 off, minimum ₹499, once per customer | ✅ live |
-| *(no code)* | Automatic, buy X get Y | Spend ₹799 → 1× mini-prints pack free | ⛔ not created — see below |
+| *(no code)* | Automatic, buy X get Y | Spend ₹799 → 1× gift pack free | created by `sync-discounts.mjs --apply` |
 
-Codes marked ✅ were created via the Admin API on 2026-08-20 and are live on
-the real store right now. The automatic gift discount was **not** created:
-its "get" product (`GIFT_PRODUCT_HANDLE` in `offers.ts`,
-`mini-pocket-prints-pack-of-5`) does not exist in the catalogue yet, and a
-discount pointing at a nonexistent product is worse than no discount. Create
-it once that product is published — see the setup notes below for exactly how.
+Codes marked ✅ were created via the Admin API on 2026-08-20. Their *scope* is
+what `scripts/sync-discounts.mjs` maintains; the automatic gift discount is
+created by the same script. Until it exists the storefront adds the gift line,
+sees Shopify charging for it, and takes it straight back out — no gift, but
+nobody billed for one either.
 
 Notes that cost an hour to rediscover:
 
 - **BXGY cannot target "all products."** Shopify rejects it. Scope both the
-  "buy" and the "get" side to collections (or specific products). The live
-  codes are scoped to all four collections (Marvel, Movies & TV, Music, DC).
+  "buy" and the "get" side to collections (or specific products — not a mix
+  of the two). The single ladder is scoped to every poster collection plus
+  `bundle-custom-posters`, an unpublished collection holding the custom
+  poster, which is how custom posters earn the same bundles; the split ladder
+  to the products tagged exactly `split`.
+- **Tag searches ignore case.** `tag:split` also matches ordinary posters
+  with a descriptive "Split" tag, and `tag:custom` matches "Custom". The
+  lowercase tags are the markers; `isCustomProduct` / `isSplitProduct` in
+  `src/lib/product.ts` re-check every tag search exactly.
 - **Set `combinesWith`** on every discount: tick *order discounts* on the
   bundles, and *product discounts* on `LIT100`. Without this LIT100 will not
   stack with a bundle. All live codes already have this set correctly.
 - **The gift must be an automatic discount, not a code** — the storefront adds
   the gift line itself and expects Shopify to zero it with no code involved.
-- The split ladder needs products tagged `split`; none are published yet, so
-  `SPLITBUY1GET2FREE` / `SPLITBUY2GET6FREE` exist but have nothing to discount
-  until split-poster products are.
+- The split ladder needs products tagged `split`. Today that is only the
+  custom split poster.
 
 ### Why LIT100 is suggested, not applied
 
@@ -369,19 +402,175 @@ customer applies it themselves. It still works if typed manually at any time.
 ### How the cart uses them
 
 `syncCartDiscounts` runs after every add, quantity change and removal. It
-works out which rung the basket has reached, applies that code, and removes it
-if the basket shrinks below it. Codes the customer typed are never touched —
-only the ones in `MANAGED_DISCOUNT_CODES` are managed.
+works out which rungs the basket can claim, puts those codes on the cart, and
+removes them if the basket shrinks. Codes the customer typed are never touched
+— only the ones in `MANAGED_DISCOUNT_CODES` are managed.
 
-`syncCartGift` adds or withdraws the gift line, marked with a `_gift`
-attribute so the cart can tell its own line from the customer's. It refuses to
-leave a gift line in the cart that Shopify is charging for.
+`syncCartGift` runs after it, adding or withdrawing the gift line (marked with
+a `_gift` attribute so the cart can tell its own line from the customer's).
+The gift is withheld only when Shopify has actually applied a bundle, and any
+gift line Shopify is charging for is removed again.
 
 Everything displayed is Shopify's own number. `cartDiscountTotal` derives the
 saving as full price minus `cost.totalAmount`, because the two discount
 classes report themselves in different places: a BXGY lands on the line (and
 Shopify splits the line in two to do it), while an order discount only moves
 the cart total.
+
+## Custom prints
+
+`/custom/<handle>` is the upload page for the four customer-artwork products
+(`lib/custom-products.ts`). What happens to the image:
+
+1. **Picked and framed in the browser.** The preview is the print: the frame is
+   the paper's shape at the chosen size. **Adjust** lets the customer drag,
+   zoom and rotate (`components/custom/artwork-editor.tsx`). Print-quality
+   warnings are judged on the part they framed, not the whole file — zooming in
+   on a face can turn a sharp photo into a soft print, and the page says so.
+2. **Rendered to the crop.** On "Add to cart" the framing is baked into a JPEG
+   (`lib/artwork-edit.ts`), so the printer has no cropping decision to make.
+   An image that already fits and was not touched is sent as it was picked. If
+   a browser cannot render the crop, the original is sent with a `Crop` line
+   property describing it in words.
+3. **Uploaded straight to Shopify**, not through this server, then registered
+   as a permanent file (`fileCreate`). This step is the one that used to be
+   missing: the upload target is a temporary bucket, and its address was being
+   put on the order.
+4. **Added to the cart** with the file's `cdn.shopify.com` address as the
+   `Artwork` line property.
+
+Every upload therefore appears in Shopify admin under **Content → Files**, as
+"Customer artwork". Download the print file from there or from the link on the
+order. Files are created when a customer adds to cart, so abandoned carts leave
+files behind; they can be deleted from that page.
+
+**A custom print cannot be in a cart without artwork.** Product cards link to
+the upload page instead of offering a quick add, and the server enforces it
+regardless: `artlessCustomLines` (`lib/shopify/cart.ts`) removes any custom
+line with no `Artwork`, on every add and every cart read. The free gift is
+exempt — it is one of these products, added by the cart itself.
+
+## Fastrr checkout
+
+Shiprocket Checkout ("Fastrr") is an overlay that opens on top of the site in
+place of Shopify's hosted checkout, adding COD, UPI and saved addresses. This
+is their **custom website** integration, signed with an API key and secret.
+
+Shopify remains the order system. Fastrr takes the payment; this app then
+writes the order into Shopify.
+
+```
+"Checkout" tapped
+  └─ server signs the cart ──► Fastrr access-token API ──► token
+       └─ HeadlessCheckout.addToCart(token) opens the overlay
+            └─ shopper pays
+                 ├─► browser: /checkout/return ──► /checkout/complete
+                 └─► Fastrr POSTs /api/fastrr/order-webhook
+                          └─ order fetched over the signed API
+                               └─ order created in Shopify (Admin API)
+```
+
+Anything that goes wrong before the overlay opens — script blocked, API down,
+a cart Fastrr can't represent — falls back to Shopify's checkout, silently.
+`window.__litwallsCheckout` in the console says which one a shopper got and
+why; in development the cart drawer shows it too.
+
+**Kill switch:** unset `NEXT_PUBLIC_FASTRR_SELLER_DOMAIN` and redeploy.
+
+### What Shiprocket needs from you
+
+Their team configures these against your account; none of it can be done from
+this codebase. All four are on the production domain, so deploy first.
+
+| What | URL |
+| --- | --- |
+| Fetch Products | `https://www.litwalls.in/api/fastrr/products` |
+| Fetch Collections | `https://www.litwalls.in/api/fastrr/collections` |
+| Fetch Products by Collection | `https://www.litwalls.in/api/fastrr/collection-products` |
+| Order webhook | `https://www.litwalls.in/api/fastrr/order-webhook` |
+
+They append `?page=1&limit=100` (and `collection_id=`) themselves.
+
+Also set in the Fastrr dashboard, because Fastrr — not Shopify — now decides
+them at checkout:
+
+- **Shipping charges.** The site promises free over ₹349 and a flat ₹49 below
+  (`lib/offers.ts`). Fastrr's shipping rule has to say the same.
+- **COD charges and prepaid discounts**, if you want either. Whatever Fastrr
+  charges is what the Shopify order records.
+- **No coupons of its own.** Discounts are Shopify's; see below.
+
+### Prices and discounts
+
+Fastrr knows nothing about bundles, `LIT100` or the free gift. It doesn't need
+to: every checkout is sent with the unit prices Shopify is charging and one
+fixed discount equal to everything Shopify took off
+(`lib/checkout/fastrr-cart.ts`). Fastrr applies exactly that amount and nothing
+else, so the total in the overlay is the total in the cart drawer.
+
+Because prices travel with each checkout, a stale catalogue sync on Fastrr's
+side cannot change what anyone pays — it can only show an old name or image.
+
+Custom prints go through Fastrr too. Their artwork link is a line property,
+which Fastrr's cart cannot carry, so it never travels through Fastrr at all:
+the order webhook reads the Shopify cart the checkout was signed from and puts
+each line's properties back, variant by variant. If a custom print ever ends up
+on an order without its artwork, the order is tagged `fastrr-missing-artwork`
+(and `fastrr-review`) and says so in its note.
+
+`NEXT_PUBLIC_FASTRR_ALLOW_CUSTOM=false` sends carts containing a custom print
+to Shopify's checkout instead. Pull it if that tag ever appears.
+
+### The Shopify order
+
+`lib/checkout/fastrr-order.ts` builds it. Worth knowing when reading orders:
+
+- Tagged `Fastrr`, `fastrr-<their id>`, and `COD` or `Prepaid`. The second tag
+  is the duplicate guard — their webhooks repeat.
+- COD orders are **payment pending**; prepaid ones are **paid**.
+- The discount on the order is worked back from the amount Fastrr collected,
+  so the Shopify total always equals what was charged, including any COD fee
+  or prepaid discount Fastrr added.
+- Tagged `fastrr-review` when something needs a person: Shopify rejected the
+  customer's details (order created without them), the cart changed
+  mid-checkout, or the amounts don't add up. Filter orders by that tag.
+- Created through the Admin API, so Shopify's checkout pixel does not fire.
+  The purchase is reported to Meta and GA4 from `/checkout/complete` instead;
+  the two paths never double-count.
+
+If Shiprocket's Shopify channel is also connected, it will import these orders
+a second time. Exclude the `Fastrr` tag there, or disconnect one of the two.
+
+### Optional: the two background jobs
+
+**Reconcile.** Shiprocket recommends a periodic job behind the webhook. Set
+`CRON_SECRET` and call, hourly:
+
+```bash
+curl -H "Authorization: Bearer $CRON_SECRET" \
+  "https://www.litwalls.in/api/fastrr/reconcile?hours=24"
+```
+
+It creates any successful Fastrr order that Shopify is missing and is safe to
+run as often as you like.
+
+**Live catalogue pushes.** Without this Fastrr still re-pulls the catalogue on
+its own schedule. To push changes as they happen: Shopify admin → Settings →
+Notifications → Webhooks → add *Product creation*, *Product update*,
+*Collection creation* and *Collection update*, format JSON, URL
+`https://www.litwalls.in/api/fastrr/catalog-webhook`. Copy the signing secret from
+that page into `SHOPIFY_WEBHOOK_SECRET`.
+
+### Testing it
+
+1. `NEXT_PUBLIC_FASTRR_ENV=staging` switches the script and the API to
+   Shiprocket's sandbox — it needs staging credentials from them.
+2. Add seven posters (so a bundle applies), tap Checkout, and confirm the
+   overlay's total equals the drawer's.
+3. Complete one COD order. Check that it appears in Shopify with the right
+   lines, address and total, and that `/checkout/complete` showed it.
+4. Repeat with a custom poster. The Shopify order line must carry its
+   `Artwork` property, and the link must open the image you framed.
 
 ## Scripts
 
@@ -390,4 +579,7 @@ npm run dev     # dev server
 npm run build   # production build
 npm run lint    # eslint
 npx tsc --noEmit  # typecheck
+
+node scripts/sync-discounts.mjs          # report Shopify discounts vs offers.ts
+node scripts/sync-discounts.mjs --apply  # fix their scope / create the gift
 ```

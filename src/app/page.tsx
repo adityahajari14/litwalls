@@ -7,11 +7,11 @@ import { Offers } from "@/components/home/offers";
 import { ProductGridSection } from "@/components/home/product-grid-section";
 import { Reviews } from "@/components/home/reviews";
 import { TrustStrip } from "@/components/home/trust-strip";
-import { getReviews } from "@/lib/reviews";
+import { getReviewSummary } from "@/lib/reviews";
 import {
   getCollections,
   getCustomProducts,
-  getProducts,
+  getSplitProducts,
   getStandardProducts,
 } from "@/lib/shopify/products";
 
@@ -31,7 +31,7 @@ const SHELF_SIZE = 4;
  * Order: want it → the range → what makes it worth buying → objections.
  */
 export default async function Home() {
-  const [collections, customProducts, splitProducts, bestSellers, newArrivals, reviews] =
+  const [collections, customProducts, splitProducts, bestSellers, newArrivals, reviewSummary] =
     await Promise.all([
       getCollections(HOME_COLLECTION_COUNT),
       getCustomProducts(SHELF_SIZE),
@@ -39,19 +39,19 @@ export default async function Home() {
       // published the shelf simply doesn't render. Custom split posters are
       // excluded here — the customer-upload range only appears in "Design your
       // own" on this page.
-      getProducts({ first: SHELF_SIZE, query: "tag:split AND -tag:custom" }),
+      getSplitProducts(SHELF_SIZE),
       getStandardProducts({ first: SHELF_SIZE, sortKey: "BEST_SELLING" }),
       getStandardProducts({
         first: SHELF_SIZE,
         sortKey: "CREATED_AT",
         reverse: true,
       }),
-      getReviews(),
+      getReviewSummary(),
     ]);
 
   return (
     <>
-      <Hero reviews={reviews} />
+      <Hero reviews={reviewSummary.reviews} summary={reviewSummary} />
       <TrustStrip />
 
       {collections.length > 0 ? <Categories collections={collections} /> : null}
@@ -64,7 +64,7 @@ export default async function Home() {
           subtitle="Our most popular prints."
           href="/products"
           products={bestSellers}
-          priority
+          eager
         />
       ) : null}
 
@@ -92,9 +92,13 @@ export default async function Home() {
         />
       ) : null}
 
-      {/* Renders nothing until a real reviews app is connected — see
-          getReviews. Never invents social proof. */}
-      <Reviews reviews={reviews} />
+      {/* Renders nothing until Judge.me credentials are set — see
+          getReviewSummary. Never invents social proof. */}
+      <Reviews
+        reviews={reviewSummary.reviews}
+        count={reviewSummary.count}
+        average={reviewSummary.average}
+      />
 
       <Faq />
       <ClosingCta />

@@ -44,9 +44,10 @@ export function storefrontConfig() {
 }
 
 /**
- * The Admin API — used only to mint staged upload targets for custom poster
- * artwork. The Storefront API cannot do this: there is no public-scope way to
- * put a file into a store, by design.
+ * The Admin API — used to mint staged upload targets for custom poster
+ * artwork, and to create the Shopify order for a checkout completed on Fastrr.
+ * The Storefront API can do neither: there is no public-scope way to put a
+ * file or an order into a store, by design.
  *
  * This token is a **secret**. It grants write access to the store, so it must
  * never reach the browser. Everything that reads it lives behind "server-only",
@@ -54,7 +55,8 @@ export function storefrontConfig() {
  * URL that stagedUploadsCreate returns.
  *
  * From Shopify admin: Settings → Apps and sales channels → Develop apps →
- * your app → Admin API access token. Needs the `write_files` scope.
+ * your app → Admin API access token. Needs `write_files`, plus `write_orders`,
+ * `read_products` and `write_customers` for Fastrr orders.
  */
 export function adminConfig() {
   return {

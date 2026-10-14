@@ -249,3 +249,23 @@ export function ChatIcon(props: IconProps) {
     </svg>
   );
 }
+
+/** Crop marks — used where the upload preview explains what gets cut off. */
+export function CropIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M6.5 2v13.5H20" />
+      <path d="M2 6.5h13.5V20" />
+    </svg>
+  );
+}
+
+/** A clockwise quarter turn — the artwork editor's rotate control. */
+export function RotateIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M20 11a8 8 0 1 0-2.3 5.7" />
+      <path d="M20 4v7h-7" />
+    </svg>
+  );
+}

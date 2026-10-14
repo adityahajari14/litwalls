@@ -140,6 +140,11 @@ const CART = /* GraphQL */ `
             product {
               handle
               title
+              # The cart drawer needs to tell a split-in-3 set from a single
+              # poster to nudge toward the right bundle ladder — the two are
+              # counted separately, and nudging a cart of split sets toward
+              # the single-poster rung promises a discount it cannot earn.
+              tags
               featuredImage {
                 ...Image
               }
@@ -162,9 +167,42 @@ export const GET_PRODUCTS = productDoc(/* GraphQL */ `
     $query: String
     $sortKey: ProductSortKeys
     $reverse: Boolean
+    $after: String
   ) {
-    products(first: $first, query: $query, sortKey: $sortKey, reverse: $reverse) {
+    products(
+      first: $first
+      query: $query
+      sortKey: $sortKey
+      reverse: $reverse
+      after: $after
+    ) {
       nodes {
+        ...Product
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+`);
+
+/**
+ * Type-ahead search. Unlike the `products(query:)` filter grammar this is
+ * built for half-typed input: it matches prefixes ("ferr" finds Ferrari) and
+ * forgives a slipped letter, which is exactly what a results-as-you-type list
+ * needs. Capped by Shopify at ten results, so it complements the full search
+ * rather than replacing it.
+ */
+export const PREDICTIVE_SEARCH = productDoc(/* GraphQL */ `
+  query PredictiveSearch($query: String!, $limit: Int!) {
+    predictiveSearch(
+      query: $query
+      types: [PRODUCT]
+      limit: $limit
+      limitScope: EACH
+    ) {
+      products {
         ...Product
       }
     }
@@ -180,15 +218,33 @@ export const GET_PRODUCT_BY_HANDLE = productDoc(/* GraphQL */ `
 `);
 
 export const GET_COLLECTION_PRODUCTS = productDoc(/* GraphQL */ `
-  query GetCollectionProducts($handle: String!, $first: Int!) {
+  query GetCollectionProducts(
+    $handle: String!
+    $first: Int!
+    $sortKey: ProductCollectionSortKeys
+    $reverse: Boolean
+    $after: String
+  ) {
     collection(handle: $handle) {
       id
       handle
       title
       description
-      products(first: $first) {
+      image {
+        ...Image
+      }
+      products(
+        first: $first
+        sortKey: $sortKey
+        reverse: $reverse
+        after: $after
+      ) {
         nodes {
           ...Product
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
         }
       }
     }
@@ -240,6 +296,19 @@ export const GET_PRODUCT_HANDLES = /* GraphQL */ `
   }
 `;
 
+/**
+ * Collections for navigation and the /collections index.
+ *
+ * Two extra connections ride along, both to answer questions the collection
+ * record alone can't:
+ *
+ *   - `previews` — a few product covers. None of the store's collections has
+ *     an image set in admin, so without these every tile was a letter on a
+ *     black square. The posters themselves are the better cover anyway.
+ *   - `counted` — ids only, to know how many products the storefront can
+ *     actually see. A collection whose products are all archived still comes
+ *     back from Shopify, and linking to it leads to an empty page.
+ */
 export const GET_COLLECTIONS = [
   IMAGE,
   /* GraphQL */ `
@@ -252,6 +321,18 @@ export const GET_COLLECTIONS = [
           description
           image {
             ...Image
+          }
+          previews: products(first: 4) {
+            nodes {
+              featuredImage {
+                ...Image
+              }
+            }
+          }
+          counted: products(first: 250) {
+            nodes {
+              id
+            }
           }
         }
       }

@@ -18,7 +18,12 @@ export function rememberClaimedDiscount(code = SUBSCRIBE_DISCOUNT_CODE) {
   }
 }
 
-function claimedDiscount() {
+/**
+ * The code this visitor earned, if any. Exported for the Fastrr path, which
+ * has no checkout URL to hang a `discount` param on and so puts the code on
+ * the cart instead — see createFastrrCheckout.
+ */
+export function claimedDiscount() {
   try {
     return localStorage.getItem(CLAIMED_CODE_KEY);
   } catch {
