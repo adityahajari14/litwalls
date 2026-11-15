@@ -14,6 +14,7 @@ import {
 import {
   CUSTOM_TAG,
   SPLIT_TAG,
+  SPLIT_POSTER_TAG,
   isCustomProduct,
   isSplitProduct,
 } from "@/lib/product";
@@ -299,9 +300,11 @@ export async function getCustomProducts(first = 8): Promise<Product[]> {
  * appears under "Design your own". Empty until such products are published.
  */
 export async function getSplitProducts(first = 8): Promise<Product[]> {
+  // Both markers (see isSplitProduct). `tag:split` also pulls in the ordinary
+  // posters with a plain "Split" tag, hence the roomier limit and the re-check.
   const products = await getProducts({
-    first: TAG_SEARCH_LIMIT,
-    query: `tag:${SPLIT_TAG}`,
+    first: 100,
+    query: `tag:${SPLIT_TAG} OR tag:'${SPLIT_POSTER_TAG}'`,
   });
   return products
     .filter((product) => isSplitProduct(product) && !isCustomProduct(product))

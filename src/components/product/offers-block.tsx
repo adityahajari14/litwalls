@@ -10,7 +10,7 @@ import {
   SPLIT_BUNDLES,
   type Bundle,
 } from "@/lib/offers";
-import { SPLIT_TAG } from "@/lib/product";
+import { isSplitProduct } from "@/lib/product";
 import type { Product } from "@/lib/shopify/types";
 
 /**
@@ -26,7 +26,7 @@ import type { Product } from "@/lib/shopify/types";
  * counted in sets, not panels.
  */
 export function OffersBlock({ product }: { product: Product }) {
-  const isSplit = product.tags.includes(SPLIT_TAG);
+  const isSplit = isSplitProduct(product);
   const bundles = isSplit ? SPLIT_BUNDLES : SINGLE_BUNDLES;
   const unit = isSplit ? "set" : "poster";
 

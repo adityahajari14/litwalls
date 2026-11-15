@@ -373,18 +373,21 @@ Notes that cost an hour to rediscover:
   of the two). The single ladder is scoped to every poster collection plus
   `bundle-custom-posters`, an unpublished collection holding the custom
   poster, which is how custom posters earn the same bundles; the split ladder
-  to the products tagged exactly `split`.
+  to the products tagged exactly `Split Poster` (the catalogue's split-in-3
+  sets) or `split` (the custom split poster).
 - **Tag searches ignore case.** `tag:split` also matches ordinary posters
   with a descriptive "Split" tag, and `tag:custom` matches "Custom". The
-  lowercase tags are the markers; `isCustomProduct` / `isSplitProduct` in
-  `src/lib/product.ts` re-check every tag search exactly.
+  markers are `Split Poster` / `split` and the lowercase `custom`;
+  `isCustomProduct` / `isSplitProduct` in `src/lib/product.ts` re-check every
+  tag search exactly. A plain "Split" tag alone is not a marker.
 - **Set `combinesWith`** on every discount: tick *order discounts* on the
   bundles, and *product discounts* on `LIT100`. Without this LIT100 will not
   stack with a bundle. All live codes already have this set correctly.
 - **The gift must be an automatic discount, not a code** — the storefront adds
   the gift line itself and expects Shopify to zero it with no code involved.
-- The split ladder needs products tagged `split`. Today that is only the
-  custom split poster.
+- The split ladder needs products tagged `Split Poster` or `split`. Re-run
+  `scripts/sync-discounts.mjs` after tagging new split posters — the codes are
+  scoped to a product list, so a newly tagged product is not covered until then.
 
 ### Why LIT100 is suggested, not applied
 

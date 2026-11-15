@@ -27,6 +27,14 @@ export const CUSTOM_TAG = "custom";
 export const SPLIT_TAG = "split";
 
 /**
+ * The tag the catalogue's ready-made split-in-3 posters carry (₹349 / ₹399 /
+ * ₹449 — the split price list), alongside a descriptive "Split". A plain
+ * "Split" tag on its own is NOT a marker: ordinary ₹79 posters carry it for a
+ * split composition and are sold as single posters.
+ */
+export const SPLIT_POSTER_TAG = "Split Poster";
+
+/**
  * Whether a product carries one of the marker tags above — compared exactly,
  * case and all, and that is deliberate.
  *
@@ -43,7 +51,11 @@ export function isCustomProduct(product: { tags?: string[] }): boolean {
 }
 
 export function isSplitProduct(product: { tags?: string[] }): boolean {
-  return product.tags?.includes(SPLIT_TAG) ?? false;
+  return (
+    (product.tags?.includes(SPLIT_TAG) ||
+      product.tags?.includes(SPLIT_POSTER_TAG)) ??
+    false
+  );
 }
 
 /** Section tags the catalogue is organised by, richest label first. */

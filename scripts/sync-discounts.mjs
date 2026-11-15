@@ -24,7 +24,7 @@
  *      its own; it is never published to a sales channel, so shoppers never
  *      see it.
  *   2. Split-set bundles (SPLITBUY1GET2FREE …) — scoped to the products tagged
- *      exactly `split`. They were scoped to the ordinary poster collections,
+ *      exactly `Split Poster` or `split`. They were scoped to the ordinary poster collections,
  *      which made SPLITBUY1GET2FREE a "buy 1 poster, get 2 free" code for
  *      anyone who typed it.
  *   3. The free gift — an AUTOMATIC buy-X-get-Y: spend the gift threshold, get
@@ -149,7 +149,7 @@ const state = await admin(`{
   collections(first: 100) {
     nodes { id handle title products(first: 50) { nodes { id handle } } }
   }
-  split: products(first: 100, query: "tag:split") { nodes { id handle tags status } }
+  split: products(first: 250, query: "tag:split OR tag:'Split Poster'") { nodes { id handle tags status } }
   discountNodes(first: 100) {
     nodes {
       id
@@ -203,10 +203,14 @@ const customPosters = offers.customPosterHandles.length
     )
   : [];
 
-// Shopify's tag search ignores case, and ordinary posters carry a descriptive
-// "Split" tag. Only the exact lowercase marker means a split-in-3 set.
+// Shopify's tag search ignores case, and ordinary ₹79 posters carry a
+// descriptive "Split" tag. A split-in-3 set is marked by the exact "Split
+// Poster" tag (the catalogue's) or the lowercase "split" (the custom one) —
+// the same test as isSplitProduct in src/lib/product.ts.
 const splitProducts = state.split.nodes.filter(
-  (product) => product.tags.includes("split") && product.status === "ACTIVE",
+  (product) =>
+    (product.tags.includes("split") || product.tags.includes("Split Poster")) &&
+    product.status === "ACTIVE",
 );
 
 const byCode = new Map();
@@ -396,7 +400,7 @@ for (const bundle of offers.single) {
 
 console.log("\nSplit-set bundles");
 if (splitProducts.length === 0) {
-  console.log("  ✗ No active product is tagged exactly `split` — nothing to scope these to.");
+  console.log("  ✗ No active product is tagged `Split Poster` or `split` — nothing to scope these to.");
 } else {
   const splitLabel = `products: ${splitProducts.map((p) => p.handle).sort().join(", ")}`;
   for (const bundle of offers.split) {
