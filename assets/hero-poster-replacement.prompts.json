@@ -1,0 +1,33 @@
+{
+  "generator": "Built-in image_gen tool, edit mode",
+  "excludedProductHandles": [
+    "naruto-07-anime-posters"
+  ],
+  "replacementProduct": {
+    "handle": "starry-night-cat-01-anime-posters",
+    "reference": "assets/hero-product-references/starry-night-cat-01-anime-posters.jpg"
+  },
+  "usage": "Remove the user-excluded Naruto group poster from all current desktop/mobile hero and bundle banners while preserving category variety.",
+  "images": [
+    {
+      "id": "desktop",
+      "prompt": "Use case: compositing. Image 1 is the existing LANDSCAPE hero photograph to edit. Image 2 is an actual store product mockup of the Starry Night Cat poster. Replace ONLY the LEFTMOST orange anime group poster on the wall of Image 1 with the exact portrait art from the printed rectangle in Image 2: one seated black cat with large pale yellow eyes in front of swirling blue Starry Night brushstrokes and yellow stars. Copy the actual artwork layout, proportions, colours and details faithfully; do not copy Image 2's beige room, furniture or computer. Remove the orange group artwork completely. Keep Image 1's MIDDLE Haas F1 car poster and RIGHT green musician poster entirely unchanged. Preserve the exact warm charcoal room, lighting, furniture, turntable, orange chair, plant, framing and dark empty left area for website copy. Keep the original left poster's physical dimensions and matte paper edges and shadows. No Naruto artwork anywhere in the result. No new text, watermark or UI. One edited wide landscape photograph.",
+      "references": [
+        "public/brand/hero-posters-v4.webp",
+        "assets/hero-product-references/starry-night-cat-01-anime-posters.jpg"
+      ],
+      "source": "C:/Users/adity/.codex/generated_images/01a1e543-6ed1-76a2-8623-58bf485b3103/exec-f37591bd-3a1d-479d-ab4f-233fa2f07c39.png",
+      "destination": "public/brand/hero-posters-v5.webp"
+    },
+    {
+      "id": "mobile",
+      "prompt": "Use case: compositing. Image 1 is the existing PORTRAIT 2:3 phone hero photograph to edit. Image 2 is the actual Starry Night Cat product mockup. Change ONLY the LEFTMOST orange anime group poster in Image 1 to the exact portrait artwork extracted from the printed rectangle of Image 2: one seated black cat, large pale yellow eyes, swirling blue Starry Night brushstrokes and yellow stars. Preserve the actual product art layout, colours, orientation and detail. Do not copy the beige room or computer from the product reference. Completely remove the old orange group artwork. Keep the MIDDLE Haas F1 racing car poster and RIGHT green musician poster unchanged. Keep all lighting, room, cabinet, turntable, chair, framing, central upper-half subjects and especially the uncluttered dark lower half for mobile copy unchanged. Preserve the existing paper sizes, edges and shadows. No Naruto artwork anywhere. No new text, watermarks or interface. Output one edited portrait 2:3 mobile image.",
+      "references": [
+        "public/brand/hero-posters-mobile-v2.webp",
+        "assets/hero-product-references/starry-night-cat-01-anime-posters.jpg"
+      ],
+      "source": "C:/Users/adity/.codex/generated_images/01a1e543-6ed1-76a2-8623-58bf485b3103/exec-9b7c96a6-d7d3-43e7-9dd4-02cd89df72d1.png",
+      "destination": "public/brand/hero-posters-mobile-v3.webp"
+    }
+  ]
+}

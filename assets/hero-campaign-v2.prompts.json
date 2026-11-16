@@ -1,0 +1,24 @@
+{
+  "generator": "Built-in image_gen tool",
+  "usage": "Decorative campaign imagery and room inspiration; not photographs of specific catalogue products.",
+  "images": [
+    {
+      "id": "posters",
+      "prompt": "Use case: ads-marketing. Create one professional editorial interior photograph for a premium poster store website hero, wide landscape 16:9 composition. A beautifully styled warm contemporary apartment listening corner with charcoal plaster walls, walnut low sideboard, record player, a few vinyl records, a burnt orange sculptural lounge chair and a small leafy plant. Three unframed matte paper art posters hung naturally on the RIGHT wall: bold orange abstract sun artwork, a warm monochrome ocean photograph, and minimalist geometric black cream art. Natural tactile paper with visible edges and tiny realistic shadows, NOT thick frames. Warm late afternoon sunlight from upper right, cinematic but realistic architectural magazine quality, refined warm charcoal and cream palette with small burnt orange accents. LEFT 42 percent is quiet deep charcoal wall with subtle shadows, empty space for website text added in code later. The poster arrangement and furniture concentrated in RIGHT 55 percent, fully visible with breathing room. Shot straight on with carefully corrected architectural perspective, exquisite material textures, tasteful lived-in detail. No text, no typography, no letters, no logos, no watermark, no UI, no people. This is aspirational room inspiration.",
+      "source": "C:/Users/adity/.codex/generated_images/01a1e543-6ed1-76a2-8623-58bf485b3103/exec-8ede60b6-0b6d-4bf4-a31e-514fdf8b9a73.png",
+      "destination": "public/brand/hero-posters-v2.webp"
+    },
+    {
+      "id": "bundles",
+      "prompt": "Use case: ads-marketing. Create one exceptionally polished photographic campaign image for a premium poster store's bundle promotion. Wide landscape 16:9 composition, professional creative studio product photography. Seven distinct unframed rectangular matte art prints arranged in a natural overlapping and gently fanned composition on a warm taupe stone studio surface, concentrated in the RIGHT 55 percent of the canvas. Prints are high-quality thick matte paper with convincing physical paper edges and soft real contact shadows. Original art: orange sun over cream dunes, monochrome architectural stairs, blue-grey ocean wave, minimalist bold dark botanical silhouette, abstract terracotta geometric blocks, muted alpine mountain photograph, orange and charcoal geometric composition. Elegant controlled angular sunlight from upper right creates dimensional shadows. Background transitions to very dark warm charcoal on LEFT 43 percent with no objects, quiet negative space for website headline added later. Restrained palette of charcoal, warm cream, burnt orange with subtle blue grey. Luxurious independent design store editorial art direction. Detail-rich print texture, natural physical arrangement, no levitating objects. No text, no letters, no logos, no watermark, no frames, no people, no user interface.",
+      "source": "C:/Users/adity/.codex/generated_images/01a1e543-6ed1-76a2-8623-58bf485b3103/exec-d27dcef4-b15f-4eb5-b043-ae5cb480de5b.png",
+      "destination": "public/brand/hero-bundles-v2.webp"
+    },
+    {
+      "id": "custom",
+      "prompt": "Use case: ads-marketing. Create one professional editorial lifestyle photograph for a custom photo print studio website hero. Wide landscape 16:9 composition. Intimate creative work desk against warm charcoal plaster wall. On RIGHT 55 percent: walnut desktop, vintage compact silver analog camera, cream ceramic coffee cup, small sculptural orange desk lamp. Several beautiful white-border matte photographic prints casually placed on desk and pinned on wall, original cinematic photographs of dramatic alpine mountains, an ocean sunset and green nature, no people. One larger unframed orange sunset matte print leans on wall, looks like real physical thick paper. Warm afternoon sunlight from right, carefully styled premium design magazine photography, rich realistic walnut and tactile paper textures, restrained charcoal, cream and burnt orange palette. LEFT 43 percent is empty very dark charcoal wall with soft atmospheric shadows, uncluttered negative space for website headline added later. Right side photographic details composed with breathing space and visible prints. No text, no letters, no logos, no watermark, no UI, no people, no thick picture frames.",
+      "source": "C:/Users/adity/.codex/generated_images/01a1e543-6ed1-76a2-8623-58bf485b3103/exec-e3905e75-b4bb-4cf2-a762-4f351ee70c8a.png",
+      "destination": "public/brand/hero-custom-v2.webp"
+    }
+  ]
+}

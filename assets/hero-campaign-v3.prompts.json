@@ -1,0 +1,47 @@
+﻿{
+  "generator": "Built-in image_gen tool",
+  "usage": "Main and custom campaign photographs edited with live-catalogue artwork references. The bundle banner renders unmodified catalogue product images in CSS over a generated studio background.",
+  "catalogueReferences": "assets/hero-product-references/products.json",
+  "images": [
+    {
+      "id": "posters",
+      "prompt": "Use case: compositing. Image 1 is the warm charcoal apartment photograph to edit. Images 2, 3, 4 are product-art references in catalogue mockups. Keep Image 1's room, light, furniture, record player, orange chair, plant, wide composition and empty dark left side. Replace only the three wall poster artworks. Put the orange Naruto group artwork from Image 2 on the left poster, the blue Mount Fuji Japanese street artwork from Image 3 on the middle poster, and the green seated musician artwork from Image 4 on the right poster. Use only the printed rectangle from each reference, excluding its surrounding beige wall and desk. Preserve each artwork's original orientation, arrangement of subjects, colours, detail and printed lettering. Do not redraw or rearrange the art. The posters should remain unframed matte paper with tiny shadows as in the original room. Keep all three fully visible with ample space above them. The left 42 percent must stay dark and empty for website text. Professional photorealistic interior campaign image, wide landscape composition. Do not add advertising text, watermark or interface.",
+      "references": [
+        "public/brand/hero-posters-v2.webp",
+        "assets/hero-product-references/naruto-07-anime-posters.jpg",
+        "assets/hero-product-references/mount-fuji-01-anime-posters.jpg",
+        "assets/hero-product-references/travis-scott-03-music-posters-2.jpg"
+      ],
+      "destination": "public/brand/hero-posters-v3.webp"
+    },
+    {
+      "id": "custom",
+      "prompt": "Use case: compositing. Image 1 is the existing warm creative workspace hero photograph to edit. Images 2, 3, 4 are exact artwork references from actual store products in beige-wall mockups. Preserve the walnut desk, analog camera, orange lamp, coffee cup, charcoal wall, warm sunshine and broad dark LEFT 43 percent negative space in Image 1. Replace ALL the generic mountain, forest and orange sunset images on the wall and desk with actual poster artwork extracted from the reference images: Image 2 the vertical blue Japanese street with Mount Fuji, Image 3 orange Naruto and friends portrait, Image 4 Travis Scott seated against green wall. Use these same three exact designs at different physical print sizes, as a natural printing-studio workbench. Make the large leaning print a PORTRAIT Mount Fuji print, the upper wall print a PORTRAIT Naruto group print, a smaller pinned print the PORTRAIT Travis Scott design, and the small desk prints repeat these actual designs. Do not invent any new artwork. Copy only artwork rectangles from the mockup references, not mockup beige walls, desks or computers. Preserve exact composition and colours, faces, original lettering and artwork proportions; do not redesign or restyle the art. Real tactile matte paper, a discreet narrow white border on smaller prints, accurate natural perspective and paper shadows. Keep all important prints inside right 55 percent with breathing space for responsive crop. Premium photorealistic editorial studio photograph. No new text, no watermark, no website UI, no people in the room. Output one wide landscape image.",
+      "references": [
+        "public/brand/hero-custom-v2.webp",
+        "assets/hero-product-references/mount-fuji-01-anime-posters.jpg",
+        "assets/hero-product-references/naruto-07-anime-posters.jpg",
+        "assets/hero-product-references/travis-scott-03-music-posters-2.jpg"
+      ],
+      "destination": "public/brand/hero-custom-v3.webp"
+    },
+    {
+      "id": "bundle-studio",
+      "prompt": "Use case: ads-marketing. Asset type: empty photographic background for a poster shop hero. One wide landscape photograph of a warm taupe stone studio surface, viewed straight on as a very shallow angled flat lay. Soft angled afternoon sunlight from upper right, subtle tactile natural stone and warm soft shadows. The right 60 percent is a clean warm pale taupe surface, entirely empty, ready for real product imagery to be laid out by the website. The left 40 percent gradually becomes deep warm charcoal, empty negative space for white headline text. A premium independent design shop campaign mood, understated and refined, realistic texture, charcoal, warm cream and a hint of warm amber light. No paper sheets, no posters, no artwork, no objects, no words, no logos, no watermark, no people, no user interface. Output one landscape image, approximately 16:9.",
+      "destination": "public/brand/hero-bundle-studio.webp"
+    }
+  ],
+  "bundleProductImages": {
+    "directory": "public/brand/hero-products",
+    "source": "First seven entries in assets/hero-product-references/products.json",
+    "rendering": "CSS crops each catalogue mockup to its printed rectangle and arranges the seven images over the studio background. The printed artwork is not generated or redrawn.",
+    "crop": {
+      "sourceWidth": 1000,
+      "sourceHeight": 1048,
+      "left": 343,
+      "top": 129,
+      "width": 296,
+      "height": 420
+    }
+  }
+}

@@ -72,6 +72,7 @@ export default async function Home() {
 
       {splitProducts.length > 0 ? (
         <ProductGridSection
+          id="split-posters"
           title="Split posters"
           subtitle="One image, split across three panels, for a larger wall display."
           href="/products"

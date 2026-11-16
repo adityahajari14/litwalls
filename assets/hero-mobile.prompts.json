@@ -1,0 +1,33 @@
+{
+  "generator": "Built-in image_gen tool",
+  "usage": "Separate 2:3 portrait mobile hero compositions. Bundle artwork is rendered from the unchanged catalogue product images over the generated portrait background.",
+  "images": [
+    {
+      "id": "posters",
+      "prompt": "Use case: ads-marketing. Create a NEW mobile-specific portrait campaign photograph based on the reference image. Output PORTRAIT 2:3 aspect ratio, approximately 1024x1536, not a landscape crop. Preserve the reference's exact three actual catalogue poster artworks: orange Naruto group in its original sideways layout, the blue Mount Fuji Japanese street photograph, and the green seated musician print. Recompose the entire listening corner for a narrow phone: all THREE unframed matte paper posters are in a carefully balanced group in the UPPER 40 percent of the portrait, all fully visible with 15 percent side margins and 6 percent top margin. Keep original poster designs, orientations, colours and lettering unchanged. A narrow walnut sideboard with turntable below the art, warm light, small plant and a subtle edge of orange chair, restrained and realistic, match the original room's charcoal, walnut and orange mood. The photographic scene occupies the UPPER 48 percent; the BOTTOM 52 percent is very dark warm charcoal with a soft natural fade and only faint tactile wall texture, clean negative space for website copy added in HTML. This lower half must contain NO furniture, floor, art, objects, typography or other detail. The upper scene should feel like a beautifully styled premium apartment, rich realistic material textures and warm editorial sunlight. Keep every important poster inside the central 70 percent width for safe phone crops. No new artworks, no advertising text, no UI, no watermark. One polished portrait banner image.",
+      "references": [
+        "public/brand/hero-posters-v3.webp"
+      ],
+      "source": "C:/Users/adity/.codex/generated_images/01a1e543-6ed1-76a2-8623-58bf485b3103/exec-8249b9a7-dbc0-4167-9a0c-ac3c3e48bac7.png",
+      "destination": "public/brand/hero-posters-mobile.webp"
+    },
+    {
+      "id": "custom",
+      "prompt": "Use case: ads-marketing. Create a NEW mobile-specific portrait creative-workspace campaign photograph based on the reference. Output PORTRAIT 2:3 aspect ratio, approximately 1024x1536, composed specifically for a narrow mobile hero, not a crop of the landscape. Preserve the reference's actual Mount Fuji Japanese street poster, orange Naruto group poster, and green seated musician print. Arrange the art and workspace centrally in the UPPER 45 percent: a compact walnut desk, one large leaning portrait Mount Fuji print, the smaller Naruto print pinned just above it, a small green print beside it, a compact silver analog camera and a tasteful orange lamp partly visible. Keep all important prints within the central 70 percent of the width, with 15 percent side margins and room above the top artwork. Match the existing warm charcoal, walnut, cream paper and orange palette, natural sunlight, realistic matte print edges and subtle paper shadows. Preserve the catalogue artwork designs and proportions, no replacement or invented artwork. The BOTTOM 52 percent of the whole portrait is uncluttered deep warm charcoal, almost black, with a soft natural fade from the photograph and faint plaster texture, deliberately empty for readable website copy added separately. Absolutely no desk, furniture, floor, prints or objects in that lower half. Premium photographic editorial art direction, exquisite materials, warm and authentic. No words added, no promotional copy, no watermark, no UI. One coherent polished portrait banner image.",
+      "references": [
+        "public/brand/hero-custom-v3.webp"
+      ],
+      "source": "C:/Users/adity/.codex/generated_images/01a1e543-6ed1-76a2-8623-58bf485b3103/exec-fce5c49a-43bb-4014-8e8b-85f89849bbd2.png",
+      "destination": "public/brand/hero-custom-mobile.webp"
+    },
+    {
+      "id": "bundles",
+      "prompt": "Use case: ads-marketing. Create a NEW portrait 2:3 mobile campaign BACKGROUND, approximately 1024x1536, using this reference only for warm taupe stone texture and editorial light. Recompose for a phone: UPPER 48 percent is a beautiful warm taupe stone studio surface with subtle texture, softly lit from upper right, suitable as a backdrop for real poster images placed separately by the website. The upper stone area must be completely empty with uniform, calm composition. From 42 to 55 percent height, fade naturally into deep warm charcoal. The BOTTOM 48 percent is nearly black warm charcoal with very subtle texture and no details, quiet negative space for website headline and buttons. This is a vertical composition and must not preserve the original left-to-right gradient: the light area is ABOVE and the dark area is BELOW. Beautiful realistic stone material and controlled photographic sunlight, premium design-store campaign aesthetic, restrained and professional. No posters, no sheets of paper, no artwork, no objects, no furniture, no words, no logos, no people, no interface or watermark. One polished portrait studio background.",
+      "references": [
+        "public/brand/hero-bundle-studio.webp"
+      ],
+      "source": "C:/Users/adity/.codex/generated_images/01a1e543-6ed1-76a2-8623-58bf485b3103/exec-96d8a69d-6696-442b-a4ee-c11feb39018b.png",
+      "destination": "public/brand/hero-bundles-mobile.webp"
+    }
+  ]
+}

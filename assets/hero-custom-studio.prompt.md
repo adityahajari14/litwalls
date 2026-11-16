@@ -1,0 +1,7 @@
+# Custom prints carousel image
+
+Generated with the built-in imagegen tool. Website asset: `public/brand/hero-custom-studio.webp`.
+
+## Prompt
+
+Use case: photorealistic-natural. Asset type: wide 1792x1024 hero carousel background for Litwalls custom photo and poster prints. Cinematic editorial interior photograph with the same warm charcoal, walnut and burnt orange palette as an upscale sunlit listening corner. LEFT 48 percent is a very dark uncluttered warm charcoal textured wall, deliberate negative space for white website copy added separately. On the RIGHT side a walnut creative work desk against a warm taupe wall, several small matte white-border photo prints resting on the desk and casually pinned to the wall: original cinematic photographs of mountains, ocean waves, an orange sunset, no people. One larger unframed matte art print leaning on the desk. A cream ceramic coffee cup, an analog camera, a little orange desk lamp, subtle plant at far right. All printed pictures form one natural coherent creative workspace, not a floating collage. Warm late afternoon sun from upper right, shadows, real paper texture, atmospheric magazine photography, premium natural composition, straight-on view. Most subject detail inside right 45 percent and central vertical 75 percent so it can crop responsively. No words, no logos, no watermarks, no UI. Scene is illustrative room inspiration, not an exact product photo.

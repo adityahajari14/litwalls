@@ -1,0 +1,30 @@
+[
+  {
+    "handle": "mclaren-senna-gtr-02-cars-posters",
+    "title": "McLaren Senna GTR #02 | Cars Posters",
+    "price": "349.0",
+    "source": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mvvhsk1x-7eiser-mockups-mockup-1.jpg?v=1793445684",
+    "file": "assets/hero-new-slides-references/mclaren-senna-gtr-02-cars-posters.jpg"
+  },
+  {
+    "handle": "ferrari-f40-02-cars-posters-1",
+    "title": "Ferrari F40 #02 | Cars Posters",
+    "price": "349.0",
+    "source": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mvvhsj8t-cjxrp8-mockups-mockup-1.jpg?v=1793445236",
+    "file": "assets/hero-new-slides-references/ferrari-f40-02-cars-posters-1.jpg"
+  },
+  {
+    "handle": "custom-poster",
+    "title": "Custom Poster",
+    "price": "79.0",
+    "source": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/custom1.jpg?v=1787491230",
+    "file": "assets/hero-new-slides-references/custom-poster.jpg"
+  },
+  {
+    "handle": "custom-split-poster",
+    "title": "Custom Split Poster",
+    "price": "349.0",
+    "source": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/split2.png?v=1787491243",
+    "file": "assets/hero-new-slides-references/custom-split-poster.jpg"
+  }
+]

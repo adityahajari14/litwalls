@@ -1,0 +1,9 @@
+# Hero interior image
+
+Generated with the built-in imagegen tool. Website asset: `public/brand/hero-living-space.webp`.
+
+The scene is decorative room inspiration, not a photograph of a specific catalogue product.
+
+## Prompt
+
+Use case: photorealistic-natural. Asset type: wide website hero background for Litwalls, a premium yet accessible Indian poster print store. Create one exceptionally beautiful cinematic editorial photograph of a contemporary young creative's apartment listening corner, landscape 1792 by 1024 composition. The LEFT 46 percent is an uncluttered deep warm charcoal plaster wall with soft shadows, deliberately dark negative space for white website copy that will be added later. The RIGHT half is a tactile warmly sunlit living space: a low dark walnut sideboard with a turntable and a few leaning vinyl records, one sculptural burnt-orange lounge chair partly visible at lower right, a leafy plant at far right, light wood floor. On the right wall above the sideboard hangs ONE unframed matte paper poster of original abstract geometric artwork, vibrant burnt orange circle, cream lines and charcoal shapes, with a slight natural paper edge shadow. Poster is centered around 73 percent image width and 40 percent height and entirely visible. A striking diagonal shaft of late-afternoon sunlight from upper right illuminates the artwork and furniture. The wall moves from dark charcoal on the left to warm taupe on the right. Sophisticated architectural magazine photography, natural film grain, realistic materials, warm restrained palette, carefully composed and authentic. Straight on camera, plenty of breathing room, no people, no typography, no logos, no watermarks, no collage, no floating graphics, no multiple poster arrangement. This is room inspiration rather than a catalogue photograph.

@@ -1,0 +1,58 @@
+{
+  "generator": "Built-in image_gen tool",
+  "usage": "Main poster scenes feature Anime, Cars/F1 and Music products. The photo-print slide promotes the physical retro and mini pocket formats using illustrative customer-photo examples.",
+  "productReferences": "assets/hero-refresh-references/products.json",
+  "bundleCategories": [
+    "Anime",
+    "Cars",
+    "F1",
+    "Music",
+    "Marvel",
+    "DC",
+    "Movies"
+  ],
+  "images": [
+    {
+      "id": "posters-desktop",
+      "prompt": "Use case: compositing. Image 1 is the existing landscape hero photograph to EDIT. Image 2 is an actual store product photo of a Haas Formula 1 racing car poster. Change ONLY the MIDDLE wall poster in Image 1: replace its blue Mount Fuji street artwork with the exact vertical Haas F1 car artwork extracted from the print rectangle in Image 2. Do not copy Image 2's wall, plants or furniture. Preserve the original car composition with a rear view of the black red and white Formula 1 car on a race circuit with palm trees, true product colours and original markings. Keep the left Naruto anime poster and the right green musician poster entirely unchanged. This makes the three actual products represent Anime, Cars/F1 and Music. Keep the room, sunlight, framing, walnut cabinet, turntable, warm charcoal wall, orange chair, plants, realistic matte paper edges and shadows, and dark empty left 42 percent exactly as in Image 1. Do not add any other art, advertising text, watermark or UI. One professional wide landscape campaign photograph, same proportions as Image 1.",
+      "references": [
+        "public/brand/hero-posters-v3.webp",
+        "assets/hero-refresh-references/haas-f1-team-01-f1-posters.jpg"
+      ],
+      "source": "C:/Users/adity/.codex/generated_images/01a1e543-6ed1-76a2-8623-58bf485b3103/exec-4869eb8e-160f-40a3-96f3-507a5dabda1a.png",
+      "destination": "public/brand/hero-posters-v4.webp"
+    },
+    {
+      "id": "posters-mobile",
+      "prompt": "Use case: compositing. Image 1 is the existing PORTRAIT 2:3 mobile hero to EDIT. Image 2 is an actual store product photo of a Haas Formula 1 racing car poster. Change ONLY the MIDDLE poster on the wall in Image 1: replace its blue Mount Fuji artwork with the exact portrait Haas F1 car artwork extracted from the paper rectangle in Image 2. Exclude the reference's surrounding wall and furniture. Preserve the actual rear-view black red and white Formula 1 car on the sunny race circuit with palm trees and true artwork layout. Keep the original left Naruto anime print and right green musician print unchanged, representing Anime, Cars/F1 and Music. Keep ALL other image details, mobile portrait 2:3 framing, upper-half central artwork, generous side margins, warm sunlight, record player and cabinet, orange chair, and especially the entirely dark uncluttered BOTTOM 48 percent for mobile HTML copy unchanged. No invented product art, no advertising text, no watermark, no UI. Output one portrait mobile banner.",
+      "references": [
+        "public/brand/hero-posters-mobile.webp",
+        "assets/hero-refresh-references/haas-f1-team-01-f1-posters.jpg"
+      ],
+      "source": "C:/Users/adity/.codex/generated_images/01a1e543-6ed1-76a2-8623-58bf485b3103/exec-91f389ff-8d7c-4538-ac30-ac3cc114f3ab.png",
+      "destination": "public/brand/hero-posters-mobile-v2.webp"
+    },
+    {
+      "id": "photo-prints-desktop",
+      "prompt": "Use case: ads-marketing. Create a premium landscape website campaign photograph promoting RETRO PHOTO PRINTS and MINI POCKET PHOTO PRINTS, using Image 1 for the warm charcoal, walnut, golden afternoon light and orange desk-lamp art direction only. Images 2 and 3 are REAL PRODUCT FORMAT references: Image 2 shows retro prints with a generous white border and deeper bottom border; Image 3 shows the smaller wallet-sized bordered mini pocket prints. Replace every large poster in Image 1 with SMALL physical photo prints. Scene on the RIGHT 55 percent: walnut desk with two lovely loosely fanned groups of tactile matte paper photos, one group of 3.5 by 4.2 inch retro instant-style prints and one group of clearly SMALLER 2.5 by 3.5 inch mini pocket prints. Original illustrative photo content of a beach sunset, a little cat, a scenic mountain, a ferris wheel and a road trip, with warm natural photography colours. A short thread behind the desk holds three small retro prints with tiny wooden pegs, not big framed wall art. A compact analog camera and cream ceramic cup give a clear size reference, small orange desk lamp at far right. Prints should be realistically small next to the camera and cup: retro prints about palm-sized, mini prints wallet-sized. A small brown wallet has one tiny photo peeking out, very subtle. Keep LEFT 44 percent entirely dark uncluttered warm charcoal for HTML copy. Photorealistic professional creative studio photography, beautiful natural paper edge shadows and real scale. No albums, no large posters, no anime or celebrity art, no large frames, no printed advertising words or placeholder text, no watermark, no website interface. One coherent wide landscape photograph.",
+      "references": [
+        "public/brand/hero-custom-v3.webp",
+        "assets/hero-refresh-references/retro-detail-2.jpg",
+        "assets/hero-refresh-references/mini-detail-1.jpg"
+      ],
+      "source": "C:/Users/adity/.codex/generated_images/01a1e543-6ed1-76a2-8623-58bf485b3103/exec-e6e71f86-5c61-4569-b600-dd24733b1394.png",
+      "destination": "public/brand/hero-photo-prints.webp"
+    },
+    {
+      "id": "photo-prints-mobile",
+      "prompt": "Use case: ads-marketing. Create a NEW PORTRAIT 2:3 mobile hero photograph for RETRO PHOTO PRINTS and MINI POCKET PHOTO PRINTS. Image 1 is a mood and mobile composition reference: retain warm charcoal, walnut, golden sunlight, orange lamp, central UPPER HALF scene, and dark empty LOWER HALF. Images 2 and 3 are actual physical print format references: larger retro instant-style prints with white borders and deeper bottom border, and noticeably smaller wallet-sized mini pocket prints. All imagery must now be SMALL personal photo prints, no big wall posters. In UPPER 48 percent of the portrait, a compact walnut desk with two loose overlapping groups of photo prints: several palm-sized 3.5x4.2 inch retro prints and several 2.5x3.5 inch mini prints. Natural illustrated customer-photo examples: sunset sea, cat on a road trip, mountain view, ferris wheel. A compact analog camera, cream cup and edge of orange lamp give scale; the prints are small in relation to those real objects. Three little retro prints pegged to a short thread above the desk, kept fully inside the central 70 percent width with generous side margins. Realistic matte paper, white borders, tiny natural edge shadows, exquisite editorial product photography. The LOWER 48 percent is almost black warm charcoal, deliberately empty and gently fading from the desk scene, for readable mobile HTML title and buttons. No furniture, objects or printed art in that lower half. No large posters, no anime or celebrity poster artwork, no albums, no big frames, no advertising text or placeholder words, no UI or watermark. One beautiful portrait phone campaign image.",
+      "references": [
+        "public/brand/hero-custom-mobile.webp",
+        "assets/hero-refresh-references/retro-detail-2.jpg",
+        "assets/hero-refresh-references/mini-detail-1.jpg"
+      ],
+      "source": "C:/Users/adity/.codex/generated_images/01a1e543-6ed1-76a2-8623-58bf485b3103/exec-e4e3a6f6-2b3b-4016-a53d-6286633ab74e.png",
+      "destination": "public/brand/hero-photo-prints-mobile.webp"
+    }
+  ]
+}

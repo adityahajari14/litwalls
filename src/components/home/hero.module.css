@@ -1,0 +1,82 @@
+﻿.banner {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  background: var(--color-ink-950);
+}
+
+.copy {
+  position: relative;
+  z-index: 1;
+  width: 56%;
+  padding: 52px 48px;
+}
+
+.visual {
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: 52%;
+}
+
+.image {
+  object-fit: cover;
+  object-position: center 46%;
+}
+
+.visual::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    var(--color-ink-950),
+    rgb(17 16 16 / 0.35) 22%,
+    transparent 52%
+  );
+}
+
+@media (min-width: 1280px) {
+  .copy {
+    padding: 56px 64px;
+  }
+}
+
+@media (max-width: 1023px) {
+  .copy {
+    width: 60%;
+    padding: 40px 32px;
+  }
+}
+
+@media (max-width: 767px) {
+  .copy {
+    width: 100%;
+    padding: 32px 24px 12px;
+  }
+
+  .visual {
+    position: relative;
+    width: 100%;
+    height: 280px;
+  }
+
+  .image {
+    object-position: center 38%;
+  }
+
+  .visual::after {
+    background: linear-gradient(
+      to bottom,
+      var(--color-ink-950),
+      rgb(17 16 16 / 0.25) 28%,
+      transparent 55%
+    );
+  }
+}
+
+@media (max-width: 359px) {
+  .copy {
+    padding-inline: 20px;
+  }
+}

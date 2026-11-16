@@ -1,0 +1,50 @@
+{
+  "generator": "Built-in image_gen tool",
+  "usage": "Two additional hero slides, each with separate desktop and phone compositions. Split artwork is the real McLaren Senna GTR #02 catalogue design. The custom-poster mountain photograph illustrates customer-upload artwork.",
+  "productReferences": "assets/hero-new-slides-references/products.json",
+  "excludedProductHandles": [
+    "naruto-07-anime-posters"
+  ],
+  "images": [
+    {
+      "id": "split-desktop",
+      "prompt": "Use case: compositing. Create a landscape campaign photograph for a THREE-PANEL SPLIT POSTER. Image 1 is a room and lighting reference. Image 2 is the exact real catalogue artwork and three-panel format to feature. Use Image 1's warm charcoal wall, walnut sideboard, warm sunlight, subtle orange chair and refined interior mood, but replace ALL existing posters with ONE continuous panoramic McLaren Senna GTR blue racing-car artwork taken from Image 2, divided across EXACTLY THREE equal tall rectangular matte paper panels. The three equal panels are hung in one straight level row on the RIGHT 55 percent of the image, small even charcoal-wall gaps between them. The blue racing car must line up seamlessly across all three panels, keeping the actual side-view car, blue livery, lettering, original layout, colours and photographic details from Image 2. Exclude its surrounding beige mockup room and computer. Prints are unframed, trimmed edge-to-edge, no white borders, with tiny realistic paper edge shadows. Keep the entire triptych visible and give it plenty of breathing room at top and right. LEFT 43 percent is entirely quiet dark warm charcoal negative space for HTML headline. A clean premium architectural editorial photograph, straight-on view, realistic wood and paper textures. No other posters, no anime or musician prints, no new advertising text, no UI, no watermark. One polished wide landscape hero background, approximately 16:9.",
+      "references": [
+        "public/brand/hero-posters-v5.webp",
+        "assets/hero-new-slides-references/mclaren-senna-gtr-02-cars-posters.jpg"
+      ],
+      "source": "C:/Users/adity/.codex/generated_images/01a1e543-6ed1-76a2-8623-58bf485b3103/exec-b6c0c45e-ec25-4190-9bf8-8c38ecf410e4.png",
+      "destination": "public/brand/hero-split-posters.webp"
+    },
+    {
+      "id": "split-mobile",
+      "prompt": "Use case: compositing. Create a NEW PORTRAIT 2:3 phone hero campaign photograph for a THREE-PANEL SPLIT POSTER. Image 1 supplies the warm charcoal, walnut, orange and sunlight mood and the upper-scene/lower-dark mobile layout. Image 2 supplies the exact real blue McLaren Senna GTR catalogue artwork. In UPPER 43 percent of the portrait, display ONE panoramic blue racing car image divided across EXACTLY THREE equal tall matte paper panels, hung in a perfectly level row with small even charcoal wall gaps. The car lines up seamlessly across all three panels, preserving the actual side-view car, blue livery and original design from Image 2. Copy only the artwork, excluding the beige mockup room and computer. The entire three-panel group must fit centrally within 74 percent of the image width, with generous side margins and 7 percent top margin; do not crop any panel. Unframed, edge-to-edge trimmed paper, no white borders. A low walnut cabinet below, subtle plant and edge of an orange chair, natural late-afternoon sunlight, premium realistic material textures. Remove all other posters. LOWER 50 percent stays entirely dark warm charcoal, a soft natural fade with no objects or detail, for mobile HTML title and button. No Naruto or other anime artwork, no musician poster, no added text, interface or watermark. One beautiful portrait 2:3 mobile campaign image.",
+      "references": [
+        "public/brand/hero-posters-mobile-v3.webp",
+        "assets/hero-new-slides-references/mclaren-senna-gtr-02-cars-posters.jpg"
+      ],
+      "source": "C:/Users/adity/.codex/generated_images/01a1e543-6ed1-76a2-8623-58bf485b3103/exec-3ad3b477-995f-48f7-be29-7e0c09f31bf2.png",
+      "destination": "public/brand/hero-split-posters-mobile.webp"
+    },
+    {
+      "id": "custom-poster-desktop",
+      "prompt": "Use case: ads-marketing. Create a professional landscape campaign photograph for CUSTOM FULL-SIZE POSTERS, using Image 1 only for the warm charcoal, walnut, orange lamp and golden sunlight art direction. Image 2 is a physical product format reference for one full-size matte portrait paper poster with a clean narrow white border. Do NOT reproduce its placeholder words. On the RIGHT 55 percent, a creative walnut desk against a charcoal wall, with ONE large A3-size portrait matte paper poster leaning elegantly against the wall. The poster contains an original beautiful personal travel photograph of a dramatic alpine mountain above a still lake at sunrise, warm orange light with cool blue water, illustrative customer-upload artwork. No lettering in the poster. A compact camera beside the print, a neatly closed sketchbook and one subtle orange desk lamp at far right. The large poster is clearly a full-size wall print, roughly 40 cm tall and about twice the width of the camera, not a mini photo or retro instant print. Thick matte stock, a clean narrow white border, tactile paper edge, realistic shadows. LEFT 44 percent is dark empty charcoal wall for webpage copy, no objects. Sophisticated editorial studio photography, real scale and materials, restrained warm light. No small scattered photo prints, no pegged string, no multiple wall posters, no anime or celebrity artwork, no placeholder words, no promotional text, no watermark or user interface. One wide landscape website hero background, approximately 16:9.",
+      "references": [
+        "public/brand/hero-photo-prints.webp",
+        "assets/hero-new-slides-references/custom-poster.jpg"
+      ],
+      "source": "C:/Users/adity/.codex/generated_images/01a1e543-6ed1-76a2-8623-58bf485b3103/exec-b3089b9c-ae6f-4b9e-82df-0b55f5d6b812.png",
+      "destination": "public/brand/hero-custom-poster.webp"
+    },
+    {
+      "id": "custom-poster-mobile",
+      "prompt": "Use case: ads-marketing. Create a NEW PORTRAIT 2:3 mobile campaign photograph for CUSTOM FULL-SIZE POSTERS. Image 1 supplies only the existing warm charcoal, walnut, orange lamp, sunlight palette and upper-photo/lower-dark phone composition. Image 2 supplies the physical product format: a large portrait matte paper poster with a narrow clean white border. Do NOT reproduce any placeholder words. The UPPER 46 percent shows ONE beautiful A3-sized portrait poster leaning on a compact walnut creative desk, centred safely within the central 70 percent image width. The poster contains an original personal travel photograph of an alpine mountain and a still lake in orange sunrise light, realistic photographic detail and blue water, illustrative customer-upload artwork. It is a full-size wall poster around 40cm tall, not a little retro or pocket print, and should be clearly the main subject. A compact camera beside it, a closed sketchbook, a small orange desk-lamp edge and warm sunshine give realistic physical scale and studio atmosphere. Natural matte paper texture, narrow white border, genuine paper edge shadows, carefully styled premium editorial photography. LOWER 50 percent is empty deep warm charcoal with a gentle natural fade and no furniture or objects, reserved for mobile HTML headline and button. No smaller scattered prints, no clothesline, no anime or celebrity artwork, no placeholder text, no words, no watermark or UI. One polished portrait 2:3 phone hero background.",
+      "references": [
+        "public/brand/hero-photo-prints-mobile.webp",
+        "assets/hero-new-slides-references/custom-poster.jpg"
+      ],
+      "source": "C:/Users/adity/.codex/generated_images/01a1e543-6ed1-76a2-8623-58bf485b3103/exec-b33b05e4-5192-4bbd-818c-75105bf627a4.png",
+      "destination": "public/brand/hero-custom-poster-mobile.webp"
+    }
+  ]
+}
