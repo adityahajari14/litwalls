@@ -1,0 +1,63 @@
+{
+  "generator": "Built-in image_gen tool",
+  "design": "Continuation of the warm charcoal collection-cover series, using published catalogue products.",
+  "assets": [
+    {
+      "handle": "motivational",
+      "output": "public/collections/covers/motivational-v2.webp",
+      "references": [
+        "public/collections/covers/video-games-v2.webp",
+        "assets/collection-cover-refresh-references/bruce-lee-01-motivational-posters.webp",
+        "assets/collection-cover-refresh-references/discipline-01-motivational-posters.webp",
+        "assets/collection-cover-refresh-references/solitude-and-sky-01-motivational-posters.webp"
+      ],
+      "prompt": "Use case: product-mockup. Asset type: one finished landscape 3:2 collection-card cover for the Litwalls poster shop. Input image 1 is a STYLE reference for the existing approved collection covers: match the same overhead studio view, warm charcoal textured matte paper surface, amber light in the top left fading to almost black to the right, narrow ivory paper edges and realistic soft paper shadows. Keep the same premium, restrained photographic presentation. Replace ALL gaming artwork from image 1. The remaining images are actual product mockups: take ONLY the printed poster artwork from them, discard their rooms, walls, desks, plants and furniture. Preserve the artwork's original colors, composition, subjects, lettering and proportions faithfully. Every paper corner must remain inside the frame with comfortable breathing room. No frames, curling paper, gloss, extra objects, store logos, prices, category labels or any new typography. The artwork fills about 80% of canvas width and 76% of its height. Collection: Motivational. Exactly three portrait prints, arranged just like image 1: left smaller tilted -11 degrees uses image 2 (Bruce Lee in black martial arts clothing against muted gray-green, with existing 'MASTER YOUR MIND' lettering); center larger almost upright tilted -2 degrees uses image 3 (overhead runner on a rust-brown track, cream lettering 'Motivation fades.' then large 'DISCIPLINE' then 'Shows up anyway.'); right smaller tilted +11 degrees uses image 4 (moody warm gray cloudscape with a lone street lamp, pale yellow existing lettering 'CAN’T BE GOOD ALL THE TIME'). The center print overlaps the side prints slightly but all original headlines and key subjects remain clearly visible. Spell the original poster text exactly and keep it fully inside its own print. Use the real catalogue artwork, no extra quotes or replacement subjects. Cohesive warm black, muted sage and rust palette. No gaming images.",
+      "source": "C:\\Users\\adity\\.codex\\generated_images\\01a1e543-6ed1-76a2-8623-58bf485b3103\\exec-04828df0-001b-47e3-98eb-b21a5f5758c1.png",
+      "width": 1200
+    }
+  ],
+  "compositions": [
+    {
+      "handle": "harry-potter",
+      "design": "Original catalogue split-poster artwork shown as three coordinated panels on the existing generated studio background. No artwork redrawn.",
+      "background": "public/collections/covers/studio-v2.webp",
+      "backgroundPrompt": "assets/collection-covers-v2.prompts.json",
+      "poster": "public/collections/poster-art/harry-potter-05-harry-potter-posters.webp",
+      "source": "assets/collection-cover-refresh-references/harry-potter-05-harry-potter-posters.webp",
+      "crops": [
+        {
+          "left": 139,
+          "top": 76,
+          "width": 238,
+          "height": 336
+        },
+        {
+          "left": 378,
+          "top": 76,
+          "width": 239,
+          "height": 336
+        },
+        {
+          "left": 619,
+          "top": 76,
+          "width": 238,
+          "height": 336
+        }
+      ],
+      "imageWidth": 1000,
+      "imageHeight": 1048
+    }
+  ],
+  "unusedAttempts": [
+    {
+      "handle": "harry-potter",
+      "output": "public/collections/covers/harry-potter-v2.webp",
+      "references": [
+        "public/collections/covers/video-games-v2.webp",
+        "assets/collection-cover-refresh-references/harry-potter-05-harry-potter-posters.webp"
+      ],
+      "prompt": "Use case: product-mockup. Asset type: one finished landscape 3:2 collection-card cover for the Litwalls poster shop. Input image 1 is a STYLE reference for the existing approved collection covers: match the same overhead studio view, warm charcoal textured matte paper surface, amber light in the top left fading to almost black to the right, narrow ivory paper edges and realistic soft paper shadows. Keep the same premium, restrained photographic presentation. Replace ALL gaming artwork from image 1. The remaining images are actual product mockups: take ONLY the printed poster artwork from them, discard their rooms, walls, desks, plants and furniture. Preserve the artwork's original colors, composition, subjects, lettering and proportions faithfully. Every paper corner must remain inside the frame with comfortable breathing room. No frames, curling paper, gloss, extra objects, store logos, prices, category labels or any new typography. The artwork fills about 80% of canvas width and 76% of its height. Collection: Harry Potter. Input image 2 shows ONE actual landscape artwork sold as a THREE-PANEL SPLIT POSTER SET. Present that exact triptych on the studio surface, NOT three invented poster designs. The left portrait panel includes the owl, Hogwarts, flying car and Dobby; the center portrait panel has Harry with glasses and wand; the right portrait panel includes Hermione, Luna, platform 9 3/4 and the newspaper collage. Reproduce this full collage faithfully across three equally sized portrait paper panels in their original left-to-right order. Arrange the set side by side with narrow charcoal gaps and a subtle, gentle fan: left rotated -6 degrees, center -2 degrees, right +6 degrees. All three remain almost completely visible; never hide Harry's face. Same narrow ivory borders and warm charcoal setting as the style reference. Do not copy the gaming designs. This is a meaningful photograph of the available Harry Potter split print, not a room mockup.",
+      "outcome": "Image service rejected the generated output; original catalogue artwork used instead."
+    }
+  ]
+}

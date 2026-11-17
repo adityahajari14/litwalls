@@ -2,7 +2,7 @@
 
 import { useState, useSyncExternalStore, useTransition } from "react";
 
-import { GiftIcon } from "@/components/icons";
+import { ChevronDownIcon, GiftIcon } from "@/components/icons";
 import { useCart } from "@/components/cart/cart-provider";
 import { amountToMilestone, milestoneProgress } from "@/lib/marketing";
 import { formatMoney } from "@/lib/money";
@@ -14,6 +14,7 @@ import {
 } from "@/lib/offers";
 import { setGiftPreference } from "@/lib/shopify/actions";
 import type { Money } from "@/lib/shopify/types";
+import styles from "./cart-drawer.module.css";
 
 /** Reads the customer's saved pick straight off the cookie — see the comment
  *  on GIFT_CHOICE_COOKIE for why this doesn't go through the server. */
@@ -29,23 +30,23 @@ function readGiftChoice(): string {
 }
 
 /**
- * "₹340 away from a free gift", the same pattern as FreeShippingBar but for
- * the ₹799 milestone — plus which of the two gift products the customer wants,
- * since there's now a real choice to make (see GIFT_OPTIONS).
+ * An always-visible gift target above the cart items, with
+ * the amount still needed and the customer's choice of print format.
  *
  * Takes cart.cost.subtotalAmount, same as FreeShippingBar and for the same
  * reason: it is what the customer actually owes. Before the gift line exists
  * this equals their real spend; once it exists syncCartGift has already
  * zeroed it, so the figure never inflates itself with its own reward.
  *
- * A bundle blocks the gift (see bundleBlocksGift in offers.ts) — Shopify
- * allows only one buy-X-get-Y discount per order, and the bundle is worth
- * more. This bar has no way to know from the subtotal alone whether a bundle
- * is active, so it always shows progress toward the milestone; the cart drawer
- * only renders it when a gift line isn't already present, which is the
- * signal that actually reflects Shopify's decision.
+ * Keep the spend target visible when it is reached or a bundle is applied.
+ * Reaching the target alone is not confirmation of a free gift: the cart
+ * passes Shopify's actual bundle and gift states so the copy stays accurate.
  */
-export function GiftMilestoneBar({ subtotal }: { subtotal: Money }) {
+export function GiftMilestoneBar({ subtotal, bundleApplied = false, giftAdded = false }: {
+  subtotal: Money;
+  bundleApplied?: boolean;
+  giftAdded?: boolean;
+}) {
   const { refresh } = useCart();
   const [pending, startTransition] = useTransition();
 
@@ -68,10 +69,7 @@ export function GiftMilestoneBar({ subtotal }: { subtotal: Money }) {
 
   const amount = Number(subtotal.amount);
   const remaining = amountToMilestone(amount, GIFT_THRESHOLD);
-  const unlocked = remaining === 0;
-  const progress = milestoneProgress(amount, GIFT_THRESHOLD);
-
-  if (unlocked) return null;
+  const targetReached = remaining === 0;
 
   const remainingMoney = formatMoney({
     amount: String(remaining),
@@ -87,31 +85,21 @@ export function GiftMilestoneBar({ subtotal }: { subtotal: Money }) {
   }
 
   return (
-    <div>
-      <p className="flex items-center gap-2 text-sm text-ink-700">
-        <GiftIcon className="size-5 shrink-0 text-brand-500" />
-        <span className="text-pretty">
-          <span className="font-semibold text-ink-950">{remainingMoney}</span>{" "}
-          away from a free gift.
-        </span>
-      </p>
-
-      <div
-        role="progressbar"
-        aria-valuemin={0}
-        aria-valuemax={GIFT_THRESHOLD}
-        aria-valuenow={Math.min(amount, GIFT_THRESHOLD)}
-        aria-label="Progress toward the free gift"
-        className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-ink-100"
-      >
-        <div
-          className="h-full rounded-full bg-brand-500 transition-[width] duration-500 ease-out-soft"
-          style={{ width: `${progress * 100}%` }}
-        />
+    <section className={styles.rewardCard} aria-label="Free gift target" data-state={giftAdded ? "added" : bundleApplied ? "bundle" : targetReached ? "reached" : "progress"}>
+      <div className={styles.rewardHeading}>
+        <h3><GiftIcon className="size-4" aria-hidden="true" />5 free photo prints</h3>
+        <span className={styles.rewardCount}>{formatMoney(subtotal)} / {formatMoney({ amount: String(GIFT_THRESHOLD), currencyCode: subtotal.currencyCode })}</span>
       </div>
-
-      <div className="mt-2.5 flex flex-wrap items-center gap-2">
-        <span className="text-xs text-ink-500">You&apos;ll get:</span>
+      <p className={styles.rewardDescription}>
+        {giftAdded ? <strong>Free gift added to your cart.</strong> : targetReached ? <><strong>Spend target reached.</strong>{!bundleApplied ? " Your gift has not been added yet." : null}</> : <><strong>Add {remainingMoney} more</strong>{bundleApplied ? " to reach the spend target." : " to unlock your gift."}</>}
+      </p>
+      {bundleApplied && !giftAdded ? <p className={styles.rewardNotice}>Gift offer doesn&apos;t combine with the current bundle discount.</p> : null}
+      <div role="progressbar" aria-label="Progress toward the free gift" aria-valuemin={0} aria-valuemax={GIFT_THRESHOLD} aria-valuenow={Math.min(amount, GIFT_THRESHOLD)} aria-valuetext={giftAdded ? "Free gift added to your cart" : bundleApplied ? `${targetReached ? "Spend target reached" : `${remainingMoney} away from the spend target`}. Gift offer doesn't combine with the current bundle discount.` : targetReached ? "Spend target reached; gift not yet added" : `${remainingMoney} away from 5 free photo prints`} className={styles.rewardTrack}>
+        <span style={{ width: `${milestoneProgress(amount, GIFT_THRESHOLD) * 100}%` }} />
+      </div>
+      {!bundleApplied && !giftAdded ? <details className={styles.rewardChoice}>
+        <summary><span>{GIFT_OPTIONS.find((option) => option.id === choice)?.label}</span><span>Change <ChevronDownIcon className="size-3" aria-hidden="true" /></span></summary>
+        <div className={styles.giftChoices}>
         {GIFT_OPTIONS.map((option) => (
           <button
             key={option.id}
@@ -119,16 +107,12 @@ export function GiftMilestoneBar({ subtotal }: { subtotal: Money }) {
             onClick={() => choose(option.id)}
             disabled={pending}
             aria-pressed={choice === option.id}
-            className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors disabled:opacity-60 ${
-              choice === option.id
-                ? "border-ink-900 bg-ink-900 text-white"
-                : "border-ink-200 text-ink-700 hover:border-ink-400"
-            }`}
           >
             {option.label}
           </button>
         ))}
-      </div>
-    </div>
+        </div>
+      </details> : null}
+    </section>
   );
 }

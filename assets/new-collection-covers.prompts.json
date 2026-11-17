@@ -1,0 +1,50 @@
+{
+  "generator": "Built-in image_gen tool",
+  "design": "Coordinated landscape 3:2 warm charcoal studio covers, based on published collection products.",
+  "assets": [
+    {
+      "handle": "aesthetic",
+      "prompt": "Use case: product-mockup. Create one finished landscape 3:2 collection cover for the Litwalls poster store. Reference image 1 is the approved existing collection-card design: match its warm charcoal matte paper background, restrained amber light in the upper left fading to almost black on the right, narrow ivory paper edges, soft realistic shadows, overhead camera and clean editorial presentation. This is a coordinated series, so keep this same design language. Replace ALL artwork in reference 1. Remaining references are product mockups: extract ONLY the rectangular printed poster artwork; discard their walls, plants, furniture and rooms. Preserve that printed artwork faithfully, including its layout, colors and any existing lettering; don't invent substitute designs. Keep paper completely flat, no glossy glare or frames. No added collection names, category labels, prices, slogans, store logos, watermarks or decorative props. Fill the 3:2 canvas with the composition and keep every paper corner inside the image with a little breathing room. Collection: Aesthetic. Exactly three portrait prints, arranged like reference 1: left smaller tilted -11 degrees uses reference 2 (minimal pink sun, purple mountain lake and solitary tree); center larger almost upright tilted -2 degrees uses reference 3 (vibrant red blossom tree, Mount Fuji and red torii); right smaller tilted +11 degrees uses reference 4 (sleeping white cat under red and white blossoms on cream). The middle print overlaps the side prints a little, without hiding their key artwork. Prints cover about 80% of image width and 76% height. Retain the quiet cream/pink, red/blue and cream color balance.",
+      "references": [
+        "assets/new-collection-cover-references/existing-cover-style.png",
+        "assets/new-collection-cover-references/aesthetic-landscape-01-aesthetic-posters.jpg",
+        "assets/new-collection-cover-references/japanese-landscape-01-aesthetic-posters.jpg",
+        "assets/new-collection-cover-references/aesthetic-cat-01-aesthetic-posters.jpg"
+      ],
+      "source": "C:\\Users\\adity\\.codex\\generated_images\\01a1e543-6ed1-76a2-8623-58bf485b3103\\exec-72720c01-1a6c-4463-85bf-05e9f49f2808.png",
+      "output": "public/collections/covers/aesthetic-v2.webp",
+      "width": 1200
+    },
+    {
+      "handle": "video-games",
+      "prompt": "Use case: product-mockup. Create one finished landscape 3:2 collection cover for the Litwalls poster store. Reference image 1 is the approved existing collection-card design: match its warm charcoal matte paper background, restrained amber light in the upper left fading to almost black on the right, narrow ivory paper edges, soft realistic shadows, overhead camera and clean editorial presentation. This is a coordinated series, so keep this same design language. Replace ALL artwork in reference 1. Remaining references are product mockups: extract ONLY the rectangular printed poster artwork; discard their walls, plants, furniture and rooms. Preserve that printed artwork faithfully, including its layout, colors and any existing lettering; don't invent substitute designs. Keep paper completely flat, no glossy glare or frames. No added collection names, category labels, prices, slogans, store logos, watermarks or decorative props. Fill the 3:2 canvas with the composition and keep every paper corner inside the image with a little breathing room. Collection: Video Games. Exactly three portrait prints, arranged like reference 1: left smaller tilted -11 degrees uses reference 2 (Ghost of Tsushima samurai on horseback in yellow grass, cloudy sky and red calligraphy); center larger almost upright tilted -2 degrees uses reference 3 (Red Dead Redemption II cowboy viewed from behind, blue sky, white and red title); right smaller tilted +11 degrees uses reference 4 (Sage from Valorant split-color face, glowing cyan crystal energy). Middle print overlaps side prints a little, without hiding key artwork. Prints cover about 80% of image width and 76% height. Faithfully retain the existing Red Dead Redemption II lettering; add no new typography.",
+      "references": [
+        "assets/new-collection-cover-references/existing-cover-style.png",
+        "assets/new-collection-cover-references/ghost-of-tsushima-01-video-games-posters.jpg",
+        "assets/new-collection-cover-references/red-dead-redemption-ii-01-video-games-posters.jpg",
+        "assets/new-collection-cover-references/sage-valorant-01-video-games-posters.jpg"
+      ],
+      "source": "C:\\Users\\adity\\.codex\\generated_images\\01a1e543-6ed1-76a2-8623-58bf485b3103\\exec-d6384bb4-dd6a-41c9-8cd6-905f01711490.png",
+      "output": "public/collections/covers/video-games-v2.webp",
+      "width": 1200
+    }
+  ],
+  "compositions": [
+    {
+      "handle": "motivational",
+      "design": "Single original catalogue poster, centered on the existing generated studio background; quote and artwork preserved without redrawing.",
+      "background": "public/collections/covers/studio-v2.webp",
+      "backgroundPrompt": "assets/collection-covers-v2.prompts.json",
+      "poster": "public/collections/poster-art/iron-man-09-marvel-posters.webp",
+      "crop": {
+        "left": 342,
+        "top": 79,
+        "width": 311,
+        "height": 440,
+        "imageWidth": 1000,
+        "imageHeight": 1043
+      },
+      "source": "assets/new-collection-cover-references/iron-man-09-marvel-posters.jpg"
+    }
+  ]
+}

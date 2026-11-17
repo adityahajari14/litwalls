@@ -3,17 +3,21 @@ import Image from "next/image";
 import type { CollectionCover } from "@/lib/collection-covers";
 import styles from "./collection-artwork.module.css";
 
-/** Shared studio setting with unaltered catalogue prints, cropped in the browser. */
+/** Coordinated studio artwork, either composed from catalogue prints or a finished cover. */
 export function CollectionArtwork({
   cover,
   posterSizes = "(min-width: 1408px) 380px, (min-width: 1024px) 28vw, 56vw",
+  sizes = "(min-width: 1408px) 330px, (min-width: 1024px) 25vw, 50vw",
+  eager = false,
 }: {
   cover: CollectionCover;
   posterSizes?: string;
+  sizes?: string;
+  eager?: boolean;
 }) {
   return (
-    <div className={styles.artwork} aria-hidden="true">
-      <Image src="/collections/covers/studio-v2.webp" alt="" fill sizes="(min-width: 1408px) 330px, (min-width: 1024px) 25vw, 50vw" className={styles.backdrop} />
+    <div className={styles.artwork} data-layout={cover.layout} aria-hidden="true">
+      <Image src={cover.image ?? "/collections/covers/studio-v2.webp"} alt="" fill sizes={sizes} loading={eager ? "eager" : "lazy"} className={styles.backdrop} />
       {cover.posters.map((poster) => {
         const crop = poster.crop;
         return (
@@ -28,6 +32,7 @@ export function CollectionArtwork({
               width={crop.imageWidth}
               height={crop.imageHeight}
               sizes={posterSizes}
+              loading={eager ? "eager" : "lazy"}
               className={styles.poster}
               style={{
                 width: `${crop.imageWidth / crop.width * 100}%`,

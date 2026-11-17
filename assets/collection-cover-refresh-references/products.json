@@ -1,0 +1,56 @@
+{
+  "harry-potter": [
+    {
+      "handle": "harry-potter-05-harry-potter-posters",
+      "title": "Harry Potter #05 | Harry Potter Posters",
+      "featuredImage": {
+        "url": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mwkg1l80-2khozn-mockups-mockup-1.jpg?v=1794905685",
+        "width": 2016,
+        "height": 2112
+      },
+      "local": "assets/collection-cover-refresh-references/harry-potter-05-harry-potter-posters.webp"
+    },
+    {
+      "handle": "harry-potter-04-harry-potter-posters",
+      "title": "Harry Potter #04 | Harry Potter Posters",
+      "featuredImage": {
+        "url": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mwkg1kxr-u1bgys-mockups-mockup-1.jpg?v=1794905676",
+        "width": 2016,
+        "height": 2112
+      },
+      "local": "assets/collection-cover-refresh-references/harry-potter-04-harry-potter-posters.webp"
+    }
+  ],
+  "motivational": [
+    {
+      "handle": "bruce-lee-01-motivational-posters",
+      "title": "Bruce Lee #01 | Motivational Posters",
+      "featuredImage": {
+        "url": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mwkepi95-w4k3g9-mockups-mockup-1.jpg?v=1794905961",
+        "width": 2016,
+        "height": 2112
+      },
+      "local": "assets/collection-cover-refresh-references/bruce-lee-01-motivational-posters.webp"
+    },
+    {
+      "handle": "discipline-01-motivational-posters",
+      "title": "Discipline #01 | Motivational Posters",
+      "featuredImage": {
+        "url": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mwkepi6j-ajclii-mockups-mockup-1.jpg?v=1794905927",
+        "width": 2016,
+        "height": 2112
+      },
+      "local": "assets/collection-cover-refresh-references/discipline-01-motivational-posters.webp"
+    },
+    {
+      "handle": "solitude-and-sky-01-motivational-posters",
+      "title": "Solitude and sky #01 | Motivational Posters",
+      "featuredImage": {
+        "url": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mwkepi4x-737nxb-mockups-mockup-1.jpg?v=1794905905",
+        "width": 2016,
+        "height": 2112
+      },
+      "local": "assets/collection-cover-refresh-references/solitude-and-sky-01-motivational-posters.webp"
+    }
+  ]
+}

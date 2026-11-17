@@ -107,9 +107,11 @@ export function useFocusTrap<T extends HTMLElement>(
       // Only restore if focus is still inside the overlay being torn down:
       // a close triggered by clicking somewhere else on the page would
       // otherwise yank focus away from wherever the shopper just put it.
+      // Removing a focused cart item can leave focus on body; that is still
+      // part of closing this overlay, rather than a newly focused page control.
       const restore = restoreRef.current;
-      if (restore && container.contains(document.activeElement)) {
-        restore.focus?.();
+      if (restore?.isConnected && (container.contains(document.activeElement) || document.activeElement === document.body)) {
+        restore.focus({ preventScroll: true });
       }
     };
   }, [active, onEscape]);

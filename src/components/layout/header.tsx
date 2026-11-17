@@ -15,13 +15,16 @@ import {
   UserIcon,
 } from "@/components/icons";
 import { CartBadge } from "@/components/cart/cart-badge";
+import { CollectionCard } from "@/components/collection-card";
 import { useCart } from "@/components/cart/cart-provider";
 import { SearchDialog } from "@/components/search/search-dialog";
 import { Overlay } from "@/components/ui/overlay";
 import { FREE_SHIPPING_THRESHOLD } from "@/lib/offers";
 import { MAIN_NAV } from "@/lib/navigation";
 import { cn } from "@/lib/cn";
+import { orderCollectionCards } from "@/lib/collection-covers";
 import type { CollectionSummary } from "@/lib/shopify/types";
+import styles from "./header-collections.module.css";
 
 const ICON_BUTTON =
   "grid size-10 place-items-center rounded-full text-ink-700 transition duration-200 hover:bg-ink-100 hover:text-ink-950 active:scale-95";
@@ -32,9 +35,6 @@ const ICON_BUTTON =
  * instead of leaking a header-specific concern into the shared nav config.
  */
 const COLLECTIONS_HREF = "/collections";
-
-/** Most tiles the desktop panel shows; "Browse all" carries the rest. */
-const PANEL_TILES = 8;
 
 /**
  * Pointer has to rest on the trigger this long before the panel opens, so
@@ -47,10 +47,6 @@ const OPEN_DELAY_MS = 70;
  * between trigger and panel, or to recover from overshooting an edge.
  */
 const CLOSE_DELAY_MS = 180;
-
-function posterCount(count: number) {
-  return `${count >= 250 ? "250+" : count} poster${count === 1 ? "" : "s"}`;
-}
 
 /** True when `href` is the page being viewed, or a parent of it. */
 function isCurrent(pathname: string, href: string) {
@@ -138,7 +134,7 @@ export function Header({ collections }: { collections: CollectionSummary[] }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  const panelCollections = collections.slice(0, PANEL_TILES);
+  const orderedCollections = orderCollectionCards(collections);
 
   return (
     <header className="sticky top-0 z-50 border-b border-ink-100 bg-paper/85 backdrop-blur-md">
@@ -205,7 +201,6 @@ export function Header({ collections }: { collections: CollectionSummary[] }) {
               return (
                 <li
                   key={item.href}
-                  className="relative"
                   onMouseEnter={() => setCollectionsMenu(true, OPEN_DELAY_MS)}
                   onMouseLeave={() => setCollectionsMenu(false, CLOSE_DELAY_MS)}
                   // On the <li>, not the link: focus events bubble, so tabbing
@@ -216,13 +211,18 @@ export function Header({ collections }: { collections: CollectionSummary[] }) {
                   onFocus={() => setCollectionsMenu(true, 0)}
                   onBlur={() => setCollectionsMenu(false, CLOSE_DELAY_MS)}
                   onKeyDown={(event) => {
-                    if (event.key === "Escape") setCollectionsMenu(false, 0);
+                    if (event.key === "Escape") {
+                      event.preventDefault();
+                      event.currentTarget.querySelector<HTMLAnchorElement>('a[aria-controls="header-collections-panel"]')?.focus();
+                      setCollectionsMenu(false, 0);
+                    }
                   }}
                 >
                   <Link
                     href={item.href}
                     aria-haspopup="true"
                     aria-expanded={collectionsMenuOpen}
+                    aria-controls="header-collections-panel"
                     aria-current={current ? "page" : undefined}
                     // The click is a navigation to /collections; the panel has
                     // done its job at that point and should get out of the way
@@ -242,18 +242,14 @@ export function Header({ collections }: { collections: CollectionSummary[] }) {
                     />
                   </Link>
 
-                  {/* A grid of covers, not a list of words. This was a
-                      12-item single column of text labels — for a product
-                      whose artwork is the entire reason to click, which made
-                      the menu the one place on the site that showed none of
-                      it. The covers are already fetched for the layout, so
-                      the thumbnails cost no extra request. */}
+                  {/* The same collection artwork as the homepage, in compact
+                      cards. Position against the header so the panel stays
+                      inside narrower desktop viewports. */}
                   <div
                     className={cn(
-                      // `pt-4` is the gap below the header, kept inside the
-                      // hoverable box so the pointer never leaves it on the
-                      // way down.
-                      "absolute left-1/2 top-full z-50 -translate-x-1/2 pt-4",
+                      // Top padding bridges the header-to-panel gap without
+                      // making the pointer leave the hoverable box.
+                      styles.position,
                       // Settles downward out of the trigger, the same
                       // direction the search dialog arrives from, so the
                       // panel reads as belonging to the link above it rather
@@ -266,45 +262,19 @@ export function Header({ collections }: { collections: CollectionSummary[] }) {
                         : "pointer-events-none invisible -translate-y-2 scale-[0.98] opacity-0 duration-200",
                     )}
                   >
-                    <div className="rounded-card border border-ink-100 bg-white p-3 shadow-lift">
+                    <div id="header-collections-panel" role="region" aria-label="Collection menu" aria-hidden={!collectionsMenuOpen} inert={!collectionsMenuOpen} className={styles.panel}>
                       <ul
-                        className="grid gap-1"
+                        className={styles.grid}
                         // Sized to the collections there are, so three of
                         // them make a three-wide panel rather than a
                         // four-wide one with a hole in it.
                         style={{
-                          gridTemplateColumns: `repeat(${Math.min(panelCollections.length, 4)}, 9.5rem)`,
+                          gridTemplateColumns: `repeat(${Math.min(orderedCollections.length, 4)}, minmax(0, 1fr))`,
                         }}
                       >
-                        {panelCollections.map((collection) => (
+                        {orderedCollections.map((collection) => (
                           <li key={collection.id}>
-                            <Link
-                              href={`/collections/${collection.handle}`}
-                              onClick={() => setCollectionsMenu(false, 0)}
-                              className="group/tile block rounded-card p-2 transition-colors duration-200 hover:bg-ink-50"
-                            >
-                              <div className="relative aspect-4/5 overflow-hidden rounded-card bg-ink-100 ring-1 ring-ink-950/5">
-                                {collection.image ? (
-                                  <Image
-                                    src={collection.image.url}
-                                    alt=""
-                                    fill
-                                    sizes="9.5rem"
-                                    className="object-cover transition-transform duration-500 ease-out-soft group-hover/tile:scale-105"
-                                  />
-                                ) : (
-                                  <span className="grid size-full place-items-center bg-ink-950 font-display text-2xl text-white/90">
-                                    {collection.title.charAt(0)}
-                                  </span>
-                                )}
-                              </div>
-                              <span className="mt-2 block truncate text-[13px] font-medium text-ink-900 transition-colors group-hover/tile:text-brand-600">
-                                {collection.title}
-                              </span>
-                              <span className="block text-xs text-ink-400">
-                                {posterCount(collection.productCount)}
-                              </span>
-                            </Link>
+                            <CollectionCard collection={collection} compact onNavigate={() => setCollectionsMenu(false, 0)} />
                           </li>
                         ))}
                       </ul>
@@ -312,10 +282,10 @@ export function Header({ collections }: { collections: CollectionSummary[] }) {
                       <Link
                         href="/collections"
                         onClick={() => setCollectionsMenu(false, 0)}
-                        className="group/all mt-2 flex items-center justify-center gap-1.5 border-t border-ink-100 pt-3 pb-1 text-[13px] font-medium text-ink-600 transition-colors hover:text-brand-600"
+                        className={styles.browse}
                       >
                         Browse all collections
-                        <ArrowRightIcon className="size-3.5 transition-transform duration-300 group-hover/all:translate-x-0.5" />
+                        <ArrowRightIcon className="size-3.5" />
                       </Link>
                     </div>
                   </div>
@@ -481,34 +451,10 @@ export function Header({ collections }: { collections: CollectionSummary[] }) {
                         : "grid-rows-[0fr] opacity-0",
                     )}
                   >
-                    <ul className="min-h-0 overflow-hidden">
-                      {collections.map((collection) => (
+                    <ul className={styles.mobileGrid}>
+                      {orderedCollections.map((collection) => (
                         <li key={collection.id}>
-                          <Link
-                            href={`/collections/${collection.handle}`}
-                            onClick={closeMenu}
-                            className="flex items-center gap-3 rounded-card px-4 py-2 transition-colors active:bg-ink-100"
-                          >
-                            <span className="relative block h-12 w-10 shrink-0 overflow-hidden rounded bg-ink-100 ring-1 ring-ink-950/5">
-                              {collection.image ? (
-                                <Image
-                                  src={collection.image.url}
-                                  alt=""
-                                  fill
-                                  sizes="40px"
-                                  className="object-cover"
-                                />
-                              ) : null}
-                            </span>
-                            <span className="min-w-0">
-                              <span className="block truncate text-[15px] text-ink-800">
-                                {collection.title}
-                              </span>
-                              <span className="block text-xs text-ink-400">
-                                {posterCount(collection.productCount)}
-                              </span>
-                            </span>
-                          </Link>
+                          <CollectionCard collection={collection} compact onNavigate={closeMenu} />
                         </li>
                       ))}
                     </ul>

@@ -9,6 +9,8 @@ export type PosterCrop = {
 
 export type CollectionCover = {
   tagline: string;
+  image?: string;
+  layout?: "single";
   posters: { id: string; src: string; crop: PosterCrop; placeholderText?: string }[];
 };
 
@@ -19,7 +21,7 @@ function poster(id: string, src: string, crop = DESK_POSTER) {
   return { id, src, crop };
 }
 
-/** Every cover uses the same studio, print sizes, borders, lighting and arrangement. */
+/** Coordinated studio covers with catalogue artwork and warm, consistent lighting. */
 export const COLLECTION_COVERS: Partial<Record<string, CollectionCover>> = {
   "marvel": {
     tagline: "Heroes worth hanging.",
@@ -75,6 +77,35 @@ export const COLLECTION_COVERS: Partial<Record<string, CollectionCover>> = {
       poster("spirited-away-01-anime-posters", "/brand/hero-products/spirited-away-01-anime-posters.webp"),
       poster("starry-night-cat-01-anime-posters", "/brand/hero-products/starry-night-cat-01-anime-posters.webp"),
       poster("my-neighbor-totoro-03-anime-posters", "/collections/poster-art/my-neighbor-totoro-03-anime-posters.webp"),
+    ],
+  },
+  "aesthetic": {
+    tagline: "A little calm. A lot of character.",
+    image: "/collections/covers/aesthetic-v2.webp",
+    posters: [],
+  },
+  "video-games": {
+    tagline: "Your favourite worlds, off screen.",
+    image: "/collections/covers/video-games-v2.webp",
+    posters: [],
+  },
+  "motivational": {
+    tagline: "A daily dose of inspiration.",
+    image: "/collections/covers/motivational-v2.webp",
+    posters: [],
+  },
+  "harry-potter": {
+    tagline: "A little magic for your wall.",
+    posters: [
+      poster("harry-potter-05-left-panel", "/collections/poster-art/harry-potter-05-harry-potter-posters.webp", {
+        left: 139, top: 76, width: 238, height: 336, imageWidth: 1000, imageHeight: 1048,
+      }),
+      poster("harry-potter-05-centre-panel", "/collections/poster-art/harry-potter-05-harry-potter-posters.webp", {
+        left: 378, top: 76, width: 239, height: 336, imageWidth: 1000, imageHeight: 1048,
+      }),
+      poster("harry-potter-05-right-panel", "/collections/poster-art/harry-potter-05-harry-potter-posters.webp", {
+        left: 619, top: 76, width: 238, height: 336, imageWidth: 1000, imageHeight: 1048,
+      }),
     ],
   },
   "custom-prints": {

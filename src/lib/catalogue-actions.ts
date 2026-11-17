@@ -2,16 +2,15 @@
 
 import {
   buildProductQuery,
-  priceBand,
   priceBandsFor,
   sortOption,
 } from "@/lib/catalogue";
 import {
   getCatalogueFacets,
   getCataloguePage,
-  getCollectionProducts,
   type ProductPage,
 } from "@/lib/shopify/products";
+import { getCollectionListing } from "@/lib/collection-catalogue";
 
 /**
  * Fetches the next page of a catalogue grid for the "Load more" button.
@@ -53,45 +52,23 @@ export async function loadMoreCollectionProducts({
   handle,
   after,
   sort,
-  price,
+  subject,
+  format,
   pageSize,
 }: {
   handle: string;
   after: string;
   sort?: string;
-  price?: string;
+  subject?: string;
+  format?: string;
   pageSize: number;
 }): Promise<ProductPage> {
-  const option = sortOption(sort);
-
-  const result = await getCollectionProducts(handle, {
-    first: pageSize,
-    after,
-    ...option.collection,
-  });
+  const result = await getCollectionListing(handle, { after, sort, subject, format, pageSize });
 
   if (!result) return { products: [], hasNextPage: false, endCursor: null };
 
-  // Shopify's collection query has no price filter in its sort grammar, so a
-  // price band is applied here rather than silently ignored. This filters the
-  // page that was fetched, which is why the collection page tells the shopper
-  // how many of the loaded prints matched rather than claiming a total.
-  //
-  // The bands are recomputed from the live catalogue — the same source the
-  // toolbar rendered them from — instead of the hardcoded table that used to
-  // sit here and could drift out of step with it.
-  const facets = await getCatalogueFacets();
-  const band = priceBand(price, priceBandsFor(facets.priceMin, facets.priceMax));
-
-  const products = band
-    ? result.products.filter((product) => {
-        const amount = Number(product.priceRange.minVariantPrice.amount);
-        return amount >= band.min && (band.max === null || amount <= band.max);
-      })
-    : result.products;
-
   return {
-    products,
+    products: result.products,
     hasNextPage: result.hasNextPage,
     endCursor: result.endCursor,
   };

@@ -14,12 +14,9 @@ import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
 import { SubscribePopup } from "@/components/marketing/subscribe-popup";
 import { MotionEnhancements } from "@/components/motion-enhancements";
-import { getCollections } from "@/lib/shopify/products";
+import { getAllCollections } from "@/lib/shopify/products";
 import { SITE_URL } from "@/lib/site";
 import "./globals.css";
-
-/** Same list Footer fetches — cached, so this is a cache hit, not a second request. */
-const NAV_COLLECTION_COUNT = 12;
 
 const inter = Inter({
   variable: "--font-inter",
@@ -65,7 +62,8 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const collections = await getCollections(NAV_COLLECTION_COUNT);
+  // Match the homepage's complete collection list, including customer uploads.
+  const collections = await getAllCollections();
 
   return (
     <html

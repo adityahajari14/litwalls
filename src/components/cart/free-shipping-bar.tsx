@@ -33,25 +33,20 @@ export function FreeShippingBar({ subtotal }: { subtotal: Money }) {
     amount: String(remaining),
     currencyCode: subtotal.currencyCode,
   });
-  const thresholdMoney = formatMoney({
-    amount: String(FREE_SHIPPING_THRESHOLD),
-    currencyCode: subtotal.currencyCode,
-  });
-
   return (
     <div>
-      <p className="flex items-center gap-2 text-sm text-ink-700">
+      <p className="flex items-center gap-2 text-xs leading-relaxed text-ink-700">
         <TruckIcon
-          className={`size-5 shrink-0 ${unlocked ? "text-success" : "text-brand-500"}`}
+          className={`size-4 shrink-0 ${unlocked ? "text-success" : "text-brand-500"}`}
         />
         {unlocked ? (
           <span className="font-medium text-success">
-            Free shipping unlocked.
+            Free delivery unlocked
           </span>
         ) : (
           <span className="text-pretty">
-            <span className="font-semibold text-ink-950">{remainingMoney}</span>{" "}
-            away from free shipping over {thresholdMoney}.
+            Add <span className="font-semibold text-ink-950">{remainingMoney}</span>{" "}
+            more for free delivery.
           </span>
         )}
       </p>
@@ -62,7 +57,8 @@ export function FreeShippingBar({ subtotal }: { subtotal: Money }) {
         aria-valuemax={FREE_SHIPPING_THRESHOLD}
         aria-valuenow={Math.min(amount, FREE_SHIPPING_THRESHOLD)}
         aria-label="Progress toward free shipping"
-        className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-ink-100"
+        aria-valuetext={unlocked ? "Free delivery unlocked" : `${remainingMoney} away from free delivery`}
+        className="mt-2.5 h-1 w-full overflow-hidden rounded-full bg-ink-100"
       >
         <div
           className={`h-full rounded-full transition-[width] duration-500 ease-out-soft ${

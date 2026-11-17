@@ -1,0 +1,85 @@
+{
+  "aesthetic": [
+    {
+      "id": "gid://shopify/Product/15482544488622",
+      "title": "Japanese Landscape #01 | Aesthetic Posters",
+      "handle": "japanese-landscape-01-aesthetic-posters",
+      "featuredImage": {
+        "url": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mwkcjllk-sqquqb-mockups-mockup-4.jpg?v=1794899277",
+        "width": 2300,
+        "height": 2400
+      },
+      "local": "assets/new-collection-cover-references/japanese-landscape-01-aesthetic-posters.jpg"
+    },
+    {
+      "id": "gid://shopify/Product/15482544259246",
+      "title": "Aesthetic Landscape #01 | Aesthetic Posters",
+      "handle": "aesthetic-landscape-01-aesthetic-posters",
+      "featuredImage": {
+        "url": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mwkcjlkc-xet7yt-mockups-mockup-4.jpg?v=1794899267",
+        "width": 2300,
+        "height": 2400
+      },
+      "local": "assets/new-collection-cover-references/aesthetic-landscape-01-aesthetic-posters.jpg"
+    },
+    {
+      "id": "gid://shopify/Product/15482544029870",
+      "title": "Aesthetic Cat #01 | Aesthetic Posters",
+      "handle": "aesthetic-cat-01-aesthetic-posters",
+      "featuredImage": {
+        "url": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mwkcjlj4-6rwnc0-mockups-mockup-4.jpg?v=1794899252",
+        "width": 2300,
+        "height": 2400
+      },
+      "local": "assets/new-collection-cover-references/aesthetic-cat-01-aesthetic-posters.jpg"
+    }
+  ],
+  "video-games": [
+    {
+      "id": "gid://shopify/Product/15482655309998",
+      "title": "Ghost of Tsushima #01 | Video Games Posters",
+      "handle": "ghost-of-tsushima-01-video-games-posters",
+      "featuredImage": {
+        "url": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mwkdo9xn-p8yxz8-mockups-mockup-4.jpg?v=1794903866",
+        "width": 2300,
+        "height": 2400
+      },
+      "local": "assets/new-collection-cover-references/ghost-of-tsushima-01-video-games-posters.jpg"
+    },
+    {
+      "id": "gid://shopify/Product/15482651345070",
+      "title": "Red Dead Redemption II #01 | Video Games Posters",
+      "handle": "red-dead-redemption-ii-01-video-games-posters",
+      "featuredImage": {
+        "url": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mwkdo9p0-3hlaze-mockups-mockup-4.jpg?v=1794903764",
+        "width": 2300,
+        "height": 2400
+      },
+      "local": "assets/new-collection-cover-references/red-dead-redemption-ii-01-video-games-posters.jpg"
+    },
+    {
+      "id": "gid://shopify/Product/15482652524718",
+      "title": "Sage Valorant #01 | Video Games Posters",
+      "handle": "sage-valorant-01-video-games-posters",
+      "featuredImage": {
+        "url": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mwkdo9rq-8sym40-mockups-mockup-4.jpg?v=1794903798",
+        "width": 2300,
+        "height": 2400
+      },
+      "local": "assets/new-collection-cover-references/sage-valorant-01-video-games-posters.jpg"
+    }
+  ],
+  "motivational": [
+    {
+      "id": "gid://shopify/Product/15482697318574",
+      "title": "Iron Man #09 | Marvel Posters",
+      "handle": "iron-man-09-marvel-posters",
+      "featuredImage": {
+        "url": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mwkfroqv-of11vs-mockups-mockup-3.jpg?v=1794904653",
+        "width": 2300,
+        "height": 2400
+      },
+      "local": "assets/new-collection-cover-references/iron-man-09-marvel-posters.jpg"
+    }
+  ]
+}

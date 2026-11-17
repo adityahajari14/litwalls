@@ -481,6 +481,24 @@ export async function getCollectionProducts(
   };
 }
 
+/** Full collection inventory for subject facets and filtering before pagination. */
+export async function getAllCollectionProducts(handle: string, options: {
+  sortKey?: CollectionSortKey;
+  reverse?: boolean;
+} = {}): Promise<{ collection: Collection; products: Product[] } | null> {
+  const products: Product[] = [];
+  let collection: Collection | null = null;
+  let after: string | null = null;
+  do {
+    const page = await getCollectionProducts(handle, { ...options, first: 250, after });
+    if (!page) return null;
+    collection = page.collection;
+    products.push(...page.products);
+    after = page.hasNextPage ? page.endCursor : null;
+  } while (after);
+  return collection ? { collection, products } : null;
+}
+
 /**
  * Stock level for the "Only N left" messaging. Requires the
  * `unauthenticated_read_product_inventory` scope; if the store's Storefront

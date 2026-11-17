@@ -61,3 +61,8 @@
 [1117/102248.201:WARNING:net\spdy\spdy_session.cc:3161] Received HEADERS for invalid stream 1
 [1117/102248.203:WARNING:net\spdy\spdy_session.cc:3161] Received HEADERS for invalid stream 1
 [1117/102250.626:WARNING:net\spdy\spdy_session.cc:3161] Received HEADERS for invalid stream 5
+[1117/104630.156:ERROR:gpu\ipc\client\command_buffer_proxy_impl.cc:285] ContextResult::kTransientFailure: Failed to send GpuControl.CreateCommandBuffer.
+[1117/130632.172:ERROR:gpu\ipc\client\command_buffer_proxy_impl.cc:285] ContextResult::kTransientFailure: Failed to send GpuControl.CreateCommandBuffer.
+[1117/133906.215:ERROR:gpu\command_buffer\service\gl_utils.cc:430] [.WebGL-0xc2403c18a00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+[1117/134758.387:ERROR:gpu\command_buffer\service\gl_utils.cc:430] [.WebGL-0x6a64001b6e00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+[1117/150157.390:ERROR:gpu\command_buffer\service\gl_utils.cc:430] [.WebGL-0x260c03e59800]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels

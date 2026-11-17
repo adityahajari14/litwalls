@@ -1,0 +1,16 @@
+.compactMeta { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px; }
+.compactTitle { color: var(--color-ink-950); font-family: var(--font-display); font-size: 23px; line-height: 1.05; letter-spacing: 0.015em; transition: color 180ms; }
+.compactCount { margin-top: 5px; color: var(--color-ink-600); font-size: 10px; line-height: 1.6; }
+.compactArrow { display: grid; width: 28px; height: 28px; flex-shrink: 0; place-items: center; border-radius: 50%; background: var(--color-ink-100); color: var(--color-ink-800); transition: background 180ms, color 180ms; }
+@media (hover: hover) {
+  a:hover > .compactMeta .compactTitle { color: var(--color-brand-600); }
+  a:hover > .compactMeta .compactArrow { background: var(--color-brand-500); color: white; }
+}
+@media (max-width: 359px) {
+  .compactMeta { gap: 6px; padding: 10px; }
+  .compactTitle { font-size: 21px; }
+  .compactArrow { width: 24px; height: 24px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .compactTitle, .compactArrow { transition: none; }
+}

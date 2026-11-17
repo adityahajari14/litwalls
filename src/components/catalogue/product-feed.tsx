@@ -69,7 +69,8 @@ export function ProductFeed({
               handle: collectionHandle,
               after: cursor,
               sort,
-              price,
+              subject: params.get("subject") ?? undefined,
+              format: params.get("format") ?? undefined,
               pageSize,
             })
           : await loadMoreProducts({
@@ -80,7 +81,14 @@ export function ProductFeed({
               pageSize,
             });
 
-        setExtra((current) => [...current, ...page.products]);
+        setExtra((current) => {
+          const seen = new Set([...initialProducts, ...current].map((product) => product.id));
+          return [...current, ...page.products.filter((product) => {
+            if (seen.has(product.id)) return false;
+            seen.add(product.id);
+            return true;
+          })];
+        });
         setCursor(page.endCursor);
         setHasNext(page.hasNextPage);
       } catch {
