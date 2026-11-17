@@ -312,8 +312,12 @@ export const GET_PRODUCT_HANDLES = /* GraphQL */ `
 export const GET_COLLECTIONS = [
   IMAGE,
   /* GraphQL */ `
-    query GetCollections($first: Int!) {
-      collections(first: $first) {
+    query GetCollections($first: Int!, $after: String) {
+      collections(first: $first, after: $after) {
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
         nodes {
           id
           handle

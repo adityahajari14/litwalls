@@ -1,0 +1,58 @@
+﻿.section {
+  scroll-margin-top: 6rem;
+  padding-block: 48px;
+  background: var(--color-ink-950);
+  color: var(--color-paper);
+}
+
+.header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
+.eyebrow { font-size: 10px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--color-brand-400); }
+.title { margin-top: 8px; font-family: var(--font-display); font-size: 46px; line-height: 1; letter-spacing: 0.01em; }
+.intro { max-width: 265px; padding-bottom: 2px; font-size: 12px; line-height: 1.7; color: var(--color-ink-300); }
+
+.deals { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 24px; }
+.deal { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 16px; padding: 22px 24px; border: 1px solid rgb(255 255 255 / 15%); border-radius: var(--radius-card); background: rgb(255 255 255 / 3%); transition: border-color 180ms, background 180ms; }
+.deal:hover { border-color: rgb(255 124 56 / 50%); background: rgb(255 255 255 / 5%); }
+.deal h3 { font-size: 11px; font-weight: 500; color: var(--color-ink-300); }
+.deal h3 > span { margin-left: 12px; font-size: 10px; color: var(--color-ink-300); }
+.value { margin-top: 8px; font-family: var(--font-display); font-size: 36px; line-height: 1.1; letter-spacing: 0.01em; }
+.value > span { color: var(--color-brand-400); }
+.detail { margin-top: 7px; font-size: 12px; line-height: 1.6; color: var(--color-ink-300); }
+.arrow { display: grid; width: 36px; height: 36px; flex-shrink: 0; place-items: center; border: 1px solid rgb(255 255 255 / 18%); border-radius: 50%; }
+
+.perks { display: grid; grid-template-columns: 1fr 1.15fr 1.35fr; margin-top: 24px; padding-top: 20px; border-top: 1px solid rgb(255 255 255 / 12%); }
+.perks li { display: flex; min-width: 0; align-items: flex-start; gap: 10px; padding-inline: 20px; border-left: 1px solid rgb(255 255 255 / 12%); }
+.perks li:first-child { padding-left: 0; border-left: 0; }
+.perks li:last-child { padding-right: 0; }
+.icon { width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; color: var(--color-brand-400); }
+.perks h3 { font-size: 13px; font-weight: 500; line-height: 1.5; }
+.perks p { margin-top: 4px; font-size: 11px; line-height: 1.7; color: var(--color-ink-300); }
+.perks code { font-weight: 600; letter-spacing: 0.04em; color: var(--color-paper); }
+.allOffers { display: inline-flex; min-height: 48px; align-items: center; justify-content: center; gap: 12px; margin-top: 24px; padding: 12px 22px; border: 1px solid var(--color-brand-500); border-radius: var(--radius-card); background: var(--color-brand-500); color: white; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 180ms, border-color 180ms; }
+.allOffers:hover { background: var(--color-brand-600); border-color: var(--color-brand-600); }
+
+@media (max-width: 1023px) {
+  .header { align-items: flex-start; flex-direction: column; gap: 12px; }
+  .intro { max-width: none; }
+  .deal { padding: 20px; gap: 12px; }
+  .value { font-size: 32px; }
+  .deal h3 > span { display: block; margin: 3px 0 0; }
+}
+
+@media (max-width: 767px) {
+  .perks { grid-template-columns: 1fr; gap: 14px; }
+  .perks li { padding: 0; border: 0; }
+}
+
+@media (max-width: 639px) {
+  .section { padding-block: 32px; }
+  .title { font-size: 38px; }
+  .deals { grid-template-columns: 1fr; gap: 10px; margin-top: 20px; }
+  .deal { padding: 17px 18px; }
+  .deal h3 > span { display: inline; margin-left: 8px; }
+  .value { font-size: 32px; margin-top: 6px; }
+  .detail { font-size: 11px; margin-top: 5px; }
+  .arrow { width: 30px; height: 30px; }
+  .perks { margin-top: 20px; padding-top: 18px; gap: 13px; }
+  .allOffers { width: 100%; }
+}

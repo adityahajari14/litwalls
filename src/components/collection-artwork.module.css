@@ -1,0 +1,50 @@
+.artwork {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  isolation: isolate;
+  background: #28231e;
+}
+
+.backdrop { object-fit: cover; }
+
+.print {
+  position: absolute;
+  container-type: inline-size;
+  overflow: hidden;
+  aspect-ratio: 296 / 420;
+  border: clamp(1px, 0.18vw, 3px) solid #eee8dd;
+  background: #eee8dd;
+  box-shadow: 2px 4px 5px rgb(0 0 0 / 30%), 6px 12px 18px rgb(0 0 0 / 35%);
+}
+
+.print:nth-of-type(1) { left: 12%; top: 19%; width: 29%; rotate: -11deg; }
+.print:nth-of-type(2) { left: 33.5%; top: 10%; width: 33%; rotate: -2deg; z-index: 2; }
+.print:nth-of-type(3) { left: 59%; top: 20%; width: 29%; rotate: 11deg; }
+
+.poster {
+  position: absolute;
+  max-width: none;
+}
+
+.designPlaceholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 10%;
+  background: #fff;
+  color: #111010;
+  text-align: center;
+}
+
+.designPlaceholder > span {
+  font-family: var(--font-display);
+  font-size: 30cqw;
+  font-weight: 700;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.designPlaceholder > span > span { display: block; }

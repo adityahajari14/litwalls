@@ -31,9 +31,9 @@ const slides: HeroSlide[] = [
       image: "/brand/hero-posters-mobile-v3.webp",
       lines: ["Make your"],
       description: `300gsm matte prints of everything you love. Find your favourites from ₹${ENTRY_PRICE}.`,
-      note: "Printed in India. Made for your space.",
+      note: "Made for your space.",
     },
-    note: "Printed in India. Made for your space.",
+    note: "Made for your space.",
   },
   {
     id: "bundles",
@@ -124,11 +124,11 @@ const slides: HeroSlide[] = [
     description: "Your photo, artwork or original design, printed big on 300gsm matte paper. Upload your image and make a poster that is yours.",
     primary: { label: "Create a custom poster", href: "/custom/custom-poster" },
     image: {
-      src: "/brand/hero-custom-poster.webp",
-      alt: "A full-size custom poster with an example mountain-and-lake photograph on a walnut creative desk",
+      src: "/brand/hero-custom-poster-design-v2.webp",
+      alt: "A full-size white custom poster reading Your Design Here on a walnut desk beside an orange lamp and camera",
     },
     mobile: {
-      image: "/brand/hero-custom-poster-mobile.webp",
+      image: "/brand/hero-custom-poster-design-mobile-v2.webp",
       lines: ["Your idea."],
       description: "Your photo or design, printed big on 300gsm matte paper. Make it yours.",
       note: `From ₹${customPosterFromPrice}. Upload your image and choose a size.`,

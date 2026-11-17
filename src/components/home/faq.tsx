@@ -63,12 +63,12 @@ const FAQS = [
 
 export function Faq() {
   return (
-    <section id="faq" className="bg-paper py-16 lg:py-24">
+    <section id="faq" className="scroll-mt-24 bg-paper py-10 sm:py-14 lg:py-20">
       <Container>
-        <div className="reveal grid gap-10 lg:grid-cols-[1fr_1.6fr] lg:gap-16">
-          <div>
+        <div className="reveal grid gap-7 sm:gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:gap-16">
+          <div className="min-w-0">
             <SectionHeading title="FAQ" />
-            <p className="mt-3 text-ink-600 text-pretty">
+            <p className="mt-3 text-sm leading-relaxed text-ink-600 text-pretty sm:text-base">
               Have a question we haven&apos;t covered? Email{" "}
               <a
                 href="mailto:hello@litwalls.in"

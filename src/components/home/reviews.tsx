@@ -35,7 +35,7 @@ export function Reviews({
     reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
 
   return (
-    <section id="reviews" className="scroll-mt-24 bg-white py-16 lg:py-24">
+    <section id="reviews" className="scroll-mt-24 bg-white py-10 sm:py-14 lg:py-20">
       <Container>
         <SectionHeading
           title="What people say"

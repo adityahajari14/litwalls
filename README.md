@@ -1,6 +1,6 @@
 # Litwalls
 
-A headless storefront for Litwalls — posters, printed in India.
+A headless storefront for Litwalls — 300gsm matte posters, printed to order.
 
 Next.js 16 (App Router) + Tailwind CSS v4 on the front, Shopify's **Headless**
 sales channel on the back — Storefront API for products/cart, Customer

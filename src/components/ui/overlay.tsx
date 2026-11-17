@@ -7,7 +7,7 @@ import { cn } from "@/lib/cn";
 import { useFocusTrap } from "@/lib/use-focus-trap";
 import { usePresence } from "@/lib/use-presence";
 
-type Side = "left" | "right" | "top";
+type Side = "left" | "right" | "top" | "center";
 
 /**
  * Where the panel sits, and where it travels from.
@@ -16,6 +16,11 @@ type Side = "left" | "right" | "top";
  * transition list names those rather than `transform`.
  */
 const PANEL: Record<Side, { base: string; open: string; closed: string }> = {
+  center: {
+    base: "relative flex flex-col",
+    open: "scale-100 opacity-100",
+    closed: "scale-[0.98] opacity-0",
+  },
   left: {
     base: "absolute inset-y-0 left-0 flex flex-col",
     open: "translate-x-0",
@@ -136,6 +141,7 @@ export function Overlay({
         // `clip`, not `hidden`: a hidden box is still scrollable from script,
         // and focusing something inside an off-screen panel would scroll it.
         "fixed inset-0 overflow-clip",
+        side === "center" && "grid place-items-center p-4",
         !visible && "pointer-events-none",
         className,
       )}

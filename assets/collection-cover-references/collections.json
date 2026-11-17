@@ -1,0 +1,90 @@
+[
+  {
+    "handle": "marvel",
+    "title": "Marvel",
+    "count": 41,
+    "product": {
+      "handle": "spider-man-14-marvel-posters",
+      "title": "Spider Man #14 | Marvel Posters"
+    },
+    "source": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mvfo89i1-1lhkxm-mockups-mockup-1.jpg?v=1792505033",
+    "file": "assets/collection-cover-references/marvel.jpg"
+  },
+  {
+    "handle": "movies-tv",
+    "title": "Movies",
+    "count": 139,
+    "product": {
+      "handle": "the-truman-show-01-movies-posters",
+      "title": "The Truman Show #01 | Movies Posters"
+    },
+    "source": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mvfo8utp-e9s9pi-mockups-mockup-1.jpg?v=1792505271",
+    "file": "assets/collection-cover-references/movies-tv.jpg"
+  },
+  {
+    "handle": "music",
+    "title": "Music",
+    "count": 137,
+    "product": {
+      "handle": "travis-scott-03-music-posters-2",
+      "title": "Travis Scott #03 | Music Posters"
+    },
+    "source": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mvfbqal4-j6paew-mockups-mockup-1_2961dbd4-3cf4-4cca-b655-bf12ade489fd.jpg?v=1792428754",
+    "file": "assets/collection-cover-references/music.jpg"
+  },
+  {
+    "handle": "dc",
+    "title": "DC",
+    "count": 22,
+    "product": {
+      "handle": "batman-05-dc-posters",
+      "title": "Batman #05 | DC Posters"
+    },
+    "source": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mvfo8tag-quvfu9-mockups-mockup-1.jpg?v=1792505135",
+    "file": "assets/collection-cover-references/dc.jpg"
+  },
+  {
+    "handle": "custom-prints",
+    "title": "Custom Prints",
+    "count": 15,
+    "product": {
+      "handle": "custom-poster",
+      "title": "Custom Poster"
+    },
+    "source": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/custom1.jpg?v=1787491230",
+    "file": "assets/collection-cover-references/custom-prints.jpg"
+  },
+  {
+    "handle": "cars",
+    "title": "Cars",
+    "count": 141,
+    "product": {
+      "handle": "mclaren-senna-gtr-02-cars-posters",
+      "title": "McLaren Senna GTR #02 | Cars Posters"
+    },
+    "source": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mvvhsk1x-7eiser-mockups-mockup-1.jpg?v=1793445684",
+    "file": "assets/collection-cover-references/cars.jpg"
+  },
+  {
+    "handle": "f1",
+    "title": "F1",
+    "count": 64,
+    "product": {
+      "handle": "haas-f1-team-01-f1-posters",
+      "title": "Haas F1 Team #01 | F1 Posters"
+    },
+    "source": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/muyibjv8-xgc5ha-mockups-mockup-4.jpg?v=1791490911",
+    "file": "assets/collection-cover-references/f1.jpg"
+  },
+  {
+    "handle": "anime",
+    "title": "Anime",
+    "count": 100,
+    "product": {
+      "handle": "starry-night-cat-01-anime-posters",
+      "title": "Starry Night Cat #01 | Anime Posters"
+    },
+    "source": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mvh6pl7a-bnmmp4-mockups-mockup-1.jpg?v=1794836658",
+    "file": "assets/collection-cover-references/anime.jpg"
+  }
+]

@@ -29,14 +29,14 @@ const ITEMS = [
 export function TrustStrip() {
   return (
     <section aria-label="Why you can buy with confidence" className="border-b border-ink-100 bg-white">
-      <Container className="py-10">
-        <ul className="reveal-stagger grid gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
+      <Container className="py-7 sm:py-8 lg:py-10">
+        <ul className="reveal-stagger grid grid-cols-2 gap-x-5 gap-y-6 sm:gap-x-8 lg:grid-cols-4">
           {ITEMS.map((item) => (
-            <li key={item.title} className="flex gap-3.5">
-              <item.icon className="mt-0.5 size-6 shrink-0 text-brand-500" />
-              <div>
-                <p className="text-sm font-semibold text-ink-950">{item.title}</p>
-                <p className="mt-1 text-sm text-ink-600 text-pretty">{item.body}</p>
+            <li key={item.title} className="flex min-w-0 flex-col gap-2.5 sm:flex-row sm:gap-3.5">
+              <item.icon className="mt-0.5 size-5 shrink-0 text-brand-500 sm:size-6" />
+              <div className="min-w-0">
+                <p className="text-xs leading-relaxed font-semibold text-ink-950 sm:text-sm">{item.title}</p>
+                <p className="mt-1 text-xs leading-relaxed text-ink-600 text-pretty sm:text-sm">{item.body}</p>
               </div>
             </li>
           ))}

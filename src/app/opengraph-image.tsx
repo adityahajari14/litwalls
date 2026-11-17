@@ -14,7 +14,7 @@ import { FREE_SHIPPING_THRESHOLD } from "@/lib/offers";
 import { ENTRY_PRICE } from "@/lib/pricing";
 
 export const alt =
-  "Litwalls — 300gsm matte posters, printed and shipped from India";
+  "Litwalls — 300gsm matte posters for your space";
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 
@@ -125,7 +125,7 @@ export default async function Image() {
           >
             Free delivery over ₹{FREE_SHIPPING_THRESHOLD}
             {" · "}
-            Printed &amp; shipped from India
+            Printed to order
           </div>
         </div>
 

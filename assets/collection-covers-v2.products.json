@@ -1,0 +1,187 @@
+{
+  "description": "Original catalogue mockups used without repainting their artwork. Only the printed rectangle is shown by CSS. Naruto #07 is excluded.",
+  "collections": {
+    "marvel": [
+      {
+        "handle": "captain-america-04-marvel-posters",
+        "title": "Captain America #04 | Marvel Posters",
+        "src": "/collections/poster-art/captain-america-04-marvel-posters.webp",
+        "source": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mvfo8997-imy2fp-mockups-mockup-1.jpg?v=1792505020",
+        "width": 1000,
+        "height": 1048
+      },
+      {
+        "handle": "spider-man-14-marvel-posters",
+        "title": "Spider Man #14 | Marvel Posters",
+        "src": "/brand/hero-products/spider-man-14-marvel-posters.webp",
+        "source": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mvfo89i1-1lhkxm-mockups-mockup-1.jpg?v=1792505033",
+        "width": 1000,
+        "height": 1048
+      },
+      {
+        "handle": "iron-man-07-marvel-posters",
+        "title": "Iron Man #07 | Marvel Posters",
+        "src": "/collections/poster-art/iron-man-07-marvel-posters.webp",
+        "source": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mvfo8947-1wqvkj-mockups-mockup-1.jpg?v=1792505008",
+        "width": 1000,
+        "height": 1048
+      }
+    ],
+    "movies-tv": [
+      {
+        "handle": "oppenheimer-01-movies-posters",
+        "title": "Oppenheimer #01 | Movies Posters",
+        "src": "/collections/poster-art/oppenheimer-01-movies-posters.webp",
+        "source": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mvfo6yhf-s0p42g-mockups-mockup-1.jpg?v=1792504599",
+        "width": 1000,
+        "height": 1048
+      },
+      {
+        "handle": "the-truman-show-01-movies-posters",
+        "title": "The Truman Show #01 | Movies Posters",
+        "src": "/brand/hero-products/the-truman-show-01-movies-posters.webp",
+        "source": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mvfo8utp-e9s9pi-mockups-mockup-1.jpg?v=1792505271",
+        "width": 1000,
+        "height": 1048
+      },
+      {
+        "handle": "breaking-bad-03-movies-posters",
+        "title": "Breaking Bad #03 | Movies Posters",
+        "src": "/collections/poster-art/breaking-bad-03-movies-posters.webp",
+        "source": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mvfo6ye5-vqg1kz-mockups-mockup-1.jpg?v=1792504588",
+        "width": 1000,
+        "height": 1048
+      }
+    ],
+    "music": [
+      {
+        "handle": "the-weeknd-08-after-hours-music-posters",
+        "title": "The Weeknd #08 - After Hours | Music Posters",
+        "src": "/collections/poster-art/the-weeknd-08-after-hours-music-posters.webp",
+        "source": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mvfbqb1k-o1gf93-mockups-mockup-1.jpg?v=1792428757",
+        "width": 1000,
+        "height": 1048
+      },
+      {
+        "handle": "travis-scott-03-music-posters-2",
+        "title": "Travis Scott #03 | Music Posters",
+        "src": "/brand/hero-products/travis-scott-03-music-posters-2.webp",
+        "source": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mvfbqal4-j6paew-mockups-mockup-1_2961dbd4-3cf4-4cca-b655-bf12ade489fd.jpg?v=1792428754",
+        "width": 1000,
+        "height": 1048
+      },
+      {
+        "handle": "eminem-04-music-posters",
+        "title": "Eminem #04 | Music Posters",
+        "src": "/collections/poster-art/eminem-04-music-posters.webp",
+        "source": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mvfbq9a4-zwfhe8-mockups-mockup-1.jpg?v=1792428704",
+        "width": 1000,
+        "height": 1048
+      }
+    ],
+    "dc": [
+      {
+        "handle": "superman-03-dc-posters",
+        "title": "Superman #03 | DC Posters",
+        "src": "/collections/poster-art/superman-03-dc-posters.webp",
+        "source": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mvfo8vmt-yvibsn-mockups-mockup-1.jpg?v=1792505327",
+        "width": 1000,
+        "height": 1048
+      },
+      {
+        "handle": "batman-05-dc-posters",
+        "title": "Batman #05 | DC Posters",
+        "src": "/brand/hero-products/batman-05-dc-posters.webp",
+        "source": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mvfo8tag-quvfu9-mockups-mockup-1.jpg?v=1792505135",
+        "width": 1000,
+        "height": 1048
+      },
+      {
+        "handle": "the-flash-02-dc-posters-1",
+        "title": "The Flash #02 | DC Posters",
+        "src": "/collections/poster-art/the-flash-02-dc-posters-1.webp",
+        "source": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mvfo8vzm-qop8o1-mockups-mockup-1.jpg?v=1792505352",
+        "width": 1000,
+        "height": 1048
+      }
+    ],
+    "cars": [
+      {
+        "handle": "bmw-m4-03-cars-posters",
+        "title": "BMW M4 #03 | Cars Posters",
+        "src": "/collections/poster-art/bmw-m4-03-cars-posters.webp",
+        "source": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mvdvjm7u-8s1hms-mockups-mockup-1.jpg?v=1792416579",
+        "width": 1000,
+        "height": 1048
+      },
+      {
+        "handle": "ferrari-f40-03-cars-posters",
+        "title": "Ferrari F40 #03 | Cars Posters",
+        "src": "/collections/poster-art/ferrari-f40-03-cars-posters.webp",
+        "source": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mvdvjm44-ww0de7-mockups-mockup-1.jpg?v=1792416488",
+        "width": 1000,
+        "height": 1048
+      },
+      {
+        "handle": "porsche-gt3-rs-03-cars-posters",
+        "title": "Porsche GT3 RS #03 | Cars Posters",
+        "src": "/collections/poster-art/porsche-gt3-rs-03-cars-posters.webp",
+        "source": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mvdvjkts-o4qmc8-mockups-mockup-1.jpg?v=1792415519",
+        "width": 1000,
+        "height": 1048
+      }
+    ],
+    "f1": [
+      {
+        "handle": "ferrari-sf25-01-f1-posters",
+        "title": "Ferrari SF25 #01 | F1 Posters",
+        "src": "/collections/poster-art/ferrari-sf25-01-f1-posters.webp",
+        "source": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/muyibj7o-qd6zip-mockups-mockup-4.jpg?v=1791490788",
+        "width": 1000,
+        "height": 1043
+      },
+      {
+        "handle": "haas-f1-team-01-f1-posters",
+        "title": "Haas F1 Team #01 | F1 Posters",
+        "src": "/brand/hero-products/haas-f1-team-01-f1-posters.webp",
+        "source": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/muyibjv8-xgc5ha-mockups-mockup-4.jpg?v=1791490911",
+        "width": 1000,
+        "height": 1043
+      },
+      {
+        "handle": "mclaren-f1-04-f1-posters",
+        "title": "McLaren F1 #04 | F1 Posters",
+        "src": "/collections/poster-art/mclaren-f1-04-f1-posters.webp",
+        "source": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/muyibjbu-9ox7wh-mockups-mockup-4.jpg?v=1791490810",
+        "width": 1000,
+        "height": 1043
+      }
+    ],
+    "anime": [
+      {
+        "handle": "spirited-away-01-anime-posters",
+        "title": "Spirited Away #01 | Anime Posters",
+        "src": "/brand/hero-products/spirited-away-01-anime-posters.webp",
+        "source": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mvh6pr7x-u0vkgn-mockups-mockup-1.jpg?v=1794837464",
+        "width": 1000,
+        "height": 1048
+      },
+      {
+        "handle": "starry-night-cat-01-anime-posters",
+        "title": "Starry Night Cat #01 | Anime Posters",
+        "src": "/brand/hero-products/starry-night-cat-01-anime-posters.webp",
+        "source": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mvh6pl7a-bnmmp4-mockups-mockup-1.jpg?v=1794836658",
+        "width": 1000,
+        "height": 1048
+      },
+      {
+        "handle": "my-neighbor-totoro-03-anime-posters",
+        "title": "My Neighbor Totoro #03 | Anime Posters",
+        "src": "/collections/poster-art/my-neighbor-totoro-03-anime-posters.webp",
+        "source": "https://cdn.shopify.com/s/files/1/0684/9826/0142/files/mvh6pr98-qaciee-mockups-mockup-1.jpg?v=1794837475",
+        "width": 1000,
+        "height": 1048
+      }
+    ]
+  }
+}

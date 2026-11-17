@@ -341,9 +341,8 @@ export async function getStandardProducts({
 /**
  * Collections that exist in Shopify but must never show up in browse
  * navigation. `custom-prints` is the customer-upload range: it has its own
- * entry point (`/custom`, "Design your own") and its own on-page treatment, so
- * listing it in the header, footer or /collections index alongside Marvel, DC
- * and the rest would present it as just another poster collection.
+ * entry point (`/custom`, "Design your own"). Full collection grids include it;
+ * compact navigation keeps it separate.
  */
 const HIDDEN_COLLECTION_HANDLES = new Set([
   "custom-prints",
@@ -366,19 +365,30 @@ const HIDDEN_COLLECTION_HANDLES = new Set([
  *     first product's artwork stands in, so every tile on the site shows a
  *     poster rather than a placeholder.
  */
-export async function getCollections(first = 12): Promise<CollectionSummary[]> {
-  type Node = Collection & {
-    previews: { nodes: { featuredImage: Image | null }[] };
-    counted: { nodes: { id: string }[] };
-  };
+type CollectionNode = Collection & {
+  previews: { nodes: { featuredImage: Image | null }[] };
+  counted: { nodes: { id: string }[] };
+};
 
-  const data = await storefront<{ collections: { nodes: Node[] } }>(
+async function getCollectionPage(first: number, after: string | null = null) {
+  const data = await storefront<{
+    collections: {
+      nodes: CollectionNode[];
+      pageInfo: { hasNextPage: boolean; endCursor: string | null };
+    };
+  }>(
     GET_COLLECTIONS,
-    { variables: { first }, revalidate: CATALOGUE_REVALIDATE, tags: ["collections"] },
+    { variables: { first, after }, revalidate: CATALOGUE_REVALIDATE, tags: ["collections"] },
   );
+  return data.collections;
+}
 
-  return data.collections.nodes
-    .filter((collection) => !HIDDEN_COLLECTION_HANDLES.has(collection.handle))
+function summarizeCollections(nodes: CollectionNode[], includeCustom = false): CollectionSummary[] {
+  return nodes
+    .filter((collection) =>
+      !HIDDEN_COLLECTION_HANDLES.has(collection.handle) ||
+      (includeCustom && collection.handle === "custom-prints"),
+    )
     .map(({ previews, counted, ...collection }) => {
       const images = previews.nodes
         .map((product) => product.featuredImage)
@@ -392,6 +402,24 @@ export async function getCollections(first = 12): Promise<CollectionSummary[]> {
       };
     })
     .filter((collection) => collection.productCount > 0);
+}
+
+export async function getCollections(first = 12): Promise<CollectionSummary[]> {
+  return summarizeCollections((await getCollectionPage(first)).nodes);
+}
+
+/** Every published, nonempty range, including custom prints, without a tile cap. */
+export async function getAllCollections(): Promise<CollectionSummary[]> {
+  const nodes: CollectionNode[] = [];
+  let after: string | null = null;
+
+  do {
+    const page = await getCollectionPage(50, after);
+    nodes.push(...page.nodes);
+    after = page.pageInfo.hasNextPage ? page.pageInfo.endCursor : null;
+  } while (after);
+
+  return summarizeCollections(nodes, true);
 }
 
 /**

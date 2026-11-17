@@ -21,6 +21,7 @@ export function SubscribeForm({
   className,
   onSubscribed,
   source,
+  buttonLabel,
 }: {
   /** Distinguishes the instances' inputs when several are on the page. */
   id: string;
@@ -29,6 +30,8 @@ export function SubscribeForm({
   onSubscribed?: () => void;
   /** Tags the customer in Shopify — see subscribeToNewsletter. */
   source?: string;
+  /** Optional visible submit text; compact instances keep the arrow alone. */
+  buttonLabel?: string;
 }) {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
@@ -101,17 +104,20 @@ export function SubscribeForm({
           placeholder="you@email.com"
           aria-label="Email address"
           aria-invalid={status === "error"}
-          className="h-11 w-full min-w-0 rounded-full border border-ink-200 bg-paper px-4 text-sm text-ink-900 placeholder:text-ink-400 focus:border-brand-400 focus:outline-none disabled:opacity-60"
+          className="h-11 w-full min-w-0 rounded-full border border-ink-200 bg-paper px-4 text-base text-ink-900 placeholder:text-ink-400 focus:border-brand-400 focus:outline-none disabled:opacity-60 sm:text-sm"
         />
         <button
           type="submit"
           disabled={isPending}
-          aria-label="Subscribe"
-          className="grid size-11 shrink-0 place-items-center rounded-full bg-ink-950 text-white transition-colors hover:bg-brand-500 disabled:opacity-60"
+          aria-label={buttonLabel ?? "Subscribe"}
+          className={cn(
+            "grid h-11 shrink-0 place-items-center rounded-full bg-ink-950 text-white transition-colors hover:bg-brand-500 disabled:opacity-60",
+            buttonLabel ? "px-4 text-sm font-medium" : "w-11",
+          )}
         >
-          <ArrowRightIcon
+          {buttonLabel ? (isPending ? "Subscribing…" : buttonLabel) : <ArrowRightIcon
             className={cn("size-5", isPending && "animate-pulse")}
-          />
+          />}
         </button>
       </div>
 

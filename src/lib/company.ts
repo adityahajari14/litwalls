@@ -11,6 +11,8 @@
  */
 
 export const SUPPORT_EMAIL = "hello@litwalls.in";
+export const INSTAGRAM_URL = "https://www.instagram.com/litwalls.in/";
+export const INSTAGRAM_HANDLE = "@litwalls.in";
 export const SUPPORT_HOURS = "Monday to Saturday, 10am–7pm IST";
 
 /** How quickly a human actually replies. Claimed on the FAQ and contact page. */

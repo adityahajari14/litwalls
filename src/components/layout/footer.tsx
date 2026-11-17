@@ -1,24 +1,22 @@
-import Image from "next/image";
+﻿import Image from "next/image";
 import Link from "next/link";
 
-import { InstagramIcon, TwitterIcon } from "@/components/icons";
+import { ArrowRightIcon, InstagramIcon, ShieldIcon } from "@/components/icons";
 import { SubscribeForm } from "@/components/marketing/subscribe-form";
 import { PAYMENT_METHODS } from "@/components/payment-icons";
 import { Container } from "@/components/ui/container";
+import { INSTAGRAM_URL, SUPPORT_EMAIL } from "@/lib/company";
 import { SUBSCRIBE_DISCOUNT_PERCENT } from "@/lib/marketing";
-import { SUPPORT_EMAIL } from "@/lib/company";
 import { FOOTER_NAV } from "@/lib/navigation";
 import { getCollections } from "@/lib/shopify/products";
+import styles from "./footer.module.css";
 
-/** Enough to fill the column without it outgrowing "Help" and "Company" next to it. */
 const FOOTER_COLLECTION_COUNT = 4;
 
 export async function Footer() {
-  // One extra than the footer shows, so we know whether "See all" earns its
-  // place without a second round trip to Shopify.
-  const collections = await getCollections(FOOTER_COLLECTION_COUNT + 1);
+  // The same cached navigation batch as the header, before limiting visible links.
+  const collections = await getCollections(12);
   const hasMore = collections.length > FOOTER_COLLECTION_COUNT;
-
   const shopGroup = {
     title: "Shop",
     links: [
@@ -27,72 +25,45 @@ export async function Footer() {
         label: collection.title,
         href: `/collections/${collection.handle}`,
       })),
-      ...(hasMore
-        ? [{ label: "See all collections", href: "/collections" }]
-        : []),
+      ...(hasMore ? [{ label: "All collections", href: "/collections" }] : []),
     ],
   };
 
   return (
-    <footer className="mt-24 border-t border-ink-200 bg-white">
-      <Container className="py-14 lg:py-16">
-        <div className="grid gap-10 lg:grid-cols-[1.4fr_2fr]">
-          <div className="max-w-sm">
-            <Image
-              src="/brand/logo.png"
-              alt="Litwalls"
-              width={156}
-              height={75}
-              className="h-9 w-auto"
-            />
-            <p className="mt-4 text-sm text-ink-600 text-pretty">
-              Posters of everything you love, on 300gsm matte paper. Printed
-              in India, shipped to your wall.
-            </p>
+    <footer className={styles.footer}>
+      <Container>
+        <section className={styles.newsletter} aria-labelledby="footer-newsletter-title">
+          <div>
+            <p className={styles.eyebrow}>The Litwalls list</p>
+            <h2 id="footer-newsletter-title">Get {SUBSCRIBE_DISCOUNT_PERCENT}% off your first order.</h2>
+            <p className={styles.newsletterCopy}>New prints, fresh inspiration, and offers worth opening.</p>
+          </div>
+          <div className={styles.signupArea}>
+            <label htmlFor="newsletter" className="sr-only">Email address</label>
+            <SubscribeForm id="newsletter" className={styles.signup} source="footer" buttonLabel="Subscribe" />
+          </div>
+        </section>
 
-            <div className="mt-6">
-              <label
-                htmlFor="newsletter"
-                className="text-sm font-medium text-ink-900"
-              >
-                Get {SUBSCRIBE_DISCOUNT_PERCENT}% off your first order
-              </label>
-              <SubscribeForm id="newsletter" className="mt-2" source="footer" />
-            </div>
-
-            <div className="mt-6 flex gap-2">
-              <Link
-                href="https://instagram.com"
-                aria-label="Litwalls on Instagram"
-                className="grid size-10 place-items-center rounded-full border border-ink-200 text-ink-600 transition-colors hover:border-ink-950 hover:text-ink-950"
-              >
-                <InstagramIcon className="size-5" />
-              </Link>
-              <Link
-                href="https://x.com"
-                aria-label="Litwalls on X"
-                className="grid size-10 place-items-center rounded-full border border-ink-200 text-ink-600 transition-colors hover:border-ink-950 hover:text-ink-950"
-              >
-                <TwitterIcon className="size-5" />
-              </Link>
+        <div className={styles.main}>
+          <div className={styles.brand}>
+            <Link href="/" aria-label="Litwalls home" className={styles.logo}>
+              <Image src="/brand/logo.png" alt="Litwalls" width={156} height={75} className={styles.logoImage} />
+            </Link>
+            <p className={styles.brandCopy}>Posters of everything you love, on 300gsm matte paper. Printed to order, shipped to your wall.</p>
+            <a href={`mailto:${SUPPORT_EMAIL}`} className={styles.email}>{SUPPORT_EMAIL}<ArrowRightIcon className="size-3.5" aria-hidden="true" /></a>
+            <div className={styles.socials}>
+              <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" aria-label="Litwalls on Instagram"><InstagramIcon className="size-4.5" aria-hidden="true" /></a>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
+          <div className={styles.navigation}>
             {[shopGroup, ...FOOTER_NAV].map((group) => (
               <nav key={group.title} aria-label={group.title}>
-                <h3 className="text-sm font-semibold text-ink-950">
-                  {group.title}
-                </h3>
-                <ul className="mt-4 space-y-3">
+                <h3>{group.title}</h3>
+                <ul>
                   {group.links.map((link) => (
                     <li key={link.href}>
-                      <Link
-                        href={link.href}
-                        className="text-sm text-ink-600 transition-colors hover:text-brand-600"
-                      >
-                        {link.label}
-                      </Link>
+                      <Link href={link.href}>{link.label}{link.href === "/collections" ? <ArrowRightIcon className="size-3" aria-hidden="true" /> : null}</Link>
                     </li>
                   ))}
                 </ul>
@@ -101,44 +72,25 @@ export async function Footer() {
           </div>
         </div>
 
-        {/* Fan-art disclaimer. It keeps its place above the copyright line —
-            for a store selling prints of copyrighted and trademarked material,
-            saying plainly that these are not official merchandise is both the
-            honest position and the one that keeps a takedown notice from being
-            the first time the question gets asked.
-
-            What changed is the volume, not the words. As a solid orange panel
-            it was the highest-contrast element on every page — louder than any
-            button on the site — so the last thing a shopper saw before leaving
-            for checkout was a note about copyright complaints. A brand rule
-            down the left edge keeps it unmissable to anyone looking for it
-            without shouting at everyone who isn't. */}
-        <div className="mt-12 rounded-card border border-ink-200 border-l-2 border-l-brand-500 bg-ink-50 px-6 py-5">
-          <p className="text-sm/6 text-ink-700 text-pretty">
+        <aside className={styles.artworkNote} aria-labelledby="footer-artwork-note">
+          <h3 id="footer-artwork-note">Artwork note</h3>
+          <p>
             All artwork on this site is fan art and is not presented as official
             merchandise unless stated otherwise. If you have any concern about
             artwork published here, write to us at{" "}
-            <a
-              href={`mailto:${SUPPORT_EMAIL}`}
-              className="font-medium text-brand-600 underline underline-offset-2"
-            >
-              {SUPPORT_EMAIL}
-            </a>{" "}
+            <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>{" "}
             and we will respond promptly.
           </p>
-        </div>
+        </aside>
 
-        <div className="mt-8 flex flex-col gap-4 border-t border-ink-200 pt-8 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-ink-500">
-            © {new Date().getFullYear()} Litwalls. All rights reserved.
-          </p>
-          <ul className="flex flex-wrap items-center gap-1.5">
-            {PAYMENT_METHODS.map(({ name, Icon }) => (
-              <li key={name} title={name}>
-                <Icon />
-              </li>
-            ))}
-          </ul>
+        <div className={styles.bottom}>
+          <p>© {new Date().getFullYear()} Litwalls. All rights reserved.</p>
+          <div className={styles.payments}>
+            <span className={styles.secure}><ShieldIcon className="size-3.5" aria-hidden="true" />Secure checkout</span>
+            <ul aria-label="Accepted payment methods">
+              {PAYMENT_METHODS.map(({ name, Icon }) => <li key={name} title={name}><Icon /></li>)}
+            </ul>
+          </div>
         </div>
       </Container>
     </footer>

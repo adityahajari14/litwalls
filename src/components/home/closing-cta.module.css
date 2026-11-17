@@ -1,0 +1,53 @@
+.section { padding-block: 40px; background: var(--color-paper); }
+.panel { overflow: hidden; border: 1px solid var(--color-ink-800); border-radius: var(--radius-card); background: var(--color-ink-950); color: var(--color-paper); }
+.main { display: grid; grid-template-columns: 1.1fr 1fr; min-height: 350px; }
+.copy { position: relative; z-index: 1; align-self: center; padding: 36px 0 36px 44px; }
+.eyebrow { font-size: 10px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--color-brand-400); }
+.title { margin-top: 12px; font-family: var(--font-display); font-size: clamp(44px, 4.1vw, 60px); line-height: 0.98; letter-spacing: 0.01em; }
+.title > span { display: block; color: var(--color-brand-400); }
+.description { max-width: 350px; margin-top: 18px; font-size: 13px; line-height: 1.8; color: var(--color-ink-300); }
+.description strong { font-weight: 600; color: var(--color-paper); }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+.primary, .secondary { min-height: 48px; height: auto; padding: 13px 20px; font-size: 13px; }
+.secondary { border-color: rgb(255 255 255 / 25%); background: transparent; color: var(--color-paper); }
+.secondary:hover { border-color: rgb(255 255 255 / 50%); background: rgb(255 255 255 / 8%); }
+.visual { position: relative; min-width: 0; overflow: hidden; }
+.visual > div { position: absolute; top: 50%; left: 4%; width: 92%; height: auto; aspect-ratio: 3 / 2; transform: translateY(-50%); }
+.visual::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(90deg, var(--color-ink-950), transparent 25%); }
+.assurances { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 32px; padding: 17px 24px; border-top: 1px solid rgb(255 255 255 / 12%); }
+.assurances li { display: flex; align-items: center; gap: 7px; font-size: 11px; line-height: 1.6; color: var(--color-ink-300); }
+.assurances svg { color: var(--color-brand-400); }
+
+@media (min-width: 1600px) {
+  .main { min-height: 370px; }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .main { grid-template-columns: 1.15fr 1fr; min-height: 340px; }
+  .copy { padding-left: 28px; }
+  .title { font-size: 44px; }
+  .actions { gap: 8px; }
+  .primary, .secondary { padding-inline: 14px; font-size: 12px; }
+  .assurances { gap: 10px 18px; padding-inline: 18px; }
+}
+
+@media (max-width: 767px) {
+  .section { padding-block: 24px; }
+  .main { grid-template-columns: 1fr; min-height: 0; }
+  .copy { padding: 24px; }
+  .eyebrow { font-size: 9px; }
+  .title { max-width: 400px; margin-top: 10px; font-size: clamp(36px, 8vw, 48px); }
+  .description { max-width: 400px; margin-top: 14px; font-size: 12px; }
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+  .primary, .secondary { gap: 6px; padding-inline: 10px; font-size: 12px; }
+  .visual { order: -1; height: clamp(185px, 58vw, 280px); }
+  .visual::after { background: linear-gradient(0deg, var(--color-ink-950), transparent 35%); }
+  .assurances { justify-content: flex-start; gap: 9px; padding: 16px 24px; }
+  .assurances li { width: 100%; font-size: 10px; }
+}
+
+@media (max-width: 359px) {
+  .copy { padding: 22px 18px; }
+  .actions { grid-template-columns: 1fr; }
+  .assurances { padding-inline: 18px; }
+}

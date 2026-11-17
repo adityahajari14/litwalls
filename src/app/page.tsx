@@ -9,17 +9,14 @@ import { Reviews } from "@/components/home/reviews";
 import { TrustStrip } from "@/components/home/trust-strip";
 import { getReviewSummary } from "@/lib/reviews";
 import {
-  getCollections,
+  getAllCollections,
   getCustomProducts,
   getSplitProducts,
   getStandardProducts,
 } from "@/lib/shopify/products";
 
-/** The same ceiling /collections treats as "all". */
-const HOME_COLLECTION_COUNT = 50;
-
-/** One row of four on desktop, for every shelf on the page. */
-const SHELF_SIZE = 4;
+/** Up to five products per homepage shelf, in one desktop row. */
+const SHELF_SIZE = 5;
 
 /**
  * Every shelf on this page is the same component with the same card, so the
@@ -33,7 +30,7 @@ const SHELF_SIZE = 4;
 export default async function Home() {
   const [collections, customProducts, splitProducts, bestSellers, newArrivals, reviewSummary] =
     await Promise.all([
-      getCollections(HOME_COLLECTION_COUNT),
+      getAllCollections(),
       getCustomProducts(SHELF_SIZE),
       // Split posters live in Shopify like anything else. Until they're
       // published the shelf simply doesn't render. Custom split posters are
@@ -56,18 +53,6 @@ export default async function Home() {
 
       {collections.length > 0 ? <Categories collections={collections} /> : null}
 
-      {/* Best sellers lead the shelves: highest-converting, and it doubles as
-          social proof — other people bought these. */}
-      {bestSellers.length > 0 ? (
-        <ProductGridSection
-          title="Best sellers"
-          subtitle="Our most popular prints."
-          href="/products"
-          products={bestSellers}
-          eager
-        />
-      ) : null}
-
       <CustomPrints products={customProducts} />
 
       {splitProducts.length > 0 ? (
@@ -77,7 +62,22 @@ export default async function Home() {
           subtitle="One image, split across three panels, for a larger wall display."
           href="/products"
           products={splitProducts}
+          desktopColumns={5}
+          mobileProductLimit={4}
+          compactSizeSelector
           tone="paper"
+        />
+      ) : null}
+
+      {bestSellers.length > 0 ? (
+        <ProductGridSection
+          title="Best sellers"
+          subtitle="Our most popular prints."
+          href="/products"
+          products={bestSellers}
+          desktopColumns={5}
+          mobileProductLimit={4}
+          compactSizeSelector
         />
       ) : null}
 
@@ -89,6 +89,9 @@ export default async function Home() {
           subtitle="Recently added to the collection."
           href="/products"
           products={newArrivals}
+          desktopColumns={5}
+          mobileProductLimit={4}
+          compactSizeSelector
           tone="white"
         />
       ) : null}

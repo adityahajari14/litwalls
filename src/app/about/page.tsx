@@ -8,7 +8,7 @@ import { DAMAGE_PROOF, SUPPORT_EMAIL } from "@/lib/company";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "Why Litwalls exists: proper 300gsm matte posters at a price that doesn't make you think twice, printed in India.",
+    "Why Litwalls exists: proper 300gsm matte posters at a price that doesn't make you think twice.",
 };
 
 export default function AboutPage() {
@@ -19,10 +19,8 @@ export default function AboutPage() {
     >
       <h2>The problem with cheap posters</h2>
       <p>
-        Most posters sold online in India are printed on 150gsm glossy stock.
-        You can tell within a week: the paper curls at the corners, the glare
-        from your lamp washes out half the image, and the colours turn muddy
-        after a few months of daylight.
+        Thin, glossy poster paper can curl at the corners and catch glare from
+        lamps, making the artwork harder to see.
       </p>
       <p>
         The good stuff — proper gallery prints — starts around ₹2,000 for
@@ -41,8 +39,8 @@ export default function AboutPage() {
       </p>
       <p>
         We keep it affordable by doing less: no frames, no middlemen, no retail
-        space, no licensing deals that add ₹400 to the sticker. We print in
-        India, we ship from India, and we start at ₹79.
+        space, no licensing deals that add ₹400 to the sticker. Our posters
+        start at ₹79.
       </p>
 
       <h2>Printed to order</h2>

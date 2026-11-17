@@ -1,7 +1,8 @@
-import { ButtonLink } from "@/components/ui/button";
-import { DAMAGE_PROOF } from "@/lib/company";
+﻿import Link from "next/link";
+
+import { ArrowRightIcon, GiftIcon, TagIcon, TruckIcon } from "@/components/icons";
 import { Container } from "@/components/ui/container";
-import { GiftIcon, ReturnIcon, TagIcon, TruckIcon } from "@/components/icons";
+import { BundleOffersModal } from "@/components/home/bundle-offers-modal";
 import {
   bundleFreeCount,
   FIRST_ORDER_CODE,
@@ -13,114 +14,59 @@ import {
   SINGLE_BUNDLES,
   SPLIT_BUNDLES,
 } from "@/lib/offers";
+import styles from "./offers.module.css";
 
-/**
- * One glance, not a spreadsheet.
- *
- * The previous version of this section printed every discount code as a
- * visible badge — six of them, plus the bundle ladder spelled out rung by
- * rung. No brand at this tier does that on a home page. The headline states
- * the shape of the deal in plain terms and the exact bundle rungs move to the
- * FAQ, where someone reads them because they are already deciding how many to
- * add — not while skimming the home page for whether to trust the store at
- * all. The copy stays descriptive rather than exhortative throughout — no
- * "right now", no manufactured urgency — because a discount is a fact about
- * the price, not an event with a countdown.
- *
- * FIRST_ORDER_CODE is the one code still shown here, deliberately: unlike the
- * bundle codes it applies regardless of quantity, so it is the offer most
- * people in this section will actually use. It is also a real Shopify
- * discount code, not an automatic discount — saying it "applies itself" would
- * be a claim the checkout can't back up. It is never auto-applied even in the
- * cart: DiscountSuggestion in the cart drawer surfaces it and asks for one tap
- * once the order qualifies, rather than changing the total without asking.
- */
-
-const bestSingle = SINGLE_BUNDLES[SINGLE_BUNDLES.length - 1];
-const bestSplit = SPLIT_BUNDLES[SPLIT_BUNDLES.length - 1];
-
+/** Lead with the entry bundles; the modal carries the complete offer ladder. */
 export function Offers() {
-  return (
-    <section id="offers" className="scroll-mt-24 bg-ink-950 py-16 lg:py-24">
-      <Container>
-        <div className="reveal grid items-center gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
-          <div>
-            <p className="text-xs font-semibold tracking-[0.2em] text-brand-400 uppercase">
-              Offers
-            </p>
-            <h2 className="mt-3 font-display text-5xl leading-[0.95] text-white sm:text-6xl">
-              Order more,
-              <br />
-              save more
-            </h2>
-            <p className="mt-4 max-w-md text-ink-300 text-pretty">
-              Mix and match any design. Order{" "}
-              <span className="text-white">
-                {bestSingle.pay} posters and {bundleFreeCount(bestSingle)} are
-                free
-              </span>
-              , or order{" "}
-              <span className="text-white">
-                {bestSplit.pay} split sets and {bundleFreeCount(bestSplit)} are
-                free
-              </span>
-              . Full details and codes are in the FAQ below.
-            </p>
-            <ButtonLink href="/products" size="lg" className="mt-7">
-              Shop posters
-            </ButtonLink>
-          </div>
+  const single = SINGLE_BUNDLES[0];
+  const split = SPLIT_BUNDLES[0];
 
-          <ul className="grid gap-3 sm:grid-cols-2">
-            <li className="flex items-start gap-3 rounded-card bg-white/5 p-5 ring-1 ring-white/10">
-              <TruckIcon className="mt-0.5 size-5 shrink-0 text-brand-400" />
-              <div>
-                <p className="text-sm font-semibold text-white">
-                  Free delivery over ₹{FREE_SHIPPING_THRESHOLD}
-                </p>
-                <p className="mt-1 text-xs text-ink-400">
-                  A flat ₹{FLAT_SHIPPING_FEE} below that, anywhere in India.
-                </p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3 rounded-card bg-white/5 p-5 ring-1 ring-white/10">
-              <TagIcon className="mt-0.5 size-5 shrink-0 text-brand-400" />
-              <div>
-                <p className="text-sm font-semibold text-white">
-                  ₹{FIRST_ORDER_DISCOUNT} off your first order
-                </p>
-                <p className="mt-1 text-xs text-ink-400">
-                  Use code {FIRST_ORDER_CODE} on orders over ₹
-                  {FIRST_ORDER_MINIMUM}.
-                </p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3 rounded-card bg-white/5 p-5 ring-1 ring-white/10">
-              <GiftIcon className="mt-0.5 size-5 shrink-0 text-brand-400" />
-              <div>
-                <p className="text-sm font-semibold text-white">
-                  5 free prints, your choice
-                </p>
-                <p className="mt-1 text-xs text-ink-400">
-                  Mini pocket prints or retro prints, added once your order
-                  passes ₹{GIFT_THRESHOLD} — unless a bundle discount already
-                  applies.
-                </p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3 rounded-card bg-white/5 p-5 ring-1 ring-white/10">
-              <ReturnIcon className="mt-0.5 size-5 shrink-0 text-brand-400" />
-              <div>
-                <p className="text-sm font-semibold text-white">
-                  Free reprint on damage
-                </p>
-                <p className="mt-1 text-xs text-ink-400">
-                  Send {DAMAGE_PROOF} and we&apos;ll ship a free replacement.
-                </p>
-              </div>
-            </li>
-          </ul>
+  return (
+    <section id="offers" aria-labelledby="offers-title" className={styles.section}>
+      <Container>
+        <header className={styles.header}>
+          <div>
+            <p className={styles.eyebrow}>A little extra, on us</p>
+            <h2 id="offers-title" className={styles.title}>More art. Less spend.</h2>
+          </div>
+          <p className={styles.intro}>Mix your designs. Bundle savings apply automatically.</p>
+        </header>
+
+        <div className={styles.deals}>
+          <Link href="/products" className={styles.deal}>
+            <div>
+              <h3>Single posters</h3>
+              <p className={styles.value}>Buy {single.pay}. <span>Get {bundleFreeCount(single)} free.</span></p>
+              <p className={styles.detail}>Add {single.total} posters to your cart. Pay for {single.pay}.</p>
+            </div>
+            <span className={styles.arrow} aria-hidden="true"><ArrowRightIcon className="size-4" /></span>
+          </Link>
+          <Link href="/#split-posters" className={styles.deal}>
+            <div>
+              <h3>Split poster sets <span>1 set = 3 panels</span></h3>
+              <p className={styles.value}>Buy {split.pay}. <span>Get {bundleFreeCount(split)} free.</span></p>
+              <p className={styles.detail}>Add {split.total} sets to your cart. Pay for {split.pay}.</p>
+            </div>
+            <span className={styles.arrow} aria-hidden="true"><ArrowRightIcon className="size-4" /></span>
+          </Link>
         </div>
+
+        <ul className={styles.perks} aria-label="More offers">
+          <li>
+            <TruckIcon className={styles.icon} aria-hidden="true" />
+            <div><h3>Free delivery</h3><p>₹{FREE_SHIPPING_THRESHOLD}+ orders · ₹{FLAT_SHIPPING_FEE} below</p></div>
+          </li>
+          <li>
+            <TagIcon className={styles.icon} aria-hidden="true" />
+            <div><h3>₹{FIRST_ORDER_DISCOUNT} off your first order</h3><p>₹{FIRST_ORDER_MINIMUM}+ orders · Use <code>{FIRST_ORDER_CODE}</code> in cart</p></div>
+          </li>
+          <li>
+            <GiftIcon className={styles.icon} aria-hidden="true" />
+            <div><h3>5 free photo prints on ₹{GIFT_THRESHOLD}+</h3><p>Mini pocket or retro</p></div>
+          </li>
+        </ul>
+
+        <BundleOffersModal triggerClassName={styles.allOffers} />
       </Container>
     </section>
   );

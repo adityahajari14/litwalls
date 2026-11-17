@@ -1,0 +1,80 @@
+﻿.footer { margin-top: 56px; padding-block: 40px 24px; border-top: 1px solid var(--color-ink-200); background: var(--color-paper); }
+.newsletter { display: grid; grid-template-columns: 1fr minmax(320px, 0.85fr); align-items: center; gap: 32px; padding: 26px 30px; border: 1px solid var(--color-ink-200); border-radius: var(--radius-card); background: #f3f0eb; }
+.eyebrow { color: var(--color-brand-600); font-size: 10px; font-weight: 600; letter-spacing: 0.17em; text-transform: uppercase; }
+.newsletter h2 { margin-top: 8px; color: var(--color-ink-950); font-family: var(--font-display); font-size: 32px; letter-spacing: 0.01em; line-height: 1.1; text-wrap: balance; }
+.newsletterCopy { margin-top: 7px; color: var(--color-ink-600); font-size: 12px; line-height: 1.7; }
+.signupArea { min-width: 0; }
+.signup input { height: 48px; border-color: var(--color-ink-200); border-radius: var(--radius-card); background: white; font-size: 13px; transition: border-color 180ms, box-shadow 180ms; }
+.signup input:focus { border-color: var(--color-brand-500); box-shadow: 0 0 0 2px rgb(255 106 0 / 12%); }
+.signup input[aria-invalid="true"] { border-color: var(--color-brand-700); }
+.signup button { min-width: 112px; height: 48px; border-radius: var(--radius-card); background: var(--color-brand-500); font-size: 13px; }
+.signup button:hover { background: var(--color-brand-600); }
+.main { display: grid; grid-template-columns: 1fr 1.8fr; gap: 80px; padding-block: 36px 32px; }
+.brand { max-width: 320px; }
+.logo { display: inline-flex; align-items: center; min-height: 44px; }
+.logoImage { width: 142px; height: auto; mix-blend-mode: multiply; }
+.brandCopy { margin-top: 9px; color: var(--color-ink-600); font-size: 13px; line-height: 1.8; }
+.email { display: inline-flex; min-height: 44px; align-items: center; gap: 10px; margin-top: 4px; color: var(--color-ink-950); font-size: 13px; font-weight: 500; transition: color 180ms; }
+.email svg { color: var(--color-ink-500); transition: color 180ms; }
+.email:hover { color: var(--color-brand-600); }
+.email:hover svg { color: currentColor; }
+.socials { display: flex; gap: 8px; margin-top: 4px; }
+.socials a { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid var(--color-ink-200); border-radius: var(--radius-card); background: white; color: var(--color-ink-600); transition: color 180ms, border-color 180ms, background-color 180ms; }
+.socials a:hover { border-color: var(--color-brand-200); background: var(--color-brand-50); color: var(--color-brand-700); }
+.navigation { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; padding-top: 15px; }
+.navigation h3 { color: var(--color-ink-950); font-family: var(--font-display); font-size: 23px; letter-spacing: 0.025em; line-height: 1; }
+.navigation ul { margin-top: 14px; }
+.navigation a { display: inline-flex; min-height: 35px; align-items: center; gap: 6px; color: var(--color-ink-600); font-size: 13px; line-height: 1.5; transition: color 180ms; }
+.navigation a:hover { color: var(--color-brand-600); text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+.navigation a[href="/collections"] { color: var(--color-ink-800); font-weight: 500; }
+.navigation a[href="/collections"]:hover { color: var(--color-brand-600); }
+.artworkNote { display: grid; grid-template-columns: 105px 1fr; align-items: start; gap: 18px; padding: 18px 20px; border: 1px solid var(--color-ink-200); border-radius: var(--radius-card); background: white; }
+.artworkNote h3 { padding-top: 1px; color: var(--color-ink-700); font-size: 12px; font-weight: 600; line-height: 1.7; }
+.artworkNote p { color: var(--color-ink-600); font-size: 12px; line-height: 1.8; }
+.artworkNote a { color: var(--color-ink-700); text-decoration: underline; text-underline-offset: 3px; }
+.artworkNote a:hover { color: var(--color-brand-600); }
+.bottom { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--color-ink-200); }
+.bottom > p { color: var(--color-ink-600); font-size: 11px; line-height: 1.7; }
+.payments { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+.secure { display: inline-flex; align-items: center; gap: 5px; color: var(--color-ink-600); font-size: 10px; }
+.secure svg { color: var(--color-brand-600); }
+.payments ul { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.footer :where(a, button):focus-visible { outline: 2px solid var(--color-ink-800); outline-offset: 4px; }
+
+@media (max-width: 1023px) {
+  .newsletter { grid-template-columns: 1fr; gap: 20px; padding: 24px; }
+  .signupArea { max-width: 520px; width: 100%; }
+  .main { grid-template-columns: 1fr 1.7fr; gap: 32px; }
+  .navigation { gap: 16px; }
+}
+
+@media (max-width: 767px) {
+  .footer { margin-top: 32px; padding-block: 24px; }
+  .newsletter { padding: 20px; }
+  .newsletter h2 { max-width: 300px; font-size: 29px; }
+  .newsletterCopy { font-size: 11px; }
+  .signup input { padding-inline: 12px; font-size: 16px; }
+  .signup button { min-width: 94px; padding-inline: 12px; font-size: 12px; }
+  .main { grid-template-columns: 1fr; gap: 30px; padding-block: 28px; }
+  .brand { max-width: 350px; }
+  .logoImage { width: 128px; }
+  .brandCopy { margin-top: 5px; font-size: 12px; }
+  .navigation { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; padding-top: 0; }
+  .navigation h3 { font-size: 21px; }
+  .navigation ul { margin-top: 10px; }
+  .navigation a { min-height: 44px; font-size: 12px; }
+  .artworkNote { grid-template-columns: 1fr; gap: 5px; padding: 16px; }
+  .artworkNote p { font-size: 11px; }
+  .bottom { align-items: flex-start; flex-direction: column; gap: 12px; margin-top: 20px; padding-top: 18px; }
+  .payments { align-items: flex-start; flex-direction: column; gap: 10px; }
+}
+
+@media (max-width: 359px) {
+  .newsletter { padding: 18px 14px; }
+  .newsletter h2 { font-size: 27px; }
+  .signup button { min-width: 88px; padding-inline: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .footer :where(a, button, input, svg) { transition: none; }
+}

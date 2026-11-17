@@ -41,12 +41,15 @@ export type HeroSlide = {
   note?: string;
 };
 
-function HeroScene({ slide, first }: { slide: HeroSlide; first: boolean }) {
+function HeroScene({ slide, active }: { slide: HeroSlide; active: boolean }) {
   const common = {
     alt: slide.image.alt,
-    sizes: "100vw",
-    loading: "eager" as const,
-    fetchPriority: first ? "high" as const : "auto" as const,
+    sizes: "(min-width: 2400px) 2400px, 100vw",
+    // These art-directed WebPs are already sized and compressed for the hero.
+    // Serve them directly rather than enlarging them through the optimiser.
+    unoptimized: true,
+    loading: active ? "eager" as const : "lazy" as const,
+    fetchPriority: active ? "high" as const : "low" as const,
   };
   const { props: desktop } = getImageProps({
     ...common,
@@ -63,10 +66,9 @@ function HeroScene({ slide, first }: { slide: HeroSlide; first: boolean }) {
 
   return (
     <picture>
-      <source media="(max-width: 767px)" srcSet={mobile.srcSet} sizes={mobile.sizes} width={1024} height={1536} />
-      {/* Art direction follows next/image's getImageProps workflow so the
-          browser downloads only the matching phone or desktop composition. */}
-      <img {...desktop} className={styles.sceneImage} draggable={false} />
+      <source media="(max-width: 767px) and (max-aspect-ratio: 3/2)" srcSet={mobile.srcSet ?? mobile.src} sizes={mobile.sizes} width={1024} height={1536} />
+      {/* The browser downloads only the matching phone or desktop composition. */}
+      <img {...desktop} alt={slide.image.alt} className={styles.sceneImage} draggable={false} />
     </picture>
   );
 }
@@ -148,7 +150,7 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
             data-active={active === index}
           >
             <div className={styles.productVisual}>
-              <HeroScene slide={slide} first={index === 0} />
+              <HeroScene slide={slide} active={active === index} />
               {slide.posterWall ? (
                 <div className={styles.posterWall} role="group" aria-label="Posters featured in this bundle">
                   {slide.posterWall.map((poster) => (
@@ -163,7 +165,8 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
                         width={1000}
                         height={poster.crop?.imageHeight ?? 1048}
                         sizes="(min-width: 2000px) 1100px, (min-width: 1280px) 900px, (min-width: 768px) 650px, 450px"
-                        loading="eager"
+                        loading={active === index ? "eager" : "lazy"}
+                        unoptimized
                         className={styles.cataloguePoster}
                         style={poster.crop ? {
                           width: `${poster.crop.imageWidth / poster.crop.width * 100}%`,

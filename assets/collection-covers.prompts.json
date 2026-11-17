@@ -1,0 +1,77 @@
+{
+  "generator": "Built-in image_gen tool",
+  "usage": "Collection covers on the homepage and collections index",
+  "excludedArtwork": "Naruto #07 group poster is excluded.",
+  "covers": [
+    {
+      "id": "marvel",
+      "prompt": "Use case: ads-marketing. Generate a landscape 3:2 abstract comic-book collection cover for a premium poster shop. Pure abstract graphic art: overlapping torn scarlet and cobalt paper, cream halftone dots, energetic radial ink lines, thick black contour strokes, an amber light accent. Sophisticated tactile collectible print aesthetic against warm charcoal. Crisp geometric composition readable at small card size. No characters, people, faces, masks, franchise symbols, logos, text, letters, watermarks, or room furniture. Do not depict a specific superhero. Output only the finished artwork.",
+      "references": [],
+      "output": "public/collections/covers/marvel.webp",
+      "source": "C:\\Users\\adity\\.codex\\generated_images\\01a1e543-6ed1-76a2-8623-58bf485b3103\\exec-de022cca-46eb-4c2b-8569-b84e98bb6084.png"
+    },
+    {
+      "id": "movies-tv",
+      "prompt": "Create the MOVIES collection cover. Use case: ads-marketing. Asset: bespoke collection cover art for a premium poster shop, landscape 3:2 composition. The input image is an actual catalogue poster in a mockup room: use ONLY the rectangular printed artwork as the visual reference, NOT the beige wall, desk, computer, plants or furniture. Create an arresting art-directed close-up composition from that artwork, with subtle tactile paper collage edges and a warm charcoal surround. This should read as collectible cover art, not a room photograph or a screenshot. Keep the actual subject, recognizable design and colours faithful to the product art. The category title will be added in HTML outside the image. No text, no words, no type, no watermark, no new logos, no interface. Main subject centrally composed with safe margins for small responsive thumbnails. Crisp detail, professional print-campaign quality. Build around the exact evocative blue-sky stairway and lone suited figure climbing toward the clouds from The Truman Show reference artwork. A dreamlike cinematic collage: striking staircase rising diagonally through luminous pale-blue sky, a dark charcoal edge like a theatre curtain, and one subtle warm amber projector beam. Keep the original small figure and staircase design recognizable. Sophisticated film-poster art direction, spacious and atmospheric, rich contrast, fine analogue film grain. No reels of repeated mockup rooms, no extra character faces. Crop out all original film-poster lettering.",
+      "references": [
+        "D:/Web/litwalls/assets/collection-cover-references/movies-tv.jpg"
+      ],
+      "source": "C:\\Users\\adity\\.codex\\generated_images\\01a1e543-6ed1-76a2-8623-58bf485b3103\\exec-83af403c-fba9-4795-b09d-134265d18eb1.png",
+      "output": "public/collections/covers/movies-tv.webp"
+    },
+    {
+      "id": "music",
+      "prompt": "Create the MUSIC collection cover. Use case: ads-marketing. Asset: bespoke collection cover art for a premium poster shop, landscape 3:2 composition. The input image is an actual catalogue poster in a mockup room: use ONLY the rectangular printed artwork as the visual reference, NOT the beige wall, desk, computer, plants or furniture. Create an arresting art-directed close-up composition from that artwork, with subtle tactile paper collage edges and a warm charcoal surround. This should read as collectible cover art, not a room photograph or a screenshot. Keep the actual subject, recognizable design and colours faithful to the product art. The category title will be added in HTML outside the image. No text, no words, no type, no watermark, no new logos, no interface. Main subject centrally composed with safe margins for small responsive thumbnails. Crisp detail, professional print-campaign quality. Use the actual seated musician portrait on the textured dark green background from the reference as the dominant artwork. Preserve the portrait's pose and likeness. Frame the cropped print with the tactile edge and circular grooves of a black vinyl record, a little warm amber light and restrained deep green tones. Editorial record-store campaign art, soulful, intimate and polished, warm black, forest green and small burnt-orange accents. The portrait remains printed artwork, not a new person photographed in a room. Crop out the tiny logos and lettering from the original print. No added words.",
+      "references": [
+        "D:/Web/litwalls/assets/collection-cover-references/music.jpg"
+      ],
+      "source": "C:\\Users\\adity\\.codex\\generated_images\\01a1e543-6ed1-76a2-8623-58bf485b3103\\exec-2628cd3d-a008-4093-a5ca-78bd88ab131b.png",
+      "output": "public/collections/covers/music.webp"
+    },
+    {
+      "id": "dc",
+      "prompt": "Use case: ads-marketing. Generate a landscape 3:2 abstract noir graphic collection cover for a premium poster shop. Monumental art-deco architectural silhouettes and layered black paper shapes, smoky gold light rising through a geometric skyline, a narrow crimson torn-paper accent, fine ink grain. Elegant cinematic print collage on warm charcoal. Clearly abstract architectural art, readable at small card size. No people, faces, masks, superhero characters, bat shapes or symbols, logos, words, watermarks, or furniture. Output only the finished artwork.",
+      "references": [],
+      "output": "public/collections/covers/dc.webp",
+      "source": "C:\\Users\\adity\\.codex\\generated_images\\01a1e543-6ed1-76a2-8623-58bf485b3103\\exec-a851b768-edc3-4073-9d73-df8c84848327.png"
+    },
+    {
+      "id": "cars",
+      "prompt": "Use case: ads-marketing. Create bespoke CARS collection cover art for a premium poster store, landscape 3:2 composition. The reference is an actual catalogue print in a mockup room: use ONLY the continuous blue McLaren racing-car artwork inside the three panels, not the room, desk or monitor. Make the exact blue side-profile McLaren and its racing livery the star, filling most of the wide composition, with the complete car visible, correct proportions, dramatic charcoal asphalt texture, a soft reflected highlight and subtle electric-blue motion streaks. Art-directed automotive editorial cover, tactile matte-paper collage edge at one corner, confident and elegant, deep warm black and vivid blue. Preserve the actual car and its original design, not a different invented car. The collection title will be HTML outside the image. No added typography, no new words, no watermark or UI, no room furniture. Crisp professional print-campaign quality, safe margins for small thumbnails.",
+      "references": [
+        "D:/Web/litwalls/assets/collection-cover-references/cars.jpg"
+      ],
+      "source": "C:\\Users\\adity\\.codex\\generated_images\\01a1e543-6ed1-76a2-8623-58bf485b3103\\exec-b9bfc87b-6430-45d6-bcdf-66c0197e3112.png",
+      "output": "public/collections/covers/cars.webp"
+    },
+    {
+      "id": "f1",
+      "prompt": "Use case: ads-marketing. Create bespoke F1 collection cover art for a premium poster store, landscape 3:2 composition. The reference is a store poster in a room: extract ONLY the actual rear-view black/red/white Haas Formula 1 car on the circuit, not the wall or furniture. A dramatic low, close rear view of that same race car, wide rear tyres and rear wing, original livery, with the red-and-white track kerb as a strong diagonal and palm-tree circuit atmosphere subtly behind it. Emphasize speed, precision and racing, charcoal, silver, white and flashes of red, a faint amber edge light. Keep the vehicle faithful to the actual product reference. Premium motorsport editorial artwork with fine film grain and one restrained torn-paper edge, distinct from a road-car ad. Car centred with safe crop margins. No collection labels, no added words, no extra logos, no UI or watermark. Any existing car markings remain natural to the source artwork. No desk or room scene.",
+      "references": [
+        "D:/Web/litwalls/assets/collection-cover-references/f1.jpg"
+      ],
+      "source": "C:\\Users\\adity\\.codex\\generated_images\\01a1e543-6ed1-76a2-8623-58bf485b3103\\exec-70ea69c1-12e1-41e5-a065-86e732d380c9.png",
+      "output": "public/collections/covers/f1.webp"
+    },
+    {
+      "id": "anime",
+      "prompt": "Use case: ads-marketing. Create bespoke ANIME collection cover art for a premium poster store, landscape 3:2 composition. Both reference images are actual catalogue prints in mockup rooms: use ONLY the rectangular illustrated artwork, no walls, desks or computers. An expressive editorial paper collage: the original Spirited Away girl in red from reference 2 is the dominant character on the right two thirds, with the original lantern-lit bathhouse atmosphere. On the left, a smaller layered crop of the black Starry Night Cat with yellow eyes and swirling blue night sky from reference 1 creates a magical contrasting detail. Preserve the actual character designs and their original colour palettes, do not invent new characters. Luminous indigo, warm lantern red and soft golden highlights over deep charcoal, sophisticated Japanese animation poster-cover mood, tactile matte-paper edges, beautifully balanced and clearly readable at thumbnail size. No Naruto imagery. Crop out all original poster headings; no words, added logos, watermark or UI. No room photography. One striking polished 3:2 category artwork.",
+      "references": [
+        "D:/Web/litwalls/assets/collection-cover-references/anime.jpg",
+        "D:/Web/litwalls/assets/hero-product-references/spirited-away-01-anime-posters.jpg"
+      ],
+      "source": "C:\\Users\\adity\\.codex\\generated_images\\01a1e543-6ed1-76a2-8623-58bf485b3103\\exec-a7352da8-74a4-4778-ae00-2c763808f1de.png",
+      "output": "public/collections/covers/anime.webp"
+    },
+    {
+      "id": "custom-prints",
+      "prompt": "Use case: ads-marketing. Create bespoke CUSTOM PRINTS collection cover art for a premium poster store, landscape 3:2 composition. The references establish the actual full-size custom poster and small white-bordered retro photo print formats, not a scene to copy. A beautiful close-up creative flat lay on a warm cream paper and charcoal surface: one large matte mountain-and-lake sunrise print with a narrow white border, several smaller retro-style photographs of an ocean sunset, cat and ferris wheel arranged in a deliberate playful overlapping fan, a corner of a sketchbook and a little orange pencil. Clear distinction between the large poster and the smaller photo prints, tactile real paper edges and natural directional shadows. Warm charcoal, cream and orange with restrained photographic blue, premium design-studio campaign art, inviting and personal. Original scenic photos illustrate customer-uploaded images. Compose the artwork centrally with breathing space and safe margins. No computer, desk-room scene, people in the room, albums, placeholder upload text, advertising words, logos, watermarks or UI. No anime or musician posters. One elegant 3:2 collection cover.",
+      "references": [
+        "D:/Web/litwalls/public/brand/hero-custom-poster.webp",
+        "D:/Web/litwalls/assets/hero-refresh-references/retro-detail-2.jpg"
+      ],
+      "source": "C:\\Users\\adity\\.codex\\generated_images\\01a1e543-6ed1-76a2-8623-58bf485b3103\\exec-0ebee1b9-c518-4d55-9efd-7555d589d2dc.png",
+      "output": "public/collections/covers/custom-prints.webp"
+    }
+  ]
+}

@@ -2,6 +2,7 @@ import { ProductCard } from "@/components/product-card";
 import { UploadIcon } from "@/components/icons";
 import { Container } from "@/components/ui/container";
 import { SectionHeading } from "@/components/ui/section-heading";
+import { cn } from "@/lib/cn";
 import type { Product } from "@/lib/shopify/types";
 
 /**
@@ -22,7 +23,7 @@ export function CustomPrints({ products }: { products: Product[] }) {
   if (products.length === 0) return null;
 
   return (
-    <section id="custom" className="scroll-mt-24 bg-white py-16 lg:py-24">
+    <section id="custom" className="scroll-mt-24 bg-white py-10 sm:py-14 lg:py-20">
       <Container>
         <SectionHeading
           title="Design your own"
@@ -31,17 +32,20 @@ export function CustomPrints({ products }: { products: Product[] }) {
           linkLabel="Get started"
         />
 
-        {/* 2 columns, then straight to 4 — see the matching comment in
-            ProductGridSection for why 3 and 5 both leave a dead gap here. */}
-        <ul className="reveal-stagger mt-8 grid grid-cols-2 gap-x-4 gap-y-6 md:grid-cols-4 md:gap-6">
-          {products.map((product) => (
-            <li key={product.id} className="h-full">
-              <ProductCard product={product} />
+        <ul className={cn(
+          "reveal-stagger mt-6 grid grid-cols-2 gap-x-3 gap-y-6 sm:mt-8 sm:gap-x-6 md:gap-6",
+          products.length >= 5 ? "md:grid-cols-3 lg:grid-cols-5" : "lg:grid-cols-4",
+        )}>
+          {products.map((product, index) => (
+            <li key={product.id} className={cn("h-full min-w-0", index >= 4 && "hidden md:block")}>
+              <ProductCard product={product} imageSizes={products.length >= 5
+                ? "(min-width: 2000px) 264px, (min-width: 1408px) 250px, (min-width: 1024px) 20vw, (min-width: 768px) 33vw, 50vw"
+                : "(min-width: 2000px) 340px, (min-width: 1408px) 320px, (min-width: 1024px) 25vw, 50vw"} />
             </li>
           ))}
         </ul>
 
-        <p className="mt-8 flex items-center justify-center gap-2 text-center text-sm text-ink-500">
+        <p className="mx-auto mt-6 flex max-w-xl items-start justify-center gap-2 text-center text-xs leading-relaxed text-ink-600 sm:mt-8 sm:items-center sm:text-sm">
           <UploadIcon className="size-4 shrink-0 text-ink-400" />
           We check your file&apos;s resolution before checkout, so nothing
           prints blurry.

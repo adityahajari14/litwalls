@@ -156,13 +156,16 @@
 }
 
 @media (min-width: 2000px) {
-  .body { max-width: var(--container-9xl); min-height: clamp(820px, 80svh, 1100px); }
+  .body { max-width: var(--container-9xl); min-height: clamp(820px, 74svh, 1000px); }
+  .copy { padding-inline: 64px; }
+  .productVisual { inset-inline: 50% auto; width: min(100%, 2400px); translate: -50% 0; mask-image: linear-gradient(90deg, transparent, black 10%, black 90%, transparent); }
+  .controls { max-width: calc(var(--container-9xl) + 128px); margin-inline: auto; }
 }
 
 @media (min-width: 768px) and (max-width: 1100px) {
   .body { min-height: 560px; }
   .copy { width: 60%; padding: 36px 64px; }
-  .title { font-size: 72px; }
+  .title { font-size: clamp(58px, 7vw, 72px); }
   .eyebrow { font-size: 9px; letter-spacing: 0.1em; }
   .description { font-size: 13px; }
   .actions { gap: 10px; }
@@ -171,8 +174,8 @@
 }
 
 @media (max-width: 767px) {
-  .body { min-height: clamp(620px, calc(100svh - 104px), 780px); align-items: flex-end; }
-  .copy { width: 100%; max-width: 560px; margin-inline: auto; padding: clamp(275px, 44svh, 350px) 24px 28px; }
+  .body { min-height: 0; align-items: stretch; }
+  .copy { width: 100%; max-width: 560px; margin-inline: auto; padding: clamp(260px, 78vw, 360px) 24px 28px; }
   .desktopCopy { display: none; }
   .mobileCopy { display: block; }
   .productVisual { inset: 0; height: auto; }
@@ -201,7 +204,7 @@
     text-align: center;
   }
   .note { max-width: 400px; margin-top: 14px; font-size: 10px; line-height: 1.6; }
-  .controls { inset: 0 0 auto; height: clamp(230px, 42%, 330px); padding-inline: 12px; }
+  .controls { inset: 0 0 auto; height: clamp(220px, 65vw, 300px); padding-inline: 12px; }
 }
 
 @media (max-width: 380px) {
@@ -229,4 +232,16 @@
   .note { font-size: 9px; }
   .posterWall { top: 12px; height: 215px; }
   .controls { height: 210px; }
+}
+
+/* A phone turned sideways needs a wide scene and room beside the copy. */
+@media (min-width: 560px) and (max-width: 767px) and (min-aspect-ratio: 3/2) {
+  .body { min-height: 440px; align-items: center; }
+  .copy { width: 65%; max-width: none; margin: 0; padding: 32px 64px; }
+  .sceneImage { height: 100%; }
+  .productVisual::after { background: linear-gradient(90deg, rgb(17 16 16 / 95%), rgb(17 16 16 / 80%) 35%, transparent 85%); }
+  .posterWall { inset: 24px 5% 24px 50%; height: auto; }
+  .title { font-size: 48px; }
+  .eyebrow { font-size: 8.5px; }
+  .controls { inset: 0; height: auto; }
 }

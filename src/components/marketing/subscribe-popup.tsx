@@ -191,7 +191,7 @@ export function SubscribePopup() {
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-0 z-70 grid place-items-center p-4">
+    <div className="fixed inset-0 z-70 grid place-items-center p-3 sm:p-4">
       <button
         type="button"
         aria-label="Close"
@@ -207,13 +207,13 @@ export function SubscribePopup() {
         role="dialog"
         aria-modal="true"
         aria-labelledby="subscribe-popup-title"
-        className="relative w-full max-w-sm animate-pop-in rounded-card bg-paper p-8 text-center shadow-lift"
+        className="relative max-h-[calc(100svh-1.5rem)] w-full max-w-sm animate-pop-in overflow-y-auto overscroll-contain rounded-card bg-paper p-6 text-center shadow-lift sm:max-h-[calc(100svh-2rem)] sm:p-8"
       >
         <button
           type="button"
           onClick={dismiss}
           aria-label="Close"
-          className="absolute right-4 top-4 grid size-9 place-items-center rounded-full text-ink-500 transition-colors hover:bg-ink-100 hover:text-ink-900"
+          className="absolute right-2 top-2 grid size-11 place-items-center rounded-full text-ink-500 transition-colors hover:bg-ink-100 hover:text-ink-900"
         >
           <CloseIcon className="size-5" />
         </button>

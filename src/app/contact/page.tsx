@@ -5,6 +5,8 @@ import { InstagramIcon, MailIcon } from "@/components/icons";
 import { Container } from "@/components/ui/container";
 import {
   DAMAGE_PROOF,
+  INSTAGRAM_HANDLE,
+  INSTAGRAM_URL,
   SUPPORT_EMAIL,
   SUPPORT_HOURS,
   SUPPORT_RESPONSE,
@@ -34,8 +36,8 @@ const CHANNELS = [
   {
     icon: InstagramIcon,
     title: "Instagram",
-    detail: "@litwalls",
-    href: "https://instagram.com",
+    detail: INSTAGRAM_HANDLE,
+    href: INSTAGRAM_URL,
     note: "DMs are open, though email is faster for order problems.",
   },
 ];

@@ -1,0 +1,18 @@
+{
+  "generator": "Built-in image_gen tool",
+  "design": "One shared studio surface, identical three-print composition, actual catalogue artwork rendered with CSS crops. Custom uses illustrative photo examples.",
+  "assets": [
+    {
+      "prompt": "Use case: product-mockup. Asset: shared background for a coordinated set of landscape 3:2 poster collection cards for Litwalls. Create a premium photographic overhead view of an EMPTY warm charcoal matte paper studio surface, with subtle natural paper grain, a gentle amber sidelight from upper left and soft diagonal light falloff. Extremely restrained, editorial art-store campaign style. Centre 80 percent must be clear and evenly dark for real catalogue poster prints which will be placed separately in the website. No posters, no prints, no paper sheets, no frames, no objects, no text, no logos, no symbols, no furniture, no abstract graphic strokes. Just the sophisticated continuous tactile surface and warm light. Landscape 3:2 composition.",
+      "source": "C:\\Users\\adity\\.codex\\generated_images\\01a1e543-6ed1-76a2-8623-58bf485b3103\\exec-e2ede7d4-16a7-48fa-acf9-3a197f70f0cc.png",
+      "output": "public/collections/covers/studio-v2.webp",
+      "width": 1200
+    },
+    {
+      "prompt": "Use case: photorealistic-natural. Asset: example customer photo artwork for a custom poster collection cover. Make a clean photographic contact sheet with exactly THREE equal vertical panels, edge to edge, no gutters, no borders, no text. Overall canvas wide 3:1; each panel is square. Left panel: candid scenic Mediterranean coastal road and turquoise sea at golden hour. Centre panel: beautiful Alpine mountain and clear lake at warm sunset, orange sunlit peak with blue water. Right panel: charming candid ginger-and-white cat resting on a sunny windowsill. Each panel is a complete independent editorial photograph, natural lighting, fine detail, rich but restrained warm colours. These are illustrative customer photo examples for a print shop. No posters, frames, rooms, paper, logos, collages inside panels, watermarks or written words. Exactly one image per square panel.",
+      "source": "C:\\Users\\adity\\.codex\\generated_images\\01a1e543-6ed1-76a2-8623-58bf485b3103\\exec-6db62e6a-116d-42c4-97a6-1b65432a407b.png",
+      "output": "public/collections/covers/custom-examples-v2.webp",
+      "width": 1800
+    }
+  ]
+}

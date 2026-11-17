@@ -186,14 +186,6 @@ export function InstagramIcon(props: IconProps) {
   );
 }
 
-export function TwitterIcon(props: IconProps) {
-  return (
-    <svg {...base} {...props}>
-      <path d="M4 4l7.5 9.5L4.5 20M20 4l-7.4 8.9L20 20h-3.6l-4.9-6-4.9 6" />
-    </svg>
-  );
-}
-
 export function GiftIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>

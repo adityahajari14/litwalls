@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { ArrowRightIcon, UploadIcon } from "@/components/icons";
-import { PosterFan } from "@/components/poster-fan";
+import { CollectionCard } from "@/components/collection-card";
 import { Container } from "@/components/ui/container";
-import { getCollections, getProductCount } from "@/lib/shopify/products";
+import { orderCollectionCards } from "@/lib/collection-covers";
+import { getAllCollections, getProductCount } from "@/lib/shopify/products";
 import { absoluteUrl } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -12,9 +13,6 @@ export const metadata: Metadata = {
   description: "Shop Litwalls posters, organised by collection.",
   alternates: { canonical: absoluteUrl("/collections") },
 };
-
-/** Same ceiling as the collection page's generateStaticParams — one list, one limit. */
-const COLLECTION_COUNT = 50;
 
 /**
  * Which collection leads the grid.
@@ -26,29 +24,13 @@ const COLLECTION_COUNT = 50;
  */
 const FEATURED_COLLECTION_HANDLE = process.env.NEXT_PUBLIC_FEATURED_COLLECTION;
 
-function posterCount(count: number) {
-  return `${count >= 250 ? "250+" : count} poster${count === 1 ? "" : "s"}`;
-}
-
 export default async function CollectionsPage() {
   const [collections, total] = await Promise.all([
-    getCollections(COLLECTION_COUNT),
+    getAllCollections(),
     getProductCount(),
   ]);
 
-  const featuredIndex = FEATURED_COLLECTION_HANDLE
-    ? collections.findIndex(
-        (collection) => collection.handle === FEATURED_COLLECTION_HANDLE,
-      )
-    : -1;
-
-  const ordered =
-    featuredIndex > 0
-      ? [
-          collections[featuredIndex],
-          ...collections.filter((_, index) => index !== featuredIndex),
-        ]
-      : collections;
+  const ordered = orderCollectionCards(collections, FEATURED_COLLECTION_HANDLE);
 
   return (
     <Container className="py-12 lg:py-16">
@@ -71,40 +53,10 @@ export default async function CollectionsPage() {
           appear here.
         </p>
       ) : (
-        // Each card is a small stack of the collection's own posters on a
-        // quiet ground, with its name beneath — the artwork is the cover.
-        // These were full-bleed tiles with the title over a dark scrim, which
-        // needs a cover image per collection to work; none is set in Shopify,
-        // so every tile was a single letter on black.
-        <ul className="reveal-stagger mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:mt-12 lg:grid-cols-3 lg:gap-6">
-          {ordered.map((collection, index) => (
+        <ul className="reveal-stagger mt-10 grid grid-cols-2 gap-3 sm:gap-6 lg:mt-12 lg:grid-cols-4">
+          {ordered.map((collection) => (
             <li key={collection.id}>
-              <Link
-                href={`/collections/${collection.handle}`}
-                className="group block h-full overflow-hidden rounded-card bg-white shadow-card ring-1 ring-ink-950/5 transition duration-300 ease-out-soft hover:-translate-y-1 hover:shadow-lift"
-              >
-                <div className="relative aspect-5/4 overflow-hidden bg-linear-to-b from-ink-50 to-ink-200/70">
-                  <PosterFan
-                    images={collection.previews}
-                    title={collection.title}
-                    eager={index < 3}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between gap-4 p-5 sm:p-6">
-                  <div className="min-w-0">
-                    <h2 className="truncate font-display text-3xl text-ink-950 transition-colors duration-300 group-hover:text-brand-600">
-                      {collection.title}
-                    </h2>
-                    <p className="mt-0.5 text-sm text-ink-500">
-                      {posterCount(collection.productCount)}
-                    </p>
-                  </div>
-                  <span className="grid size-11 shrink-0 place-items-center rounded-full bg-ink-950 text-white transition duration-300 ease-out-soft group-hover:bg-brand-500">
-                    <ArrowRightIcon className="size-4.5 transition-transform duration-300 ease-out-soft group-hover:translate-x-0.5" />
-                  </span>
-                </div>
-              </Link>
+              <CollectionCard collection={collection} headingLevel={2} />
             </li>
           ))}
         </ul>

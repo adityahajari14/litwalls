@@ -17,6 +17,7 @@ import { IMAGE_PLACEHOLDER } from "@/lib/image-placeholder";
 import { isCustomProduct } from "@/lib/product";
 import { addItem } from "@/lib/shopify/actions";
 import { cn } from "@/lib/cn";
+import styles from "./product-card.module.css";
 import {
   hasSizeChoice,
   sizeOptions,
@@ -57,6 +58,8 @@ export function ProductCard({
   product,
   eager = false,
   className,
+  compactSizeSelector = false,
+  imageSizes = "(min-width: 2000px) 340px, (min-width: 1408px) 320px, (min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw",
 }: {
   product: Product;
   /** Load immediately instead of lazily — for cards above the fold. Not
@@ -64,6 +67,9 @@ export function ProductCard({
    *  of them just splits the same bandwidth four ways. */
   eager?: boolean;
   className?: string;
+  compactSizeSelector?: boolean;
+  /** Match the shelf's column count so phones do not download desktop images. */
+  imageSizes?: string;
 }) {
   const isNew = product.tags.includes("new");
   const soldOut = !product.availableForSale;
@@ -127,7 +133,7 @@ export function ProductCard({
     : `/products/${product.handle}`;
 
   return (
-    <article className={cn("group flex h-full flex-col", className)}>
+    <article className={cn("group flex h-full flex-col", styles.card, className)}>
       {/* Two links to the same product (image + title) would otherwise give
           keyboard and screen-reader users a duplicate stop with nothing to
           distinguish it — this one carries no name of its own, so it's
@@ -146,7 +152,7 @@ export function ProductCard({
               fill
               loading={eager ? "eager" : "lazy"}
               placeholder={IMAGE_PLACEHOLDER}
-              sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 80vw"
+              sizes={imageSizes}
               className={cn(
                 "object-cover transition-transform duration-500 ease-out-soft",
                 !soldOut && "group-hover:scale-105",
@@ -174,7 +180,7 @@ export function ProductCard({
 
       <div className="mt-4 flex flex-1 flex-col">
         <Link href={href} className="block">
-          <h3 className="line-clamp-1 text-[15px] font-medium text-ink-900 transition-colors group-hover:text-brand-600">
+          <h3 className={cn(styles.title, "font-medium text-ink-900 transition-colors group-hover:text-brand-600")}>
             {product.title}
           </h3>
         </Link>
@@ -211,7 +217,7 @@ export function ProductCard({
           <div
             role="group"
             aria-label={`Size — ${product.title}`}
-            className="mt-2.5 flex flex-wrap gap-1 sm:gap-1.5"
+            className={cn("mt-2.5", styles.sizes, compactSizeSelector && styles.compactSizes)}
           >
             {sizes.map((size) => {
               const candidate = variantForSize(product, size);
@@ -230,13 +236,10 @@ export function ProductCard({
                   aria-pressed={isSelected}
                   aria-label={outOfStock ? `${size} — sold out` : size}
                   className={cn(
-                    // min-h-8 keeps every chip a real touch target rather than
-                    // a text-height sliver, which is what made the previous
-                    // inline control awkward to hit on a phone. The tighter
-                    // width/padding below sm is what lets all four sizes sit
-                    // on one row in a two-up phone grid instead of breaking
-                    // to a second row on some cards and not others.
-                    "inline-flex min-h-8 min-w-7 items-center justify-center rounded-card border px-1.5 text-[11.5px] leading-none font-medium transition-colors sm:min-w-9 sm:px-2",
+                    // The card's container width chooses one row or a two-by-two
+                    // layout, including narrow cards in five-column shelves.
+                    "inline-flex items-center justify-center rounded-card border leading-none font-medium transition-colors",
+                    styles.size,
                     isSelected
                       ? "border-ink-950 bg-ink-950 text-white"
                       : "border-ink-200 text-ink-700 hover:border-ink-950 hover:text-ink-950",
@@ -256,7 +259,7 @@ export function ProductCard({
         <div className="mt-3 flex-1" />
 
         {isCustom && !unavailable ? (
-          <ButtonLink href={href} size="sm" variant="secondary" className="w-full">
+          <ButtonLink href={href} size="sm" variant="secondary" className={styles.purchase}>
             Upload your artwork
           </ButtonLink>
         ) : (
@@ -266,7 +269,7 @@ export function ProductCard({
             variant={unavailable ? "ghost" : "secondary"}
             disabled={unavailable || pending}
             onClick={addToCart}
-            className="w-full"
+            className={styles.purchase}
           >
             {unavailable ? (
               "Sold out"
