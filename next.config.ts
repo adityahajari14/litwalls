@@ -2,6 +2,11 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
+    // Shopify's CDN (and imgix for review photos) does the resizing, not
+    // Vercel's optimizer. Vercel's quota ran out and blanked product images.
+    // See src/lib/image-loader.ts.
+    loader: "custom",
+    loaderFile: "./src/lib/image-loader.ts",
     remotePatterns: [
       {
         protocol: "https",
