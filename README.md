@@ -343,8 +343,8 @@ around:
   seven, as four paid and three free. So a rung is claimable at its `total`,
   not its `pay` count — `claimableBundles` in `offers.ts` — and the cart
   nudge counts down to the full set.
-- **It is all or nothing.** Seven posters with `BUY6GET12FREE` is not "one
-  free"; it is inapplicable until there are eighteen. Every claimable rung is
+- **It is all or nothing.** Six posters with `BUY5GET5FREE` is not "one
+  free"; it is inapplicable until there are ten. Every claimable rung is
   put on the cart and Shopify applies the best one that fits.
 
 ### What to create
@@ -353,10 +353,11 @@ around:
 | --- | --- | --- | --- |
 | `BUY4GET3FREE` | Buy X get Y | Buy 4 → get 3 free (100% off) | ✅ live |
 | `BUY5GET5FREE` | Buy X get Y | Buy 5 → get 5 free | ✅ live |
-| `BUY6GET12FREE` | Buy X get Y | Buy 6 → get 12 free | ✅ live |
-| `BUY10GET26FREE` | Buy X get Y | Buy 10 → get 26 free | ✅ live |
-| `SPLITBUY1GET2FREE` | Buy X get Y | Buy 1 split set → get 2 free | ✅ live |
-| `SPLITBUY2GET6FREE` | Buy X get Y | Buy 2 split sets → get 6 free | ✅ live |
+| `SPLITBUY2GET1FREE` | Buy X get Y | Buy 2 split sets → get 1 free (100% off) | ✅ live (created 2026-11-17) |
+| ~~`BUY6GET12FREE`~~ | — | retired 2026-11-17 | ✅ deactivated |
+| ~~`BUY10GET26FREE`~~ | — | retired 2026-11-17 | ✅ deactivated |
+| ~~`SPLITBUY1GET2FREE`~~ | — | retired 2026-11-17 | ✅ deactivated |
+| ~~`SPLITBUY2GET6FREE`~~ | — | retired 2026-11-17 | ✅ deactivated |
 | `LIT100` | Amount off order | ₹100 off, minimum ₹499, once per customer | ✅ live |
 | *(no code)* | Automatic, buy X get Y | Spend ₹799 → 1× gift pack free | created by `sync-discounts.mjs --apply` |
 

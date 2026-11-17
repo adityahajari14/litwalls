@@ -39,7 +39,8 @@ export function OffersBlock({ product }: { product: Product }) {
   const effective = (bundle: Bundle) =>
     Math.round((min * bundle.pay) / bundle.total);
 
-  const best = bundles[bundles.length - 1];
+  // A "best value" badge only means something when there is a rung to beat.
+  const best = bundles.length > 1 ? bundles[bundles.length - 1] : null;
 
   return (
     <section
@@ -55,7 +56,7 @@ export function OffersBlock({ product }: { product: Product }) {
         designs
       </p>
 
-      <ul className="grid grid-cols-2 gap-2.5 p-3">
+      <ul className={`grid gap-2.5 p-3 ${bundles.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
         {bundles.map((bundle) => {
           const free = bundleFreeCount(bundle);
           const isBest = bundle === best;

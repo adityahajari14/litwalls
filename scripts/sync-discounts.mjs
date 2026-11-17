@@ -147,7 +147,7 @@ const ITEMS = `
 
 const state = await admin(`{
   collections(first: 100) {
-    nodes { id handle title products(first: 50) { nodes { id handle } } }
+    nodes { id handle title products(first: 250) { nodes { id handle } } }
   }
   split: products(first: 250, query: "tag:split OR tag:'Split Poster'") { nodes { id handle tags status } }
   discountNodes(first: 100) {

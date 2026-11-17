@@ -8,7 +8,7 @@
  * Two separate bundle ladders, because they apply to different products:
  * SINGLE_BUNDLES discounts single posters, SPLIT_BUNDLES discounts
  * split-in-3 sets. A split "set" is one 3-panel poster, priced and sold as
- * one unit — "buy 2, get 8" means 8 sets (24 panels total), not 8 panels.
+ * one unit — "buy 2, get 1 free" means 1 free set (3 panels), not 1 panel.
  */
 
 import { isCustomSinglePoster } from "@/lib/custom-products";
@@ -44,17 +44,28 @@ export type Bundle = {
 export const SINGLE_BUNDLES: Bundle[] = [
   { pay: 4, total: 7, code: "BUY4GET3FREE" },
   { pay: 5, total: 10, code: "BUY5GET5FREE" },
-  { pay: 6, total: 18, code: "BUY6GET12FREE" },
-  { pay: 10, total: 36, code: "BUY10GET26FREE" },
 ];
 
 /**
  * Buy-X-get-Y on split-in-3 sets. A "set" is one 3-panel split poster, sold
  * and priced as a single unit — this ladder counts sets, not panels.
+ * One offer only: buy 2 sets, get 1 free.
  */
 export const SPLIT_BUNDLES: Bundle[] = [
-  { pay: 1, total: 3, code: "SPLITBUY1GET2FREE" },
-  { pay: 2, total: 8, code: "SPLITBUY2GET6FREE" },
+  { pay: 2, total: 3, code: "SPLITBUY2GET1FREE" },
+];
+
+/**
+ * Codes that used to be advertised and are now switched off. They stay listed
+ * here, not in a ladder, so a cart that still carries one from an earlier visit
+ * has it stripped instead of treating it as a code the customer typed
+ * themselves. Deactivate them in Shopify Admin too.
+ */
+const RETIRED_BUNDLE_CODES = [
+  "BUY6GET12FREE",
+  "BUY10GET26FREE",
+  "SPLITBUY1GET2FREE",
+  "SPLITBUY2GET6FREE",
 ];
 
 /** Backward-compatible alias — existing components read BUNDLES for the
@@ -183,9 +194,10 @@ export { ENTRY_PRICE };
  */
 const ALL_BUNDLES: Bundle[] = [...SINGLE_BUNDLES, ...SPLIT_BUNDLES];
 
-export const MANAGED_DISCOUNT_CODES: string[] = ALL_BUNDLES.map(
-  (bundle) => bundle.code,
-);
+export const MANAGED_DISCOUNT_CODES: string[] = [
+  ...ALL_BUNDLES.map((bundle) => bundle.code),
+  ...RETIRED_BUNDLE_CODES,
+];
 
 /**
  * How many units a cart holds on each ladder.
